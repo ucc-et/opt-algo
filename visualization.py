@@ -1,11 +1,11 @@
 import tkinter as tk
 from tkinter import ttk
 
-def open_screen_window():
+def open_screen_window(box_size):
     # This function opens the second window when "Start" is clicked
     screen_window = tk.Toplevel(root)  # Create a new top-level window
     screen_window.title("Screen Window")
-    screen_window.geometry("800x600")  # Set the size of the window
+    screen_window.geometry(f"{box_size}x{box_size}")  # Set the size of the window
 
     # Large screen area (75% of the window)
     screen_frame = tk.Frame(screen_window, bg='lightgray', bd=2, relief='solid')
@@ -54,7 +54,7 @@ def on_start():
     print(f"Box Size: {box_size_value}, Algorithm Choice: {algorithm_choice}")
     
     # Open the second window with the large screen area
-    open_screen_window()
+    open_screen_window(box_size_value)
 
 # Create the main window for input fields
 root = tk.Tk()
@@ -105,6 +105,7 @@ entry_box_size.grid(row=5, column=1, padx=5, pady=5)
 # Algorithm Choice (Greedy or Local Search)
 label_algorithm = ttk.Label(control_frame, text="Algorithm:")
 label_algorithm.grid(row=6, column=0, padx=5, pady=5, sticky="w")
+
 algorithm_var = tk.StringVar()
 algorithm_dropdown = ttk.Combobox(control_frame, textvariable=algorithm_var, values=["Greedy", "Local Search"], state="readonly")
 algorithm_dropdown.grid(row=6, column=1, padx=5, pady=5)
