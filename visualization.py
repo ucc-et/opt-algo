@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from instance_gen import generateInstances
 
 def open_screen_window(box_size):
     # This function opens the second window when "Start" is clicked
@@ -26,14 +27,14 @@ def update_algorithm_options(*args):
         # Dropdown for Greedy algorithm: options "a" and "b"
         greedy_options = ["a", "b"]
         greedy_dropdown = ttk.Combobox(control_frame, values=greedy_options, state="readonly")
-        greedy_dropdown.grid(row=8, column=1, padx=5, pady=5)
+        greedy_dropdown.grid(row=7, column=1, padx=5, pady=5)
         greedy_dropdown.current(0)  # Default value
     
     elif algorithm_choice == "Local Search":
         # Dropdown for Local Search algorithm: options "geometry", "rule", "overlaps"
         local_search_options = ["geometry", "rule", "overlaps"]
         local_search_dropdown = ttk.Combobox(control_frame, values=local_search_options, state="readonly")
-        local_search_dropdown.grid(row=8, column=1, padx=5, pady=5)
+        local_search_dropdown.grid(row=7, column=1, padx=5, pady=5)
         local_search_dropdown.current(0)  # Default value
 
 def on_start():
@@ -41,11 +42,11 @@ def on_start():
     print("Start button pressed")
     
     # Retrieve values from the entries if needed
-    anzahl_value = entry_anzahl.get()
-    upper_bound_a_value = entry_upperBoundA.get()
-    lower_bound_a_value = entry_lowerBoundA.get()
-    upper_bound_b_value = entry_upperBoundB.get()
-    lower_bound_b_value = entry_lowerBoundB.get()
+    anzahl_value = int(entry_anzahl.get())
+    upper_bound_a_value = int(entry_upperBoundA.get())
+    lower_bound_a_value = int(entry_lowerBoundA.get())
+    upper_bound_b_value = int(entry_upperBoundB.get())
+    lower_bound_b_value = int(entry_lowerBoundB.get())
     box_size_value = entry_box_size.get()
     algorithm_choice = algorithm_var.get()
 
@@ -53,6 +54,14 @@ def on_start():
     print(f"Anzahl: {anzahl_value}, Upper Bound A: {upper_bound_a_value}, Lower Bound A: {lower_bound_a_value}, Upper Bound B: {upper_bound_b_value}, Lower Bound B: {lower_bound_b_value}")
     print(f"Box Size: {box_size_value}, Algorithm Choice: {algorithm_choice}")
     
+    # Start instance generation
+    instances = generateInstances(anzahl_value, upper_bound_a_value, 
+                      lower_bound_a_value, upper_bound_b_value, lower_bound_b_value)
+    for instance in instances:
+        print("INSTANCE")
+        print(instance.width)
+        print(instance.height)
+
     # Open the second window with the large screen area
     open_screen_window(box_size_value)
 
@@ -106,10 +115,13 @@ entry_box_size.grid(row=5, column=1, padx=5, pady=5)
 label_algorithm = ttk.Label(control_frame, text="Algorithm:")
 label_algorithm.grid(row=6, column=0, padx=5, pady=5, sticky="w")
 
+valuesAlgo = ["Please select", "Greedy", "Local Search"]
+
 algorithm_var = tk.StringVar()
-algorithm_dropdown = ttk.Combobox(control_frame, textvariable=algorithm_var, values=["Greedy", "Local Search"], state="readonly")
+algorithm_dropdown = ttk.Combobox(control_frame, textvariable=algorithm_var, values=valuesAlgo, state="readonly")
 algorithm_dropdown.grid(row=6, column=1, padx=5, pady=5)
-algorithm_dropdown.current(0)  # Default value is "Greedy"
+algorithm_dropdown.current(0)  # Default value is "Please Select"
+valuesAlgo.remove("Please select")
 algorithm_var.trace("w", update_algorithm_options)  # Update options based on selection
 
 # Placeholder for dropdown (Greedy: a/b or Local Search: geometry/rule/overlaps)
