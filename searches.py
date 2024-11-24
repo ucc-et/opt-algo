@@ -1,5 +1,8 @@
 from helpers import calculate_objective, generate_neighbors, rectangle_fits_in_box
 
+"""
+TODO: Instead of having two methods, try to have a Generic Class like in the old approach
+"""
 
 def local_search(initial_solution, L, max_iterations=100):
     """
@@ -32,10 +35,11 @@ def local_search(initial_solution, L, max_iterations=100):
     return current_solution
 
 def greedy_algorithm(rectangles, L, strategy="area"):
+    # TODO: check if these 'strategy types' are sufficient for the task description
     if strategy == "area":
-        rectangles.sort(key=lambda x: x[0] * x[1], reverse=True)  # Fläche
+        rectangles.sort(key=lambda x: x[0] * x[1], reverse=True)  # Sortiere Rechtecke nach Fläche
     elif strategy == "aspect_ratio":
-        rectangles.sort(key=lambda x: x[0] / x[1], reverse=True)  #
+        rectangles.sort(key=lambda x: x[0] / x[1], reverse=True)  # Sortiere nach Aspect Ratio
         
     boxes = []
     
