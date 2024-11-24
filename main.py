@@ -5,6 +5,12 @@ import random
 from helpers import generate_instances
 from searches import greedy_algorithm, local_search
 
+"""
+TODO: Try to make the visualization of the boxes with rectangles better. Maybe a separate window ?
+      Maybe Zoom ?
+"""
+
+
 def generate_rectangles():
     """
     Get data from input fields in the UI and utilize the values in there to generate_instances
