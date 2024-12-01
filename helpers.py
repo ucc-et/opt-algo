@@ -1,16 +1,16 @@
 import random
 import copy
 
-def generate_instances(L, n, min_width, max_width, min_height, max_height):
+def generate_instances(n, min_width, max_width, min_height, max_height):
     """
     Generate rectangle Instances.
-    L: Size of one Box,
     n: amount of rectangles that will be generated
     min_width: A rectangle has to have a width that is bigger or equals min_width
     max_width: A rectangle has to have a width that is smaller or equals max_width
     min_height: A rectangle has to have a height that is bigger or equals min_height
     max_height: A rectangle has to have a height that is smaller or equals max_height
     """
+
     return [(random.randint(min_width, max_width), random.randint(min_height, max_height)) for _ in range(n)]
 
 def rectangle_fits_in_box(box, rect, L):
