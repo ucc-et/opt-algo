@@ -1,9 +1,5 @@
 from helpers import calculate_objective, generate_neighbors, rectangle_fits_in_box
 
-"""
-TODO: Instead of having two methods, try to have a Generic Class like in the old approach
-"""
-
 def local_search(initial_solution, L, max_iterations=100):
     """
     Perform local search to minimize the number of boxes.
@@ -35,7 +31,6 @@ def local_search(initial_solution, L, max_iterations=100):
     return current_solution
 
 def greedy_algorithm(rectangles, L, strategy="area"):
-    # TODO: check if these 'strategy types' are sufficient for the task description
     if strategy == "area":
         rectangles.sort(key=lambda x: x[0] * x[1], reverse=True)  # Sortiere Rechtecke nach Fläche
     elif strategy == "aspect_ratio":
@@ -60,4 +55,11 @@ def greedy_algorithm(rectangles, L, strategy="area"):
             # Create a new box and place the rectangle at (0, 0)
             boxes.append([(0, 0, rect[0], rect[1])])
     
+    print(len(boxes))
+    a = 0
+    for box in boxes:
+        a += len(box)
+    print(a)
+    print("-----")
+
     return boxes

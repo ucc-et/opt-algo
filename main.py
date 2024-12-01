@@ -5,11 +5,6 @@ import random
 from helpers import generate_instances
 from searches import greedy_algorithm, local_search
 
-"""
-TODO: Try to make the visualization of the boxes with rectangles better. Maybe a separate window ?
-      Maybe Zoom ?
-"""
-
 
 def generate_rectangles():
     """
@@ -23,7 +18,7 @@ def generate_rectangles():
     max_h = int(entry_max_height.get())
     L = int(entry_box_length.get())
     
-    rectangles = generate_instances(L, n, min_w, max_w, min_h, max_h)
+    rectangles = generate_instances(n, min_w, max_w, min_h, max_h)
     label_status.config(text=f"{n} Rechtecke generiert!")
 
 def run_algorithm():
@@ -42,16 +37,51 @@ def visualize_solution(solution):
     """
     Generate box instances in the UI with the rectangles filled in them
     """
+
     canvas.delete("all")
+    
+    box_padding = 10
+    x_offset = 0
+    y_offset = 0
+    row_height = 0
+    canvas_width = canvas.winfo_width()
+
     for box_id, box in enumerate(solution):
-        offset_x, offset_y = box_id * (L + 10), 10  # Box Off sets
-        canvas.create_rectangle(offset_x, offset_y, offset_x + L, offset_y + L, outline="black")
+        # If box too big for current line, go to next
+        if x_offset + L + box_padding > canvas_width:
+            x_offset = 0
+            y_offset += row_height + box_padding
+            row_height = 0
+
+        row_height = max(row_height, L)
+
+        canvas.create_rectangle(
+            x_offset, y_offset,
+            x_offset + L, y_offset + L,
+            outline="black"
+        )
+
+        # Rectangle drawer
         for rect in box:
             x, y, w, h = rect
             canvas.create_rectangle(
-                offset_x + x, offset_y + y, offset_x + x + w, offset_y + y + h,
-                fill=random.choice(["red", "green", "blue", "yellow"]), outline="black"
+                x_offset + x, y_offset + y,
+                x_offset + x + w, y_offset + y + h,
+                fill=random.choice(["red", "green", "blue", "yellow"]),
+                outline="black"
             )
+
+        x_offset += L + box_padding
+
+    update_scrollregion()
+
+def update_scrollregion():
+    """
+    Update canvas to make Scrollbar work properly
+    """
+    canvas.update_idletasks()
+    canvas.configure(scrollregion=canvas.bbox("all"))
+
 
 """
 =========
@@ -109,7 +139,21 @@ btn_run.grid(row=0, column=1, padx=5)
 label_status = tk.Label(root, text="Status: Bereit")
 label_status.pack()
 
-canvas = tk.Canvas(root, width=800, height=600, bg="white")
-canvas.pack()
+# Create the scrollable canvas frame
+canvas_frame = tk.Frame(root)
+canvas_frame.pack(fill="both", expand=True)
+
+# Create the canvas
+canvas = tk.Canvas(canvas_frame, bg="white")
+canvas.pack(side="left", fill="both", expand=True)
+
+# Add vertical scrollbar
+v_scrollbar = tk.Scrollbar(canvas_frame, orient="vertical", command=canvas.yview)
+v_scrollbar.pack(side="right", fill="y")
+
+# Configure the canvas to work with the vertical scrollbar
+canvas.configure(yscrollcommand=v_scrollbar.set)
+
+
 
 root.mainloop()
