@@ -1,9 +1,5 @@
 from helpers import calculate_objective, generate_neighbors, rectangle_fits_in_box
 
-"""
-TODO: Instead of having two methods, try to have a Generic Class like in the old approach
-"""
-
 def local_search(initial_solution, L, max_iterations=100):
     """
     Perform local search to minimize the number of boxes.
@@ -60,4 +56,11 @@ def greedy_algorithm(rectangles, L, strategy):
             # Create a new box and place the rectangle at (0, 0)
             boxes.append([(0, 0, rect[0], rect[1])])
     
+    print(len(boxes))
+    a = 0
+    for box in boxes:
+        a += len(box)
+    print(a)
+    print("-----")
+
     return boxes
