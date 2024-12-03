@@ -34,7 +34,7 @@ def local_search(initial_solution, L, max_iterations=100):
 
     return current_solution
 
-def greedy_algorithm(rectangles, L, strategy="area"):
+def greedy_algorithm(rectangles, L, strategy):
     # TODO: check if these 'strategy types' are sufficient for the task description
     if strategy == "area":
         rectangles.sort(key=lambda x: x[0] * x[1], reverse=True)  # Sortiere Rechtecke nach Fläche

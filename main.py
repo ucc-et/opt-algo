@@ -32,9 +32,9 @@ def run_algorithm():
     """
     algorithm = algo_selector.get()
     if algorithm == "Greedy":
-        solution = greedy_algorithm(rectangles, L, strategy="area")
+        solution = greedy_algorithm(rectangles, L, greedy_strat.get())
     elif algorithm == "Lokale Suche":
-        initial_solution = greedy_algorithm(rectangles, L, strategy="area")
+        initial_solution = greedy_algorithm(rectangles, L, greedy_strat.get())
         solution = local_search(initial_solution, L)
     visualize_solution(solution)
 
@@ -94,6 +94,25 @@ entry_box_length.grid(row=5, column=1)
 algo_selector = ttk.Combobox(frame_inputs, values=["Greedy", "Lokale Suche"])
 algo_selector.set("Greedy")
 algo_selector.grid(row=6, column=1)
+
+# Choose Greedy strategy
+greedy_strat = ttk.Combobox(frame_inputs, values= ["area", "aspect_ratio"])
+greedy_strat.set("area")
+greedy_strat.grid(row=7, column=1)
+greedy_strat.grid_remove()
+
+# Function to toggle visibility based on strategy
+def update_visibility(*args):
+    if algo_selector.get() == "Greedy":
+        greedy_strat.grid()
+    else:
+        greedy_strat.grid_remove()
+
+# Attach function to algorithm selection change
+algo_selector.bind("<<ComboboxSelected>>", update_visibility)
+
+# Ensure visibility is updated during initialization
+update_visibility()
 
 # Create Buttons in UI to Generate Instances and Start Packer
 frame_buttons = tk.Frame(root)
