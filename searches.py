@@ -1,6 +1,6 @@
 from helpers import calculate_objective, generate_neighbors, rectangle_fits_in_box
 
-def local_search(initial_solution, L, max_iterations=100):
+def local_search(initial_solution, L, neighborhood,  max_iterations=100,):
     """
     Perform local search to minimize the number of boxes.
     initial_solution: Starting solution (e.g., from Greedy algorithm).
@@ -11,7 +11,7 @@ def local_search(initial_solution, L, max_iterations=100):
     current_objective = calculate_objective(current_solution)
 
     for iteration in range(max_iterations):
-        neighbors = generate_neighbors(current_solution, L)
+        neighbors = generate_neighbors(current_solution, L, neighborhood)
         best_neighbor = None
         best_objective = current_objective
 

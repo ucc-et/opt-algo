@@ -30,7 +30,7 @@ def run_algorithm():
         solution = greedy_algorithm(rectangles, L, greedy_strat.get())
     elif algorithm == "Lokale Suche":
         initial_solution = greedy_algorithm(rectangles, L, greedy_strat.get())
-        solution = local_search(initial_solution, L)
+        solution = local_search(initial_solution, L, local_search_neighborhood_selector.get())
     visualize_solution(solution)
 
 def visualize_solution(solution):
@@ -126,17 +126,24 @@ algo_selector.set("Greedy")
 algo_selector.grid(row=6, column=1)
 
 # Choose Greedy strategy
-greedy_strat = ttk.Combobox(frame_inputs, values= ["area", "aspect_ratio"])
+greedy_strat = ttk.Combobox(frame_inputs, values=["area", "aspect_ratio"])
 greedy_strat.set("area")
 greedy_strat.grid(row=7, column=1)
 greedy_strat.grid_remove()
 
+local_search_neighborhood_selector = ttk.Combobox(frame_inputs, values=["Geometriebasiert", "Regelbasiert", "Überlappungen teilweise zulassen"])
+local_search_neighborhood_selector.set("Geometriebasiert")
+local_search_neighborhood_selector.grid(row=7, column=1)
+local_search_neighborhood_selector.grid_remove()
+
 # Function to toggle visibility based on strategy
 def update_visibility(*args):
     if algo_selector.get() == "Greedy":
+        local_search_neighborhood_selector.grid_remove()
         greedy_strat.grid()
-    else:
+    elif algo_selector.get() == "Lokale Suche":
         greedy_strat.grid_remove()
+        local_search_neighborhood_selector.grid()
 
 # Attach function to algorithm selection change
 algo_selector.bind("<<ComboboxSelected>>", update_visibility)

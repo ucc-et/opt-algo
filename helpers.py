@@ -31,7 +31,7 @@ def calculate_objective(boxes):
     """
     return len(boxes)
 
-def generate_neighbors(current_solution, L):
+def generate_neighbors(current_solution, L, neighborhood):
     """
     Generate neighbors by making small changes to the current solution.
     - Move a rectangle within the same box or between boxes.
