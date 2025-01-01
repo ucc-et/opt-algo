@@ -55,12 +55,5 @@ def greedy_algorithm(rectangles, L, strategy):
         if not placed:
             # Create a new box and place the rectangle at (0, 0)
             boxes.append([(0, 0, rect[0], rect[1])])
-    
-    print(len(boxes))
-    a = 0
-    for box in boxes:
-        a += len(box)
-    print(a)
-    print("-----")
 
     return boxes
