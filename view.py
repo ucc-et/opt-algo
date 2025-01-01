@@ -118,11 +118,19 @@ class GUI:
     def run_algorithm(self):
         algorithm = self.algo_selector.get()
         if algorithm == "Greedy":
-            solution = self.greedy_algorithm(self.rectangles, self.L, self.greedy_strat.get())
+            solution = self.greedy_algorithm(
+                self.rectangles, 
+                self.L, 
+                self.greedy_strat.get()
+            )
         elif algorithm == "Lokale Suche":
-            initial_solution = self.greedy_algorithm(self.rectangles, self.L, self.greedy_strat.get())
-            solution = self.local_search(initial_solution, self.L, self.local_search_neighborhood_selector.get())
+            solution = self.local_search(
+                self.rectangles, 
+                self.L, 
+                self.local_search_neighborhood_selector.get()
+            )
         self.visualize_solution(solution)
+
     
     def visualize_solution(self, solution):
         self.canvas.delete("all")
