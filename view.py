@@ -67,6 +67,10 @@ class GUI:
         self.algo_selector.bind("<<ComboboxSelected>>", self.update_algorithm)
         self.update_algorithm()
 
+        # Label for error messages
+        self.error_label = tk.Label(self.root, text="", fg="red")
+        self.error_label.pack()
+
         # Create Buttons in UI to Generate Instances and Start Packer
         frame_buttons = tk.Frame(self.root)
         frame_buttons.pack(pady=10)
@@ -103,17 +107,49 @@ class GUI:
         elif self.algo_selector.get() == "Lokale Suche":
             self.greedy_strat.grid_remove()
             self.local_search_neighborhood_selector.grid()
-    
-    def generate_rectangles(self):
-        n = int(self.entry_num_rectangles.get())
-        min_w = int(self.entry_min_width.get())
-        max_w = int(self.entry_max_width.get())
-        min_h = int(self.entry_min_height.get())
-        max_h = int(self.entry_max_height.get())
-        self.L = int(self.entry_box_length.get())
 
-        self.rectangles = self.generate_instances(n, min_w, max_w, min_h, max_h)
-        self.label_status.config(text=f"{n} Rechtecke generiert!")
+    def validate_inputs(self):
+        errors = []
+
+        try:
+            num_rectangles = int(self.entry_num_rectangles.get())
+            min_width = int(self.entry_min_width.get())
+            max_width = int(self.entry_max_width.get())
+            min_height = int(self.entry_min_height.get())
+            max_height = int(self.entry_max_height.get())
+            box_length = int(self.entry_box_length.get())
+
+            if num_rectangles < 1:
+                errors.append("Es muss mind. 1 rechteck geben")
+            if min_width > max_width:
+                errors.append("Min Breite größer als Max Breite")
+            if min_height > max_height:
+                errors.append("Min Höhe größer als Max Höhe")
+            if box_length < 1:
+                errors.append("Die Länge der Box muss mind. 1 sein")
+
+        except ValueError:
+            # Converting into ints fails
+            errors.append("Bitte geben Sie gültige Zahlen ein und befüllen Sie alle Felder")
+
+        return errors
+
+    def generate_rectangles(self):
+        self.error_label.config(text="")
+        errors = self.validate_inputs()
+
+        if errors:
+            self.error_label.config(text="\n".join(errors), fg="red")
+        else:
+            n = int(self.entry_num_rectangles.get())
+            min_w = int(self.entry_min_width.get())
+            max_w = int(self.entry_max_width.get())
+            min_h = int(self.entry_min_height.get())
+            max_h = int(self.entry_max_height.get())
+            self.L = int(self.entry_box_length.get())
+
+            self.rectangles = self.generate_instances(n, min_w, max_w, min_h, max_h)
+            self.label_status.config(text=f"{n} Rechtecke generiert!")
         
     def run_algorithm(self):
         algorithm = self.algo_selector.get()
