@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import ttk
 import random
 
+from numpy import empty
+
 class GUI:
     def __init__(self, root, generate_instances, greedy_algorithm, local_search):
         self.root = root
@@ -15,8 +17,6 @@ class GUI:
         self.setup_ui()
     
     def setup_ui(self):
-        self.root.title("Optimierungsalgorithmen GUI")
-        
         self.root.title("Optimierungsalgorithmen GUI")
 
         # Create input fields and place them in UI
@@ -58,10 +58,17 @@ class GUI:
         self.greedy_strat.grid(row=7, column=1)
         self.greedy_strat.grid_remove()
 
+        # Choose Local Search strategy
         self.local_search_neighborhood_selector = ttk.Combobox(frame_inputs, values=["Geometriebasiert", "Regelbasiert", "Überlappungen teilweise zulassen"])
         self.local_search_neighborhood_selector.set("Geometriebasiert")
         self.local_search_neighborhood_selector.grid(row=7, column=1)
         self.local_search_neighborhood_selector.grid_remove()
+
+        # Maximum Iterations for Local Search
+        self.local_search_max_iterations_label = tk.Label(frame_inputs, text="Maximum Iterationen")
+        self.local_search_max_iterations_label.grid(row=8, column=0)
+        self.local_search_max_iterations = tk.Entry(frame_inputs)
+        self.local_search_max_iterations.grid(row=8, column=1)
 
         # Function to toggle visibility based on strategy
         self.algo_selector.bind("<<ComboboxSelected>>", self.update_algorithm)
@@ -100,13 +107,20 @@ class GUI:
         # Configure the canvas to work with the vertical scrollbar
         self.canvas.configure(yscrollcommand=v_scrollbar.set)
         
+    # Chnages visibility for widgets based on the selected algorithm    
     def update_algorithm(self, *args):
         if self.algo_selector.get() == "Greedy":
             self.local_search_neighborhood_selector.grid_remove()
+            self.local_search_max_iterations.grid_remove()
+            self.local_search_max_iterations_label.grid_remove()
+            self.local_search_max_iterations_is_visible = False
             self.greedy_strat.grid()
         elif self.algo_selector.get() == "Lokale Suche":
             self.greedy_strat.grid_remove()
             self.local_search_neighborhood_selector.grid()
+            self.local_search_max_iterations.grid()
+            self.local_search_max_iterations_label.grid()
+            self.local_search_max_iterations_is_visible = True
 
     def validate_inputs(self):
         errors = []
@@ -127,6 +141,10 @@ class GUI:
                 errors.append("Min Höhe größer als Max Höhe")
             if box_length < 1:
                 errors.append("Die Länge der Box muss mind. 1 sein")
+            if self.local_search_max_iterations_is_visible:
+                max_iterations = int(self.local_search_max_iterations.get())
+                if max_iterations < 1:
+                    errors.append("Es muss mindestens eine Iteration ausgeführt werden")
 
         except ValueError:
             # Converting into ints fails
@@ -163,7 +181,8 @@ class GUI:
             solution = self.local_search(
                 self.rectangles, 
                 self.L, 
-                self.local_search_neighborhood_selector.get()
+                self.local_search_neighborhood_selector.get(),
+                int(self.local_search_max_iterations.get())
             )
         self.visualize_solution(solution)
 

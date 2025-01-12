@@ -16,14 +16,14 @@ def main():
         greedy_solver = Greedy(problem, strategy_map[strategy_name])
         return greedy_solver.solve()
 
-    def local_search_algorithm(rectangles, box_length, neighborhood_name):
+    def local_search_algorithm(rectangles, box_length, neighborhood_name, max_iterations):
         neighborhood_map = {
             "Geometriebasiert": GeometryBasedStrategy(),
             "Regelbasiert": RuleBasedStrategy(),
             "Überlappungen teilweise zulassen": OverlapStrategy(initial_overlap=0.1)
         }
         problem = RectanglePacker(rectangles, box_length, neighborhood_map[neighborhood_name])
-        local_search_solver = LocalSearch(problem, neighborhood_map[neighborhood_name])
+        local_search_solver = LocalSearch(problem, neighborhood_map[neighborhood_name], max_iterations)
         return local_search_solver.solve()
 
     root = tk.Tk()
