@@ -10,10 +10,8 @@ class GUI:
         self.generate_instances = generate_instances
         self.greedy_algorithm = greedy_algorithm
         self.local_search = local_search
-        
         self.rectangles = []
         self.L = 0
-        
         self.setup_ui()
     
     def setup_ui(self):
@@ -88,6 +86,12 @@ class GUI:
         btn_run = tk.Button(frame_buttons, text="Algorithmus ausführen", command=self.run_algorithm)
         btn_run.grid(row=0, column=1, padx=5)
 
+        btn_import = tk.Button(frame_buttons, text="Import Rectangles", command=self.import_rectangles)
+        btn_import.grid(row=1, column=0, padx=5)
+
+        btn_export = tk.Button(frame_buttons, text="Export Rectangles", command=self.export_rectangles)
+        btn_export.grid(row=1, column=1, padx=5)
+
         # Display Status of Program and the canvas with the rectangles
         self.label_status = tk.Label(self.root, text="Status: Bereit")
         self.label_status.pack()
@@ -107,7 +111,7 @@ class GUI:
         # Configure the canvas to work with the vertical scrollbar
         self.canvas.configure(yscrollcommand=v_scrollbar.set)
         
-    # Chnages visibility for widgets based on the selected algorithm    
+    # Changes visibility for widgets based on the selected algorithm    
     def update_algorithm(self, *args):
         if self.algo_selector.get() == "Greedy":
             self.local_search_neighborhood_selector.grid_remove()
@@ -186,7 +190,6 @@ class GUI:
             )
         self.visualize_solution(solution)
 
-    
     def visualize_solution(self, solution):
         self.canvas.delete("all")
 
@@ -226,3 +229,11 @@ class GUI:
     def update_scrollregion(self):
         self.canvas.update_idletasks()
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+        
+    def import_rectangles(self):
+        print("Importing")
+        pass
+    
+    def export_rectangles(self):
+        print("Exporting")
+        pass
