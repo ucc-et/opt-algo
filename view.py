@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import ttk
 import random
 
+from numpy import empty
+
 class GUI:
     def __init__(self, root, generate_instances, greedy_algorithm, local_search):
         self.root = root
@@ -15,8 +17,6 @@ class GUI:
         self.setup_ui()
     
     def setup_ui(self):
-        self.root.title("Optimierungsalgorithmen GUI")
-        
         self.root.title("Optimierungsalgorithmen GUI")
 
         # Create input fields and place them in UI
@@ -58,14 +58,25 @@ class GUI:
         self.greedy_strat.grid(row=7, column=1)
         self.greedy_strat.grid_remove()
 
+        # Choose Local Search strategy
         self.local_search_neighborhood_selector = ttk.Combobox(frame_inputs, values=["Geometriebasiert", "Regelbasiert", "Überlappungen teilweise zulassen"])
         self.local_search_neighborhood_selector.set("Geometriebasiert")
         self.local_search_neighborhood_selector.grid(row=7, column=1)
         self.local_search_neighborhood_selector.grid_remove()
 
+        # Maximum Iterations for Local Search
+        self.local_search_max_iterations_label = tk.Label(frame_inputs, text="Maximum Iterationen")
+        self.local_search_max_iterations_label.grid(row=8, column=0)
+        self.local_search_max_iterations = tk.Entry(frame_inputs)
+        self.local_search_max_iterations.grid(row=8, column=1)
+
         # Function to toggle visibility based on strategy
         self.algo_selector.bind("<<ComboboxSelected>>", self.update_algorithm)
         self.update_algorithm()
+
+        # Label for error messages
+        self.error_label = tk.Label(self.root, text="", fg="red")
+        self.error_label.pack()
 
         # Create Buttons in UI to Generate Instances and Start Packer
         frame_buttons = tk.Frame(self.root)
@@ -96,24 +107,67 @@ class GUI:
         # Configure the canvas to work with the vertical scrollbar
         self.canvas.configure(yscrollcommand=v_scrollbar.set)
         
+    # Chnages visibility for widgets based on the selected algorithm    
     def update_algorithm(self, *args):
         if self.algo_selector.get() == "Greedy":
             self.local_search_neighborhood_selector.grid_remove()
+            self.local_search_max_iterations.grid_remove()
+            self.local_search_max_iterations_label.grid_remove()
+            self.local_search_max_iterations_is_visible = False
             self.greedy_strat.grid()
         elif self.algo_selector.get() == "Lokale Suche":
             self.greedy_strat.grid_remove()
             self.local_search_neighborhood_selector.grid()
-    
-    def generate_rectangles(self):
-        n = int(self.entry_num_rectangles.get())
-        min_w = int(self.entry_min_width.get())
-        max_w = int(self.entry_max_width.get())
-        min_h = int(self.entry_min_height.get())
-        max_h = int(self.entry_max_height.get())
-        self.L = int(self.entry_box_length.get())
+            self.local_search_max_iterations.grid()
+            self.local_search_max_iterations_label.grid()
+            self.local_search_max_iterations_is_visible = True
 
-        self.rectangles = self.generate_instances(n, min_w, max_w, min_h, max_h)
-        self.label_status.config(text=f"{n} Rechtecke generiert!")
+    def validate_inputs(self):
+        errors = []
+
+        try:
+            num_rectangles = int(self.entry_num_rectangles.get())
+            min_width = int(self.entry_min_width.get())
+            max_width = int(self.entry_max_width.get())
+            min_height = int(self.entry_min_height.get())
+            max_height = int(self.entry_max_height.get())
+            box_length = int(self.entry_box_length.get())
+
+            if num_rectangles < 1:
+                errors.append("Es muss mind. 1 rechteck geben")
+            if min_width > max_width:
+                errors.append("Min Breite größer als Max Breite")
+            if min_height > max_height:
+                errors.append("Min Höhe größer als Max Höhe")
+            if box_length < 1:
+                errors.append("Die Länge der Box muss mind. 1 sein")
+            if self.local_search_max_iterations_is_visible:
+                max_iterations = int(self.local_search_max_iterations.get())
+                if max_iterations < 1:
+                    errors.append("Es muss mindestens eine Iteration ausgeführt werden")
+
+        except ValueError:
+            # Converting into ints fails
+            errors.append("Bitte geben Sie gültige Zahlen ein und befüllen Sie alle Felder")
+
+        return errors
+
+    def generate_rectangles(self):
+        self.error_label.config(text="")
+        errors = self.validate_inputs()
+
+        if errors:
+            self.error_label.config(text="\n".join(errors), fg="red")
+        else:
+            n = int(self.entry_num_rectangles.get())
+            min_w = int(self.entry_min_width.get())
+            max_w = int(self.entry_max_width.get())
+            min_h = int(self.entry_min_height.get())
+            max_h = int(self.entry_max_height.get())
+            self.L = int(self.entry_box_length.get())
+
+            self.rectangles = self.generate_instances(n, min_w, max_w, min_h, max_h)
+            self.label_status.config(text=f"{n} Rechtecke generiert!")
         
     def run_algorithm(self):
         algorithm = self.algo_selector.get()
@@ -127,7 +181,8 @@ class GUI:
             solution = self.local_search(
                 self.rectangles, 
                 self.L, 
-                self.local_search_neighborhood_selector.get()
+                self.local_search_neighborhood_selector.get(),
+                int(self.local_search_max_iterations.get())
             )
         self.visualize_solution(solution)
 
