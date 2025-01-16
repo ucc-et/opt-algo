@@ -232,11 +232,41 @@ class GUI:
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
         
     def import_rectangles(self):
-        print("Importing")
-        pass
+        file_path = filedialog.askopenfilename(filetypes=[("JSON files", "*.json")])
+        if file_path:
+            try:
+                with open(file_path, "r") as file:
+                    data = json.load(file)
+                    
+                    # Populate rectangles and box length
+                    self.rectangles = data.get("rectangles", [])
+                    self.L = data.get("box_length", 0)
+                    
+                    # Update input fields
+                    self.entry_num_rectangles.delete(0, tk.END)
+                    self.entry_num_rectangles.insert(0, data.get("num_rectangles", ""))
+                    
+                    self.entry_min_width.delete(0, tk.END)
+                    self.entry_min_width.insert(0, data.get("min_width", ""))
+                    
+                    self.entry_max_width.delete(0, tk.END)
+                    self.entry_max_width.insert(0, data.get("max_width", ""))
+                    
+                    self.entry_min_height.delete(0, tk.END)
+                    self.entry_min_height.insert(0, data.get("min_height", ""))
+                    
+                    self.entry_max_height.delete(0, tk.END)
+                    self.entry_max_height.insert(0, data.get("max_height", ""))
+                    
+                    self.entry_box_length.delete(0, tk.END)
+                    self.entry_box_length.insert(0, self.L)
+                    
+                    self.label_status.config(text="Rechtecke erfolgreich importiert!")
+            except Exception as e:
+                self.error_label.config(text=f"Fehler beim Importieren: {e}", fg="red")
     
     def export_rectangles(self):
-        default_filename = "exported_rectangles.json"
+        default_filename = "rectangles.json"
         file_path = filedialog.asksaveasfilename(
             initialfile=default_filename,
             defaultextension=".json",
@@ -247,7 +277,12 @@ class GUI:
                 with open(file_path, "w") as file:
                     data = {
                         "rectangles": self.rectangles,
-                        "box_length": self.L
+                        "box_length": self.L,
+                        "num_rectangles": len(self.rectangles),
+                        "min_width": self.entry_min_width.get(),
+                        "max_width": self.entry_max_width.get(),
+                        "min_height": self.entry_min_height.get(),
+                        "max_height": self.entry_max_height.get(),
                     }
                     json.dump(data, file)
                     self.label_status.config(text="Rechtecke erfolgreich exportiert!")
