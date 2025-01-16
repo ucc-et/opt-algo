@@ -1,6 +1,7 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, filedialog
 import random
+import json
 
 from numpy import empty
 
@@ -235,5 +236,20 @@ class GUI:
         pass
     
     def export_rectangles(self):
-        print("Exporting")
-        pass
+        default_filename = "exported_rectangles.json"
+        file_path = filedialog.asksaveasfilename(
+            initialfile=default_filename,
+            defaultextension=".json",
+            filetypes=[("JSON files", "*.json")]
+        )
+        if file_path:
+            try:
+                with open(file_path, "w") as file:
+                    data = {
+                        "rectangles": self.rectangles,
+                        "box_length": self.L
+                    }
+                    json.dump(data, file)
+                    self.label_status.config(text="Rechtecke erfolgreich exportiert!")
+            except Exception as e:
+                self.error_label.config(text=f"Fehler beim Exportieren: {e}", fg="red")
