@@ -33,9 +33,10 @@ class Greedy:
 
 class LocalSearch:
     
-    def __init__(self, problem, neighborhood):
+    def __init__(self, problem, neighborhood, max_iterations):
         self.problem = problem
         self.neighborhood = neighborhood
+        self.max_iterations = max_iterations
         
     def solve(self):
         current_solution = self.problem.start_solution()
