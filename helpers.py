@@ -10,8 +10,7 @@ def generate_instances(n, min_width, max_width, min_height, max_height):
     min_height: A rectangle has to have a height that is bigger or equals min_height
     max_height: A rectangle has to have a height that is smaller or equals max_height
     """
-
-    return [(random.randint(0, max_width - min_width), random.randint(0, max_height - min_height), random.randint(min_width, max_width), random.randint(min_height, max_height)) for _ in range(n)]
+    return [(None, None, random.randint(min_width, max_width), random.randint(min_height, max_height)) for _ in range(n)]
 
 def rectangle_fits_in_box(box, rect, L):
     """
@@ -20,10 +19,14 @@ def rectangle_fits_in_box(box, rect, L):
     rect: Width and Height of Rectangle
     L: Box dimensions
     """
-    for x, y, w, h in box:
-        if not (rect[0] + rect[2] <= x or x + w <= rect[0] or rect[1] + rect[3] <= y or y + h <= rect[1]):
+    x, y, w, h = rect
+    if x is None or y is None:
+        x, y = 0, 0  # Default position for uninitialized rectangles
+
+    for bx, by, bw, bh in box:
+        if not (x + w <= bx or bx + bw <= x or y + h <= by or by + bh <= y):
             return False
-    return rect[0] + rect[2] <= L and rect[1] + rect[3] <= L
+    return x + w <= L and y + h <= L
 
 def calculate_objective(boxes):
     """

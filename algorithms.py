@@ -6,30 +6,16 @@ class Greedy:
         self.strategy = strategy
     
     def solve(self):
-        current_solution = self.problem.start_solution()
-        best_solution = current_solution
-        best_value = self.problem.evaluate_solution(best_solution)
+        current_solution = []  # Start with an empty solution
+        best_value = self.problem.evaluate_solution(current_solution)
+        # Iterate over all instances and place each one
+        for instance in self.problem.get_instances():
+            new_solution = self.problem.place_instance(current_solution, instance)
+            if new_solution is not None:
+                current_solution = new_solution
 
-        while True:
-            neighbors = self.problem.generate_neighbors(current_solution)
-            best_neighbor = None
-            best_neighbor_value = best_value
+        return current_solution
 
-            for neighbor in neighbors:
-                neighbor_value = self.problem.evaluate_solution(neighbor)
-                if neighbor_value > best_neighbor_value:
-                    best_neighbor = neighbor
-                    best_neighbor_value = neighbor_value
-
-            if best_neighbor is None:
-                break
-
-            current_solution = best_neighbor
-            if best_neighbor_value > best_value:
-                best_solution = best_neighbor
-                best_value = best_neighbor_value
-
-        return best_solution
 
 class LocalSearch:
     
