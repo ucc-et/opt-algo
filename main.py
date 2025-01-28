@@ -8,12 +8,16 @@ from helpers import generate_instances
 def main():
 
     def greedy_algorithm(rectangles, box_length, strategy_name):
-        strategy_map = {
-            "area": "area",  # Add appropriate strategy configurations if needed
-            "aspect_ratio": "aspect_ratio"
-        }
-        problem = RectanglePacker(rectangles, box_length, GeometryBasedStrategy())
-        greedy_solver = Greedy(problem, strategy_map[strategy_name])
+        if strategy_name == "largest_area_first":
+            rectangles = sorted(rectangles, key=lambda r: r[2] * r[3], reverse=True)
+        elif strategy_name == "smallest_area_first":
+            rectangles = sorted(rectangles, key=lambda r: r[2] * r[3])
+        elif strategy_name == "largest_aspect_ratio_first":
+            rectangles = sorted(rectangles, key=lambda r: max(r[2] / r[3], r[3] / r[2]), reverse=True)
+        elif strategy_name == "smallest_aspect_ratio_first":
+            rectangles = sorted(rectangles, key=lambda r: max(r[2] / r[3], r[3] / r[2]))
+        problem = RectanglePacker(rectangles, box_length)
+        greedy_solver = Greedy(problem, strategy_name)
         return greedy_solver.solve()
 
     def local_search_algorithm(rectangles, box_length, neighborhood_name, max_iterations):

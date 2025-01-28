@@ -23,12 +23,12 @@ class OptimizationProblem(ABC):
         pass
     
     @abstractmethod
-    def place_instance(self, boxes, rectangle):
+    def add_to_solution(self, boxes, rectangle):
         pass
 
 class RectanglePacker(OptimizationProblem):
     
-    def __init__(self, rectangles, box_length, neighborhood_strategy):
+    def __init__(self, rectangles, box_length, neighborhood_strategy = None):
         self.rectangles = rectangles
         self.box_length = box_length
         self.neighborhood_strategy = neighborhood_strategy
@@ -39,10 +39,13 @@ class RectanglePacker(OptimizationProblem):
         box: [rectangle, rectangle, ...]
     """
     
+    def get_box_length(self):
+        return self.box_length
+    
     def get_instances(self):
         return self.rectangles
     
-    def place_instance(self, boxes, rectangle):
+    def add_to_solution(self, boxes, rectangle):
         # place the rectangle in one of the boxes. If it does not fit, it will add a new box, and initialize the rectangle at 0, 0
         rectangle_list_item = [rectangle[0], rectangle[1], rectangle[2], rectangle[3]]
         
@@ -55,6 +58,14 @@ class RectanglePacker(OptimizationProblem):
                 rectangle_list_item[0] = x
                 rectangle_list_item[1] = y
                 box.append(rectangle_list_item)
+                return
+            
+            rotated_rectangle = [rectangle_list_item[0], [1], rectangle_list_item[3], rectangle_list_item[2]]
+            x, y = self.fit_rectangle_inside_box(box, rotated_rectangle)
+            if x is not None and y is not None:
+                rotated_rectangle[0] = x
+                rotated_rectangle[1] = y
+                box.append(rotated_rectangle)
                 return
 
         # If no box can fit the rectangle, create a new box

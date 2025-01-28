@@ -53,8 +53,8 @@ class GUI:
         self.algo_selector.grid(row=6, column=1)
 
         # Choose Greedy strategy
-        self.greedy_strat = ttk.Combobox(frame_inputs, values=["area", "aspect_ratio"])
-        self.greedy_strat.set("area")
+        self.greedy_strat = ttk.Combobox(frame_inputs, values=["largest_area_first", "smalles_area_first", "largest_aspect_ratio_first", "smallest_aspect_ratio_first"])
+        self.greedy_strat.set("largest_area_first")
         self.greedy_strat.grid(row=7, column=1)
         self.greedy_strat.grid_remove()
 

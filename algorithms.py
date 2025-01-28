@@ -1,7 +1,7 @@
 from problem import OptimizationProblem
 
 class Greedy:
-    def __init__(self, problem: OptimizationProblem, strategy):
+    def __init__(self, problem: OptimizationProblem, strategy = "largest_area_first"):
         self.problem = problem
         self.strategy = strategy
     
@@ -10,7 +10,7 @@ class Greedy:
         best_value = self.problem.evaluate_solution(current_solution)
         # Iterate over all instances and place each one
         for instance in self.problem.get_instances():
-            new_solution = self.problem.place_instance(current_solution, instance)
+            new_solution = self.problem.add_to_solution(current_solution, instance)
             if new_solution is not None:
                 current_solution = new_solution
 
