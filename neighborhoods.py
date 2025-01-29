@@ -2,85 +2,109 @@ from abc import ABC, abstractmethod
 import random
 from itertools import permutations
 
+from objects import Box, RecPac_Solution, Rectangle
+from problem import OptimizationProblem
+
 class NeighborhoodStrategy(ABC):
     @abstractmethod
-    def generate_neighbors(self, solution, problem_data):
+    def generate_neighbor(self, solution):
         pass
 
 
 class GeometryBasedStrategy(NeighborhoodStrategy):
-    def generate_neighbors(self, solution, problem_data):
-        neighbors = []
-        for i in range(len(solution)):
-            for j in range(len(solution)):
-                if i != j:
-                    for rect in solution[i]:
-                        new_solution = [list(box) for box in solution]
-                        new_solution[i].remove(rect)
-                        new_solution[j].append(rect)
-                        if not new_solution[i]:  # Remove empty box
-                            del new_solution[i]
-                        neighbors.append(new_solution)
-        return neighbors
+    def generate_neighbor(self, solution: RecPac_Solution):
+        if not solution.boxes:
+            return solution
+        
+        new_solution = RecPac_Solution()
+        new_solution.set_boxes([Box(box.box_length) for box in solution.boxes])
+        
+        for box in solution.boxes:
+            for rect in box.rectangles:
+                new_solution.boxes[solution.boxes.index(box)].add_rectangle(rect)
+        
+        box_from = random.choice(new_solution.boxes)
+        if not box_from.rectangles:
+            return new_solution
+        
+        rect_to_move = random.choice(box_from.rectangles)
+        box_from.remove_rectangle(rect_to_move)
+        
+        if random.random() < 0.5:  # Move within the same box
+            rect_to_move.x = random.randint(0, box_from.box_length - rect_to_move.width)
+            rect_to_move.y = random.randint(0, box_from.box_length - rect_to_move.height)
+            box_from.add_rectangle(rect_to_move)
+        else:  # Move to another box
+            box_to = random.choice(new_solution.boxes)
+            rect_to_move.x = random.randint(0, box_to.box_length - rect_to_move.width)
+            rect_to_move.y = random.randint(0, box_to.box_length - rect_to_move.height)
+            box_to.add_rectangle(rect_to_move)
+        
+        return new_solution
 
 class RuleBasedStrategy(NeighborhoodStrategy):
-    def generate_neighbors(self, solution, problem_data):
-        rect_permutations = list(permutations(problem_data.rectangles))
-        perm_index = random.randint(0, len(rect_permutations) - 1)
-        current_perm = list(rect_permutations[perm_index])
-        if len(current_perm) > 1:
-            idx1, idx2 = random.sample(range(len(current_perm)), 2)
-            current_perm[idx1], current_perm[idx2] = current_perm[idx2], current_perm[idx1]
-            new_solution = [[rect] for rect in current_perm]
-            return [new_solution]
-        return [solution]
+    def generate_neighbor(self, solution: RecPac_Solution):
+        if not solution.boxes:
+            return solution
+        
+        new_solution = RecPac_Solution()
+        new_solution.set_boxes([Box(box.box_length) for box in solution.boxes])
+        
+        rectangles = [rect for box in solution.boxes for rect in box.rectangles]
+        random.shuffle(rectangles)
+        
+        for i, rect in enumerate(rectangles):
+            box_idx = i % len(new_solution.boxes)
+            new_solution.boxes[box_idx].add_rectangle(rect)
+        
+        return new_solution
     
 class OverlapStrategy(NeighborhoodStrategy):
 
-    def __init__(self, initial_overlap):
-        self.initial_overlap = initial_overlap
-        self.current_overlap = initial_overlap
+    def __init__(self, initial_overlap: float = 1.0, decay_rate: float = 0.05):
+        self.overlap_percentage = initial_overlap
+        self.decay_rate = decay_rate
 
-    def generate_neighbors(self, solution, problem_data):
-        neighbors = []
-        for i in range(len(solution)):
-            for j in range(len(solution)):
-                if i != j:
-                    for index, rect in enumerate(solution[i]):
-                        # Try moving rect to another box and check overlap
-                        for target_rect in solution[j]:
-                            if self.check_overlap_allowed(rect, target_rect, problem_data):
-                                new_solution = [list(box) for box in solution]
-                                new_solution[i].remove(rect)
-                                new_solution[j].append(rect)
-                                if not new_solution[i]:  # Remove empty box
-                                    del new_solution[i]
-                                neighbors.append(new_solution)
-        return neighbors
+    def generate_neighbor(self, solution: RecPac_Solution):
+        if not solution.boxes:
+            return solution
+        
+        new_solution = RecPac_Solution()
+        new_solution.set_boxes([Box(box.box_length) for box in solution.boxes])
+        
+        for box in solution.boxes:
+            for rect in box.rectangles:
+                new_solution.boxes[solution.boxes.index(box)].add_rectangle(rect)
+        
+        box_from = random.choice(new_solution.boxes)
+        if not box_from.rectangles:
+            return new_solution
+        
+        rect_to_move = random.choice(box_from.rectangles)
+        box_from.remove_rectangle(rect_to_move)
+        
+        box_to = random.choice(new_solution.boxes)
+        rect_to_move.x = random.randint(0, box_to.box_length - rect_to_move.width)
+        rect_to_move.y = random.randint(0, box_to.box_length - rect_to_move.height)
+        
+        if self.check_overlap(box_to, rect_to_move):
+            box_to.add_rectangle(rect_to_move)
+        else:
+            box_from.add_rectangle(rect_to_move)  # Revert the move if too much overlap
+        
+        self.overlap_percentage = max(0, self.overlap_percentage - self.decay_rate)
+        
+        return new_solution
     
-    def update_threshold(self, decrement):
-        self.current_overlap = max(0, self.current_overlap - decrement)
-
-    def calculate_overlap(self, rectangle1, rectangle2):
-        x1, y1, w1, h1 = rectangle1
-        x2, y2, w2, h2 = rectangle2
-
-        # Calculate the coordinates of the overlap rectangle
-        overlap_x1 = max(x1, x2)
-        overlap_y1 = max(y1, y2)
-        overlap_x2 = min(x1 + w1, x2 + w2)
-        overlap_y2 = min(y1 + h1, y2 + h2)
-
-        # Calculate dimensions of the overlap area
-        overlap_width = max(0, overlap_x2 - overlap_x1)
-        overlap_height = max(0, overlap_y2 - overlap_y1)
-
-        return overlap_width * overlap_height
-    
-    def check_overlap_allowed(self, rectangle1, rectangle2, problem_data):
-        overlap_area = self.calculate_overlap(rectangle1, rectangle2)
-        max_area = max(rectangle1[2] * rectangle1[3], rectangle2[2] * rectangle2[3])  # width * height
-        overlap_ratio = overlap_area / max_area
-
-        # Check if overlap is within the current allowed threshold
-        return overlap_ratio <= self.current_overlap
+    def check_overlap(self, box: Box, rect: Rectangle):
+        total_area = box.box_length ** 2
+        overlapping_area = 0
+        
+        for existing_rect in box.rectangles:
+            x_overlap = max(0, min(existing_rect.x + existing_rect.width, rect.x + rect.width) - max(existing_rect.x, rect.x))
+            y_overlap = max(0, min(existing_rect.y + existing_rect.height, rect.y + rect.height) - max(existing_rect.y, rect.y))
+            overlapping_area += x_overlap * y_overlap
+        
+        if overlapping_area / max(rect.width * rect.height, 1) <= self.overlap_percentage:
+            return True
+        return False

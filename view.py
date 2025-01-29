@@ -1,18 +1,20 @@
 import tkinter as tk
 from tkinter import ttk, filedialog
 import random
+from typing import List
+from helpers import generate_instances
+from objects import Rectangle
 import json
 
-from numpy import empty
-
 class GUI:
-    def __init__(self, root, generate_instances, greedy_algorithm, local_search):
+    def __init__(self, root, greedy_algorithm, local_search):
         self.root = root
-        self.generate_instances = generate_instances
         self.greedy_algorithm = greedy_algorithm
         self.local_search = local_search
-        self.rectangles = []
-        self.L = 0
+        
+        self.instances: List[Rectangle] = []
+        self.box_size: int = 0
+        
         self.setup_ui()
     
     def setup_ui(self):
@@ -52,8 +54,8 @@ class GUI:
         self.algo_selector.grid(row=6, column=1)
 
         # Choose Greedy strategy
-        self.greedy_strat = ttk.Combobox(frame_inputs, values=["area", "aspect_ratio"])
-        self.greedy_strat.set("area")
+        self.greedy_strat = ttk.Combobox(frame_inputs, values=["Größte Fläche zuerst", "Kleinste Fläche zuerst", "Größtes Seitenverhältnis zuerst", "Kleinstes Seitenverhältnis zuerst"])
+        self.greedy_strat.set("Größte Fläche zuerst")
         self.greedy_strat.grid(row=7, column=1)
         self.greedy_strat.grid_remove()
 
@@ -81,7 +83,7 @@ class GUI:
         frame_buttons = tk.Frame(self.root)
         frame_buttons.pack(pady=10)
 
-        btn_generate = tk.Button(frame_buttons, text="Instanz generieren", command=self.generate_rectangles)
+        btn_generate = tk.Button(frame_buttons, text="Instanz generieren", command=self.generate_rectangles_clicked)
         btn_generate.grid(row=0, column=0, padx=5)
 
         btn_run = tk.Button(frame_buttons, text="Algorithmus ausführen", command=self.run_algorithm)
@@ -146,6 +148,8 @@ class GUI:
                 errors.append("Min Höhe größer als Max Höhe")
             if box_length < 1:
                 errors.append("Die Länge der Box muss mind. 1 sein")
+            if min_width > box_length or max_width > box_length or min_height > box_length or max_height > box_length:
+                errors.append("Die Rechtecke dürfen nicht breiter/höher sein als die Box")
             if self.local_search_max_iterations_is_visible:
                 max_iterations = int(self.local_search_max_iterations.get())
                 if max_iterations < 1:
@@ -157,7 +161,7 @@ class GUI:
 
         return errors
 
-    def generate_rectangles(self):
+    def generate_rectangles_clicked(self):
         self.error_label.config(text="")
         errors = self.validate_inputs()
 
@@ -169,23 +173,23 @@ class GUI:
             max_w = int(self.entry_max_width.get())
             min_h = int(self.entry_min_height.get())
             max_h = int(self.entry_max_height.get())
-            self.L = int(self.entry_box_length.get())
+            self.box_size = int(self.entry_box_length.get())
 
-            self.rectangles = self.generate_instances(n, min_w, max_w, min_h, max_h)
+            self.instances = generate_instances(n, min_w, max_w, min_h, max_h)
             self.label_status.config(text=f"{n} Rechtecke generiert!")
         
     def run_algorithm(self):
         algorithm = self.algo_selector.get()
         if algorithm == "Greedy":
             solution = self.greedy_algorithm(
-                self.rectangles, 
-                self.L, 
+                self.instances, 
+                self.box_size, 
                 self.greedy_strat.get()
             )
         elif algorithm == "Lokale Suche":
             solution = self.local_search(
-                self.rectangles, 
-                self.L, 
+                self.instances, 
+                self.box_size, 
                 self.local_search_neighborhood_selector.get(),
                 int(self.local_search_max_iterations.get())
             )
@@ -200,22 +204,22 @@ class GUI:
         row_height = 0
         canvas_width = self.canvas.winfo_width()
 
-        for box_id, box in enumerate(solution):
-            if x_offset + self.L + box_padding > canvas_width:
+        for box_id, box in enumerate(solution.boxes):
+            if x_offset + self.box_size + box_padding > canvas_width:
                 x_offset = 0
                 y_offset += row_height + box_padding
                 row_height = 0
 
-            row_height = max(row_height, self.L)
+            row_height = max(row_height, self.box_size)
 
             self.canvas.create_rectangle(
                 x_offset, y_offset,
-                x_offset + self.L, y_offset + self.L,
+                x_offset + self.box_size, y_offset + self.box_size,
                 outline="black"
             )
 
-            for rect in box:
-                x, y, w, h = rect
+            for rect in box.rectangles:
+                x, y, w, h = rect.x, rect.y, rect.width, rect.height
                 self.canvas.create_rectangle(
                     x_offset + x, y_offset + y,
                     x_offset + x + w, y_offset + y + h,
@@ -223,7 +227,7 @@ class GUI:
                     outline="black"
                 )
 
-            x_offset += self.L + box_padding
+            x_offset += self.box_size + box_padding
 
         self.update_scrollregion()
         

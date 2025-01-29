@@ -1,62 +1,50 @@
+from neighborhoods import NeighborhoodStrategy
+from objects import RecPac_Solution
 from problem import OptimizationProblem
 
 class Greedy:
-    def __init__(self, problem: OptimizationProblem, strategy):
+    def __init__(self, problem: OptimizationProblem, strategy = "largest_area_first"):
         self.problem = problem
         self.strategy = strategy
     
     def solve(self):
-        current_solution = self.problem.start_solution()
-        best_solution = current_solution
-        best_value = self.problem.evaluate_solution(best_solution)
+        current_solution = RecPac_Solution() # Start with an empty solution
+        best_value = current_solution.evaluate_solution()
+        # Iterate over all instances and place each one
+        for instance in self.problem.rectangles:
+            new_solution = self.problem.add_to_solution(current_solution, instance)
+            if new_solution is not None:
+                current_solution = new_solution
 
-        while True:
-            neighbors = self.problem.generate_neighbors(current_solution)
-            best_neighbor = None
-            best_neighbor_value = best_value
+        return current_solution
 
-            for neighbor in neighbors:
-                neighbor_value = self.problem.evaluate_solution(neighbor)
-                if neighbor_value > best_neighbor_value:
-                    best_neighbor = neighbor
-                    best_neighbor_value = neighbor_value
-
-            if best_neighbor is None:
-                break
-
-            current_solution = best_neighbor
-            if best_neighbor_value > best_value:
-                best_solution = best_neighbor
-                best_value = best_neighbor_value
-
-        return best_solution
 
 class LocalSearch:
-    
-    def __init__(self, problem, neighborhood, max_iterations):
+    def __init__(self, problem: OptimizationProblem, max_iterations: int, neighborhood_strategy: NeighborhoodStrategy):
         self.problem = problem
-        self.neighborhood = neighborhood
         self.max_iterations = max_iterations
-        
+        self.neighborhood_strategy = neighborhood_strategy
+
     def solve(self):
-        current_solution = self.problem.start_solution()
+        current_solution = self.problem.basic_solution()
         best_solution = current_solution
-        best_value = self.problem.evaluate_solution(best_solution)
+        best_value = best_solution.evaluate_solution()
+        iteration = 0
 
-        while True:
-            neighbors = self.problem.generate_neighbors(current_solution)
-            improved = False
-            for neighbor in neighbors:
-                neighbor_value = self.problem.evaluate_solution(neighbor)
-                if neighbor_value > best_value:
-                    current_solution = neighbor
-                    best_solution = neighbor
-                    best_value = neighbor_value
-                    improved = True
-                    break
+        while iteration < self.max_iterations:
+            # Generate a single neighbor (adjust to match your strategy's behavior)
+            neighbor = self.neighborhood_strategy.generate_neighbor(current_solution)
+            
+            neighbor_value = neighbor.evaluate_solution()
+            if neighbor_value > best_value:
+                current_solution = neighbor
+                best_solution = neighbor
+                best_value = neighbor_value
+            else:
+                # No improvement; optionally log or debug this
+                pass
 
-            if not improved:
-                break
+            iteration += 1
 
         return best_solution
 
