@@ -7,13 +7,13 @@ from algorithms import Greedy, LocalSearch
 def main():
 
     def greedy_algorithm(rectangles, box_length, strategy_name):
-        if strategy_name == "largest_area_first":
+        if strategy_name == "Größte Fläche zuerst":
             rectangles = sorted(rectangles, key=lambda r: r.width * r.height, reverse=True)
-        elif strategy_name == "smallest_area_first":
+        elif strategy_name == "Kleinste Fläche zuerst":
             rectangles = sorted(rectangles, key=lambda r: r.width * r.height)
-        elif strategy_name == "largest_aspect_ratio_first":
+        elif strategy_name == "Größtes Seitenverhältnis zuerst":
             rectangles = sorted(rectangles, key=lambda r: max(r.width / r.height, r.height / r.width), reverse=True)
-        elif strategy_name == "smallest_aspect_ratio_first":
+        elif strategy_name == "Kleinstes Seitenverhältnis zuerst":
             rectangles = sorted(rectangles, key=lambda r: max(r.width / r.height, r.height / r.width))
         problem = RectanglePacker(rectangles, box_length)
         greedy_solver = Greedy(problem, strategy_name)
