@@ -1,7 +1,9 @@
 import random
-import copy
+from typing import List
 
-def generate_instances(n, min_width, max_width, min_height, max_height):
+from objects import Rectangle
+
+def generate_instances(n, min_width, max_width, min_height, max_height) -> List[Rectangle]:
     """
     Generate rectangle Instances.
     n: amount of rectangles that will be generated
@@ -10,60 +12,12 @@ def generate_instances(n, min_width, max_width, min_height, max_height):
     min_height: A rectangle has to have a height that is bigger or equals min_height
     max_height: A rectangle has to have a height that is smaller or equals max_height
     """
-    return [(None, None, random.randint(min_width, max_width), random.randint(min_height, max_height)) for _ in range(n)]
+    
+    instances = []
+    for _ in range(n):
+        random_width = random.randint(min_width, max_width)
+        random_height = random.randint(min_height, max_height)
+        rect = Rectangle(None, None, random_width, random_height)
+        instances.append(rect)
 
-def rectangle_fits_in_box(box, rect, L):
-    """
-    Check if rectangle fits into the box. If not the result can be used, to initialize a new box.
-    box: Position and Width/Height Data.
-    rect: Width and Height of Rectangle
-    L: Box dimensions
-    """
-    x, y, w, h = rect
-    if x is None or y is None:
-        x, y = 0, 0  # Default position for uninitialized rectangles
-
-    for bx, by, bw, bh in box:
-        if not (x + w <= bx or bx + bw <= x or y + h <= by or by + bh <= y):
-            return False
-    return x + w <= L and y + h <= L
-
-def calculate_objective(boxes):
-    """
-    Objective function: Minimize the number of boxes.
-    """
-    return len(boxes)
-
-def generate_neighbors(current_solution, L, neighborhood):
-    """
-    Generate neighbors by making small changes to the current solution.
-    - Move a rectangle within the same box or between boxes.
-
-    current_solution: The solution for which a neighbor will be generated
-    L: Box dimensions
-    """
-    neighbors = []
-
-    for i, box in enumerate(current_solution):
-        for j, rect in enumerate(box):
-            # Try moving the rectangle within the current box
-            for dx in range(1, L):
-                for dy in range(1, L):
-                    new_solution = copy.deepcopy(current_solution)
-                    new_solution[i].remove(rect)
-                    x, y, w, h = rect
-                    new_rect = (x + dx, y + dy, w, h)
-                    if rectangle_fits_in_box(new_solution[i], new_rect, L):
-                        new_solution[i].append(new_rect)
-                        neighbors.append(new_solution)
-            
-            # Try moving the rectangle to a different box
-            for k, other_box in enumerate(current_solution):
-                if i != k:  # Don't move to the same box
-                    new_solution = copy.deepcopy(current_solution)
-                    new_solution[i].remove(rect)
-                    if rectangle_fits_in_box(new_solution[k], rect, L):
-                        new_solution[k].append(rect)
-                        neighbors.append(new_solution)
-
-    return neighbors
+    return instances
