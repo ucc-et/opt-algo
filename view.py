@@ -11,9 +11,16 @@ class GUI:
         self.root = root
         self.greedy_algorithm = greedy_algorithm
         self.local_search = local_search
+        self.current_solution = None
         
         self.instances: List[Rectangle] = []
         self.box_size: int = 0
+        
+        self.rectangle_colors = {}
+        
+        self.zoom_factor = 1.0
+        self.zoom_steps = 0
+        self.max_zoom_steps = 4
         
         self.setup_ui()
     
@@ -89,6 +96,12 @@ class GUI:
         btn_run = tk.Button(frame_buttons, text="Algorithmus ausführen", command=self.run_algorithm)
         btn_run.grid(row=0, column=1, padx=5)
 
+        btn_zoom_in = tk.Button(frame_buttons, text="Zoom In", command=self.zoom_in)
+        btn_zoom_in.grid(row=0, column=2, padx=5)
+        
+        btn_zoom_out = tk.Button(frame_buttons, text="Zoom Out", command=self.zoom_out)
+        btn_zoom_out.grid(row=0, column=3, padx=5)
+
         btn_import = tk.Button(frame_buttons, text="Import Rechtecke", command=self.import_rectangles)
         btn_import.grid(row=1, column=0, padx=5)
 
@@ -105,7 +118,7 @@ class GUI:
 
         # Create the canvas
         self.canvas = tk.Canvas(canvas_frame, bg="white")
-        self.canvas.pack(side="left", fill="both", expand=True)
+        self.canvas.pack(fill="both", expand=True)
 
         # Add vertical scrollbar
         v_scrollbar = tk.Scrollbar(canvas_frame, orient="vertical", command=self.canvas.yview)
@@ -113,6 +126,28 @@ class GUI:
 
         # Configure the canvas to work with the vertical scrollbar
         self.canvas.configure(yscrollcommand=v_scrollbar.set)
+        
+        self.canvas.bind_all("<MouseWheel>", self.on_mousewheel)
+        
+    def on_mousewheel(self, event):
+        self.canvas.yview_scroll(-1 * (event.delta // 120), "units")
+        
+    def zoom_in(self):
+        if(self.zoom_steps < 10):
+            self.zoom_factor *= 1.2
+            self.zoom_steps += 1
+            self.redraw_canvas()
+        
+    def zoom_out(self):
+        if(self.zoom_steps > -1):
+            self.zoom_factor /= 1.2
+            self.zoom_steps -= 1
+            self.redraw_canvas()
+        
+    def redraw_canvas(self):
+        self.canvas.delete("all")
+        self.visualize_solution(self.current_solution)
+        
         
     # Changes visibility for widgets based on the selected algorithm    
     def update_algorithm(self, *args):
@@ -180,6 +215,9 @@ class GUI:
         
     def run_algorithm(self):
         algorithm = self.algo_selector.get()
+        self.zoom_factor = 1.2
+        self.zoom_steps = 0
+        self.rectangle_colors = {}
         if algorithm == "Greedy":
             solution = self.greedy_algorithm(
                 self.instances, 
@@ -193,41 +231,61 @@ class GUI:
                 self.local_search_neighborhood_selector.get(),
                 int(self.local_search_max_iterations.get())
             )
+        self.current_solution = solution
         self.visualize_solution(solution)
+
+    def get_rectangle_color(self, rect):
+        if len(self.rectangle_colors.keys()) == 0 or rect not in self.rectangle_colors.keys():
+            color = random.choice(["red", "green", "blue", "yellow", "purple", "orange", "cyan"])
+            self.rectangle_colors[rect] = color
+        else:
+            color = self.rectangle_colors[rect]
+        return color
 
     def visualize_solution(self, solution):
         self.canvas.delete("all")
 
-        box_padding = 10
+        box_padding = 10 * self.zoom_factor  # Skaliere den Abstand zwischen den Boxen
         x_offset = 0
         y_offset = 0
         row_height = 0
         canvas_width = self.canvas.winfo_width()
 
         for box_id, box in enumerate(solution.boxes):
-            if x_offset + self.box_size + box_padding > canvas_width:
+            scaled_box_length = int(self.box_size * self.zoom_factor)
+
+            # Überprüfen, ob die Box in die aktuelle Zeile passt
+            if x_offset + scaled_box_length + box_padding > canvas_width:
                 x_offset = 0
                 y_offset += row_height + box_padding
                 row_height = 0
 
-            row_height = max(row_height, self.box_size)
+            row_height = max(row_height, scaled_box_length)
 
+            # Zeichne die Box
             self.canvas.create_rectangle(
                 x_offset, y_offset,
-                x_offset + self.box_size, y_offset + self.box_size,
+                x_offset + scaled_box_length, y_offset + scaled_box_length,
                 outline="black"
             )
 
+            # Zeichne die Rechtecke innerhalb der Box
             for rect in box.rectangles:
                 x, y, w, h = rect.x, rect.y, rect.width, rect.height
+                scaled_x = int(x * self.zoom_factor) + x_offset
+                scaled_y = int(y * self.zoom_factor) + y_offset
+                scaled_w = int(w * self.zoom_factor)
+                scaled_h = int(h * self.zoom_factor)
+
                 self.canvas.create_rectangle(
-                    x_offset + x, y_offset + y,
-                    x_offset + x + w, y_offset + y + h,
-                    fill=random.choice(["red", "green", "blue", "yellow"]),
+                    scaled_x, scaled_y,
+                    scaled_x + scaled_w, scaled_y + scaled_h,
+                    fill=self.get_rectangle_color(rect),
                     outline="black"
                 )
 
-            x_offset += self.box_size + box_padding
+            # Aktualisiere den x_offset für die nächste Box
+            x_offset += scaled_box_length + box_padding
 
         self.update_scrollregion()
         
@@ -243,8 +301,8 @@ class GUI:
                     data = json.load(file)
                     
                     # Populate rectangles and box length
-                    self.rectangles = data.get("rectangles", [])
-                    self.L = data.get("box_length", 0)
+                    self.instances = [Rectangle(rect[0], rect[1], rect[2], rect[3]) for rect in data.get("rectangles", [])]
+                    self.box_size = data.get("box_length", 0)
                     
                     # Update input fields
                     self.entry_num_rectangles.delete(0, tk.END)
@@ -263,7 +321,7 @@ class GUI:
                     self.entry_max_height.insert(0, data.get("max_height", ""))
                     
                     self.entry_box_length.delete(0, tk.END)
-                    self.entry_box_length.insert(0, self.L)
+                    self.entry_box_length.insert(0, self.box_size)
                     
                     self.label_status.config(text="Rechtecke erfolgreich importiert!")
             except Exception as e:
@@ -280,9 +338,9 @@ class GUI:
             try:
                 with open(file_path, "w") as file:
                     data = {
-                        "rectangles": self.rectangles,
-                        "box_length": self.L,
-                        "num_rectangles": len(self.rectangles),
+                        "rectangles": [(instance.x, instance.y, instance.width, instance.height) for instance in self.instances],
+                        "box_length": self.box_size,
+                        "num_rectangles": len(self.instances),
                         "min_width": self.entry_min_width.get(),
                         "max_width": self.entry_max_width.get(),
                         "min_height": self.entry_min_height.get(),
