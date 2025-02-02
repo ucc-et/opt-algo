@@ -71,6 +71,17 @@ class RectanglePacker(OptimizationProblem):
 
         return None, None
 
+    def does_rectangle_fit_into_position(self, box: Box, rectangle: Rectangle):
+
+        for rect in box.rectangles:
+            if (
+                    rectangle.x < rect.x + rect.width and rectangle.x + rectangle.width > rect.x and
+                    rectangle.y < rect.y + rect.height and rectangle.y + rectangle.height > rect.y
+            ):
+                return False
+
+        return True
+
     def basic_solution(self):
         """Creates a solution, in which each rectangle has its own box
 
