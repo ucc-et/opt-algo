@@ -1,11 +1,12 @@
 import tkinter as tk
-from view import GUI
+
+from algorithms import Greedy, LocalSearch
 from neighborhoods import GeometryBasedStrategy, RuleBasedStrategy, OverlapStrategy
 from problem import RectanglePacker
-from algorithms import Greedy, LocalSearch
+from view import GUI
+
 
 def main():
-
     def greedy_algorithm(rectangles, box_length, strategy_name):
         if strategy_name == "Größte Fläche zuerst":
             rectangles = sorted(rectangles, key=lambda r: r.width * r.height, reverse=True)
@@ -33,6 +34,7 @@ def main():
     root = tk.Tk()
     app = GUI(root, greedy_algorithm, local_search_algorithm)
     root.mainloop()
+
 
 if __name__ == "__main__":
     main()

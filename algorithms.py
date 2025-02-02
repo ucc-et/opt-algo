@@ -1,17 +1,15 @@
-import math
-import random
-
 from neighborhoods import NeighborhoodStrategy
 from objects import RecPac_Solution
 from problem import OptimizationProblem
 
+
 class Greedy:
-    def __init__(self, problem: OptimizationProblem, strategy = "largest_area_first"):
+    def __init__(self, problem: OptimizationProblem, strategy="largest_area_first"):
         self.problem = problem
         self.strategy = strategy
-    
+
     def solve(self):
-        current_solution = RecPac_Solution() # Start with an empty solution
+        current_solution = RecPac_Solution()  # Start with an empty solution
         best_value = current_solution.evaluate_solution()
         # Iterate over all instances and place each one
         for instance in self.problem.rectangles:
@@ -23,7 +21,8 @@ class Greedy:
 
 
 class LocalSearch:
-    def __init__(self, problem: OptimizationProblem, start_solution: RecPac_Solution ,max_iterations: int, neighborhood_strategy: NeighborhoodStrategy, initial_temperature: float = 100.0):
+    def __init__(self, problem: OptimizationProblem, start_solution: RecPac_Solution, max_iterations: int,
+                 neighborhood_strategy: NeighborhoodStrategy, initial_temperature: float = 100.0):
         self.problem = problem
         self.start_solution = start_solution
         self.max_iterations = max_iterations
@@ -58,8 +57,10 @@ class LocalSearch:
 
         return best_solution
 
+
 class SimmulatedAnnealing:
     pass
+
 
 class Backtracking:
     pass
