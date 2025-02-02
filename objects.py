@@ -63,7 +63,7 @@ class RecPac_Solution:
             coverage = box.calculate_covered_area()
             rectangle_areas += (coverage / (box_length**2)) / 100
         
-        total_covered_area = (rectangle_areas / (box_length**2)*box_amounts)* 100
+        total_covered_area = (rectangle_areas / (box_length**2) * box_amounts) * 100
         return total_covered_area
         
     def __repr__(self):
