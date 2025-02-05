@@ -1,4 +1,5 @@
 import tkinter as tk
+from strategy import apply_strategy
 from view import GUI
 from neighborhoods import GeometryBasedStrategy, RuleBasedStrategy, OverlapStrategy
 from problem import RectanglePacker
@@ -7,14 +8,7 @@ from algorithms import Greedy, LocalSearch
 def main():
 
     def greedy_algorithm(rectangles, box_length, strategy_name):
-        if strategy_name == "Größte Fläche zuerst":
-            rectangles = sorted(rectangles, key=lambda r: r.width * r.height, reverse=True)
-        elif strategy_name == "Kleinste Fläche zuerst":
-            rectangles = sorted(rectangles, key=lambda r: r.width * r.height)
-        elif strategy_name == "Größtes Seitenverhältnis zuerst":
-            rectangles = sorted(rectangles, key=lambda r: max(r.width / r.height, r.height / r.width), reverse=True)
-        elif strategy_name == "Kleinstes Seitenverhältnis zuerst":
-            rectangles = sorted(rectangles, key=lambda r: max(r.width / r.height, r.height / r.width))
+        rectangles = apply_strategy(rectangles, strategy_name)
         problem = RectanglePacker(rectangles, box_length)
         greedy_solver = Greedy(problem, strategy_name)
         return greedy_solver.solve()
