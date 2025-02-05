@@ -1,6 +1,7 @@
 from neighborhoods import NeighborhoodStrategy
 from objects import RecPac_Solution
 from problem import OptimizationProblem
+import time
 
 
 class Greedy:
@@ -9,13 +10,19 @@ class Greedy:
         self.strategy = strategy
 
     def solve(self):
-        current_solution = RecPac_Solution()  # Start with an empty solution
+        start_time = time.time()
+
+        current_solution = RecPac_Solution() # Start with an empty solution
         best_value = current_solution.evaluate_solution()
         # Iterate over all instances and place each one
         for instance in self.problem.rectangles:
             new_solution = self.problem.add_to_solution(current_solution, instance)
             if new_solution is not None:
                 current_solution = new_solution
+
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print(f"Laufzeit Greedy: {elapsed_time:.6f} Sekunden")
 
         return current_solution
 

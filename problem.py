@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 from typing import List
 
 from objects import Box, RecPac_Solution, Rectangle
+from numba import njit
+import numpy as np
 
 
 class OptimizationProblem(ABC):
@@ -14,6 +16,28 @@ class OptimizationProblem(ABC):
     def add_to_solution(self, solution, instance) -> object:
         pass
 
+@njit
+def check_collision(x, y, width, height, rect_x, rect_y, rect_width, rect_height):
+    """Fast overlap check using Numba"""
+    return not (x >= rect_x + rect_width or x + width <= rect_x or
+                y >= rect_y + rect_height or y + height <= rect_y)
+
+@njit
+def fit_rectangle_inside_box_numba(box_length, rectangles_x, rectangles_y, rectangles_width, rectangles_height, rect_width, rect_height):
+    """Fast brute-force search for a valid rectangle position"""
+    for y in range(box_length - rect_height + 1):
+        for x in range(box_length - rect_width + 1):
+            fits = True
+            for i in range(len(rectangles_x)):  # Check all existing rectangles
+                if check_collision(x, y, rect_width, rect_height,
+                                rectangles_x[i], rectangles_y[i],
+                                rectangles_width[i], rectangles_height[i]):
+                    fits = False
+                    break  # If overlap, stop checking
+            if fits:
+                return x, y  # Found a valid position
+
+    return -1, -1  # No valid position found
 
 class RectanglePacker(OptimizationProblem):
 
@@ -25,54 +49,52 @@ class RectanglePacker(OptimizationProblem):
         return f"RectanglePacker(rectangles={self.rectangles}, box_length={self.box_length}"
 
     def add_to_solution(self, solution: RecPac_Solution, instance: Rectangle):
-        # place the rectangle in one of the boxes. If it does not fit, it will add a new box, and initialize the rectangle at 0, 0
-
-        if solution == None:
+        """Attempts to place a rectangle into an existing box. If no space is found, a new box is created."""
+        if solution is None:
             return None
 
         for box in solution.boxes:
-            x, y = self.fit_rectangle_inside_box(box, instance)
+            x, y, rotated = self.fit_rectangle_inside_box(box, instance)
             if x is not None and y is not None:
                 instance.x, instance.y = x, y
+                if rotated:
+                    instance.width, instance.height = instance.height, instance.width  # Apply rotation
                 box.add_rectangle(instance)
-                return solution
+                return solution  # Successfully placed, return solution
 
-            rectangle_rotated = instance
-            rectangle_rotated.width, rectangle_rotated.height = instance.height, instance.width
-            x, y = self.fit_rectangle_inside_box(box, rectangle_rotated)
-            if x is not None and y is not None:
-                rectangle_rotated.x, rectangle_rotated.y = x, y
-                box.add_rectangle(instance)
-                return solution
-
-        # If no box can fit the rectangle, create a new box
+        # If no box can fit the rectangle, create a new one
         new_box = Box(self.box_length)
         instance.x, instance.y = 0, 0
         new_box.add_rectangle(instance)
         solution.add_box(new_box)
+
         return solution
 
+
     def fit_rectangle_inside_box(self, box: Box, rectangle: Rectangle):
-        # check if rectangle fits into the box provided. 
-        # if it does, it returns the x, y coordinates that it can be placed into the box. 
-        # if it doesn't it returns None, None
+        """Wrapper function that prepares data and calls the Numba-optimized function"""
+        box_length = self.box_length
 
-        for y in range(self.box_length - rectangle.height + 1):  # Iterate within box height
-            for x in range(self.box_length - rectangle.width + 1):  # Iterate within box width
-                fits = True
-                for rect in box.rectangles:
-                    # Check for overlap with any existing rectangles
-                    if (
-                            x < rect.x + rect.width and x + rect.width > rect.x and
-                            y < rect.y + rect.height and y + rect.height > rect.y
-                    ):
-                        fits = False
-                        break
+        # Convert Box data to NumPy arrays for Numba
+        rectangles_x = np.array([r.x for r in box.rectangles], dtype=np.int32)
+        rectangles_y = np.array([r.y for r in box.rectangles], dtype=np.int32)
+        rectangles_width = np.array([r.width for r in box.rectangles], dtype=np.int32)
+        rectangles_height = np.array([r.height for r in box.rectangles], dtype=np.int32)
 
-                if fits:
-                    return x, y  # Return the valid position
+        # Try normal orientation
+        x, y = fit_rectangle_inside_box_numba(box_length, rectangles_x, rectangles_y, rectangles_width, rectangles_height,
+                                            rectangle.width, rectangle.height)
+        if x != -1:
+            return x, y, False  # No rotation needed
 
-        return None, None
+        # Try rotated orientation
+        if rectangle.width != rectangle.height:  # Only rotate if dimensions are different
+            x, y = fit_rectangle_inside_box_numba(box_length, rectangles_x, rectangles_y, rectangles_width, rectangles_height,
+                                                rectangle.height, rectangle.width)
+            if x != -1:
+                return x, y, True  # Rotation needed
+
+        return None, None, False  # No valid position found
 
     def does_rectangle_fit_into_position(self, box: Box, rectangle: Rectangle):
 
