@@ -60,8 +60,8 @@ class RectanglePacker(OptimizationProblem):
                 for rect in box.rectangles:
                     # Check for overlap with any existing rectangles
                     if (
-                        x < rect.x + rect.width and x + rect.width > rect.x and
-                        y < rect.y + rect.height and y + rect.height > rect.y
+                        x < rect.x + rect.width and x + rectangle.width > rect.x and
+                        y < rect.y + rect.height and y + rectangle.height > rect.y
                     ):
                         fits = False
                         break
