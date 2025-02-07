@@ -1,6 +1,11 @@
 import time
+from algorithms import Greedy, LocalSearch
 from helpers import generate_instances
 from neighborhoods import GeometryBasedStrategy, RuleBasedStrategy, OverlapStrategy
+from problem import RectanglePacker
+from strategy import apply_strategy
+
+import json
 
 
 class Test_Environment:
@@ -9,25 +14,81 @@ class Test_Environment:
         self.box_length = -1
         self.greedy_strategy = None
         self.neighborhood = None
+        self.max_iterations = 20
+        self.greedy_solutions = []
+        self.local_search_solutions = []
     
     def __repr__(self):
-        return f"Test_Environment(box_length={self.box_length}, greedy_strategy={self.greedy_strategy}, neighborhood={self.neighborhood})"
+        return f"Test_Environment(box_length={self.box_length}, greedy_strategy={self.greedy_strategy}, neighborhood={self.neighborhood}, max_iterations={self.max_iterations})"
     
     def run_greedy(self):
+        print("\nStarte Greedy-Algorithmus...")
+        start_time = time.time()
+        for i, instance_set in enumerate(self.instances):
+            print(f"->Verarbeite Instanz {i+1}/{len(self.instances)} mit {len(instance_set)} Rechtecken...")
+            
+            instance_set = apply_strategy(instance_set, self.greedy_strategy)
+            
+            problem = RectanglePacker(instance_set, self.box_length)
+            solver = Greedy(problem, self.greedy_strategy)
+            solution = solver.solve()
+            self.greedy_solutions.append(solution)
+            
+        elapsed_time = time.time() - start_time
+        print(f"\nGreedy-Algorithmus abgeschlossen. Gesamtdauer: {elapsed_time:.6f} Sekunden für {len(self.instances)} Instanzen")
         pass
     
-    def run_local_search(self, instance_index):
-        pass
+    def run_local_search(self):
+        print("\nStarte lokale Suche...")
+        start_time = time.time()
+        for i, instance_set in enumerate(self.instances):
+            print(f"-> Verarbeite Instanz {i+1}/{len(self.instances)} mit {len(instance_set)} Rechtecken...")
+
+            # Erzeuge das Problem und löse es mit Lokaler Suche
+            problem = RectanglePacker(instance_set, self.box_length)
+            solver = LocalSearch(problem, self.max_iterations, self.neighborhood)
+            solution = solver.solve()
+            self.local_search_solutions.append(solution)
+
+        elapsed_time = time.time() - start_time
+        print(f"\nLokale Suche abgeschlossen. Gesamtdauer: {elapsed_time:.6f} Sekunden")
     
     def generate_multiple_instances(self, instance_count, rectangle_count, min_breite, min_hoehe, max_breite, max_hoehe):        
         for _ in range(instance_count):
             self.instances.append(generate_instances(rectangle_count, min_breite, max_breite, min_hoehe, max_hoehe))
         
     def run(self):
-        pass
-    
+        self.run_greedy()
+        self.run_local_search()
+        self.save_solutions()
 
-
+    def save_solutions(self):
+        with open("test_env_solutions.json", "w") as f:
+            
+            greedy_solution_parsed = []
+            
+            for solution in self.greedy_solutions:
+                current = {"boxes": []}
+                for box in solution.boxes:
+                    current_box = [(rect.x, rect.y, rect.width, rect.height) for rect in box.rectangles]
+                    current["boxes"].append(current_box)
+                greedy_solution_parsed.append(current)
+                
+            local_search_solution_parsed = []
+            
+            for solution in self.local_search_solutions:
+                current = {"boxes": []}
+                for box in solution.boxes:
+                    current_box = [(rect.x, rect.y, rect.width, rect.height) for rect in box.rectangles]
+                    current["boxes"].append(current_box)
+                local_search_solution_parsed.append(current)
+                
+            
+            solutions = {
+                "greedy": greedy_solution_parsed,
+                "local_search": local_search_solution_parsed
+            }
+            json.dump(solutions, f, indent=4)
 
 if __name__ == "__main__":
     test_env = Test_Environment()
@@ -63,7 +124,11 @@ if __name__ == "__main__":
         
     test_env.neighborhood = local_search_neighborhoods[chosen_neighborhood]
     
+    max_iterations = int(input("Geben Sie die maximale Anzahl an Iterationen für die lokale Suche ein (Standard ist 20): "))
+    
     test_env.run()
+    
+    
     
     
         
