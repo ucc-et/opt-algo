@@ -12,7 +12,6 @@ class Greedy:
         start_time = time.time()
         
         current_solution = RecPac_Solution() # Start with an empty solution
-        best_value = current_solution.evaluate_solution()
         # Iterate over all instances and place each one
         for instance in self.problem.rectangles:
             new_solution = self.problem.add_to_solution(current_solution, instance)
@@ -43,7 +42,7 @@ class LocalSearch:
             neighbor = self.neighborhood_strategy.generate_neighbor(current_solution)
             
             neighbor_value = neighbor.evaluate_solution()
-            if neighbor_value > best_value:
+            if neighbor_value <= best_value:
                 current_solution = neighbor
                 best_solution = neighbor
                 best_value = neighbor_value
