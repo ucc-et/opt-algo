@@ -65,30 +65,26 @@ class Test_Environment:
     def save_solutions(self):
         with open("test_env_solutions.json", "w") as f:
             
-            greedy_solution_parsed = []
+            obj = {"box_length": self.box_length, "solutions": []}
+            
             
             for solution in self.greedy_solutions:
-                current = {"boxes": []}
+                current = {"boxes": [], "algorithm": "greedy"}
                 for box in solution.boxes:
                     current_box = [(rect.x, rect.y, rect.width, rect.height) for rect in box.rectangles]
                     current["boxes"].append(current_box)
-                greedy_solution_parsed.append(current)
+                obj["solutions"].append(current)
                 
-            local_search_solution_parsed = []
+            
             
             for solution in self.local_search_solutions:
-                current = {"boxes": []}
+                current = {"boxes": [], "algorithm": "local_search"}
                 for box in solution.boxes:
                     current_box = [(rect.x, rect.y, rect.width, rect.height) for rect in box.rectangles]
                     current["boxes"].append(current_box)
-                local_search_solution_parsed.append(current)
+                obj["solutions"].append(current)
                 
-            
-            solutions = {
-                "greedy": greedy_solution_parsed,
-                "local_search": local_search_solution_parsed
-            }
-            json.dump(solutions, f, indent=4)
+            json.dump(obj, f, indent=4)
 
 if __name__ == "__main__":
     test_env = Test_Environment()
