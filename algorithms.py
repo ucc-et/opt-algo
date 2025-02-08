@@ -29,12 +29,11 @@ class Greedy:
 
 class LocalSearch:
     def __init__(self, problem: OptimizationProblem, start_solution: RecPac_Solution, max_iterations: int,
-                 neighborhood_strategy: NeighborhoodStrategy, initial_temperature: float = 100.0):
+                 neighborhood_strategy: NeighborhoodStrategy):
         self.problem = problem
         self.start_solution = start_solution
         self.max_iterations = max_iterations
         self.neighborhood_strategy = neighborhood_strategy
-        self.temperature = initial_temperature
 
     def solve(self):
         start_time = time.time()
