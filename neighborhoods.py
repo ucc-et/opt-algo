@@ -1,66 +1,54 @@
+import copy
 import random
 from abc import ABC, abstractmethod
 
 from objects import Box, RecPac_Solution, Rectangle
-from problem import RectanglePacker
+from problem import RectanglePacker, OptimizationProblem
 
 
 class NeighborhoodStrategy(ABC):
     @abstractmethod
-    def generate_neighbor(self, solution, temperature: float):
+    def generate_neighbor(self, solution):
         pass
 
 
 class GeometryBasedStrategy(NeighborhoodStrategy):
-    def __init__(self, problem: RectanglePacker):
+    def __init__(self, problem: OptimizationProblem):
         self.x = 2
         self.problem = problem
 
-    def generate_neighbor(self, solution: RecPac_Solution, temperature: float):
+    def generate_neighbor(self, solution: RecPac_Solution):
         if not solution.boxes:
             return solution
 
-        new_solution = RecPac_Solution()
-        new_solution.set_boxes([Box(box.box_length) for box in solution.boxes])
+        new_solution = copy.deepcopy(solution)
 
-        for box in solution.boxes:
-            for rect in box.rectangles:
-                new_solution.boxes[solution.boxes.index(box)].add_rectangle(rect)
-
-        box_from = random.choice(new_solution.boxes)
+        box_from = new_solution.boxes[-1]
         if not box_from.rectangles:
             return new_solution
 
-        move_intensity = max(1, int(len(box_from.rectangles) / self.x))
-
-        for _ in range(move_intensity):
+        for _ in range(len(box_from.rectangles)):
             rect_to_move = random.choice(box_from.rectangles)
             box_from.remove_rectangle(rect_to_move)
 
-            counter = 0
+            index = 0
 
             while True:
-                if random.random() < 0.5:  # Move within the same box
-                    rect_to_move.x = random.randint(0, box_from.box_length - rect_to_move.width)
-                    rect_to_move.y = random.randint(0, box_from.box_length - rect_to_move.height)
-                    if self.problem.does_rectangle_fit_into_position(box_from, rect_to_move):
-                        box_from.add_rectangle(rect_to_move)
-                        break
+                box_to = new_solution.boxes[index]
 
-                else:  # Move to another box
-                    box_to = random.choice(new_solution.boxes)
-                    rect_to_move.x = random.randint(0, box_to.box_length - rect_to_move.width)
-                    rect_to_move.y = random.randint(0, box_to.box_length - rect_to_move.height)
-                    if self.problem.does_rectangle_fit_into_position(box_to, rect_to_move):
-                        box_to.add_rectangle(rect_to_move)
-                        break
+                x, y, rotated = self.problem.fit_rectangle_inside_box(box_to, rect_to_move)
 
-                counter += 1
-
-                if counter > 20:
+                if x is not None and y is not None:
+                    rect_to_move.x = x
+                    rect_to_move.y = y
+                    if rotated:
+                        rect_to_move.width, rect_to_move.height = rect_to_move.height, rect_to_move.width
+                    box_to.add_rectangle(rect_to_move)
+                    new_solution.check_if_box_empty(box_from)
                     break
 
-        self.x += 1
+                else:
+                    index += 1
 
         return new_solution
 

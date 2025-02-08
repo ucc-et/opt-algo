@@ -47,26 +47,12 @@ class RecPac_Solution:
     def set_boxes(self, boxes: List[Box]):
         self.boxes = boxes
 
+    def check_if_box_empty(self, box: Box):
+        if len(box.rectangles) == 0:
+            self.boxes.remove(box)
+
     def evaluate_solution(self):
-        """Calculates the total area, that is covered by all rectangles, over all boxes
-
-        Args:
-            solution (RecPac_Solution): the solution that will be evaluated
-
-        Returns:
-            number: total_covered_area in percent (%)
-        """
-        rectangle_areas = 0
-        if len(self.boxes) == 0:
-            return 0
-        box_length = self.boxes[0].box_length
-        box_amounts = len(self.boxes)
-        for box in self.boxes:
-            coverage = box.calculate_covered_area()
-            rectangle_areas += (coverage / (box_length ** 2)) / 100
-
-        total_covered_area = (rectangle_areas / (box_length ** 2) * box_amounts) * 100
-        return total_covered_area
+        return len(self.boxes)
 
     def __repr__(self):
         return f"RecPac_Solution(boxes={self.boxes})"

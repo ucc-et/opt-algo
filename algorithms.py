@@ -1,7 +1,8 @@
+import time
+
 from neighborhoods import NeighborhoodStrategy
 from objects import RecPac_Solution
 from problem import OptimizationProblem
-import time
 
 
 class Greedy:
@@ -37,30 +38,28 @@ class LocalSearch:
         self.temperature = initial_temperature
 
     def solve(self):
+        start_time = time.time()
+
         current_solution = self.start_solution
         best_solution = current_solution
         best_value = best_solution.evaluate_solution()
         iteration = 0
-        stagnation = 0
 
         while iteration < self.max_iterations:
             # Generate a single neighbor (adjust to match your strategy's behavior)
-            neighbor = self.neighborhood_strategy.generate_neighbor(current_solution, self.temperature)
+            neighbor = self.neighborhood_strategy.generate_neighbor(current_solution)
             neighbor_value = neighbor.evaluate_solution()
 
-            # Accept better solution directly, worse solution with probability
-            if neighbor_value > best_value:
+            if neighbor_value <= best_value:
                 current_solution = neighbor
                 best_solution = neighbor
                 best_value = neighbor_value
-                stagnation = 0
-            else:
-                stagnation += 1
-
-            if stagnation > self.max_iterations / 10:
-                return best_solution
 
             iteration += 1
+
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print(f"Laufzeit LocalSearch: {elapsed_time:.6f} Sekunden")
 
         return best_solution
 
