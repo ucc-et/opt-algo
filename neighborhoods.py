@@ -60,8 +60,8 @@ class RuleBasedStrategy(NeighborhoodStrategy):
         if not solution.boxes:
             return solution
 
-        new_solution = RecPac_Solution()
-        new_solution.set_boxes([Box(box.box_length) for box in solution.boxes])
+        current_solution = RecPac_Solution()
+        current_solution.set_boxes([Box(box.box_length) for box in solution.boxes])
 
         rectangles = [rect for box in solution.boxes for rect in box.rectangles]
 
@@ -77,9 +77,11 @@ class RuleBasedStrategy(NeighborhoodStrategy):
             rectangles[i], rectangles[j] = rectangles[j], rectangles[i]
 
         for instance in rectangles:
-            new_solution = self.problem.add_to_solution(new_solution, instance)
+            new_solution = self.problem.add_to_solution(current_solution, instance)
+            if new_solution is not None:
+                current_solution = new_solution
 
-        return new_solution
+        return current_solution
 
 
 class OverlapStrategy(NeighborhoodStrategy):
