@@ -65,9 +65,15 @@ class RuleBasedStrategy(NeighborhoodStrategy):
 
         rectangles = [rect for box in solution.boxes for rect in box.rectangles]
 
-        #swap two random rectangles
         if len(rectangles) > 1:
-            i, j = random.sample(range(len(rectangles)), 2)
+            rectangles.sort(key=lambda rect: rect.width * rect.height)
+
+            small_rectangles = rectangles[:len(rectangles) // 2]
+            selected = random.choice(small_rectangles)
+
+            i = rectangles.index(selected)
+            j = i + 1 if i < len(rectangles) - 1 else i - 1
+
             rectangles[i], rectangles[j] = rectangles[j], rectangles[i]
 
         for instance in rectangles:
