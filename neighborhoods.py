@@ -68,7 +68,7 @@ class RuleBasedStrategy(NeighborhoodStrategy):
 
         if len(rectangles) > 1:
             # Sort rectangles (smallest first)
-            rectangles.sort(key=lambda rect: rect.width * rect.height)
+            rectangles = sorted(rectangles, key=lambda rect: rect.height, reverse=True)
 
             # Pick a small rectangle from the first half
             small_rectangles = rectangles[:len(rectangles) // 2]
