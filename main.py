@@ -17,14 +17,17 @@ def main():
         return greedy_solver.solve()
 
     def local_search_algorithm(rectangles, box_length, neighborhood_name, max_iterations):
-        start_solution = generate_bad_solution(rectangles, box_length)
+        start_solution_map = {
+            "Geometriebasiert": generate_bad_solution(rectangles, box_length),
+            "Regelbasiert": greedy_algorithm(rectangles, box_length, "Größte Fläche zuerst"),
+        }
         problem = RectanglePacker(rectangles, box_length)
         neighborhood_map = {
             "Geometriebasiert": GeometryBasedStrategy(problem),
-            "Regelbasiert": RuleBasedStrategy(),
+            "Regelbasiert": RuleBasedStrategy(problem),
             "Überlappungen teilweise zulassen": OverlapStrategy(initial_overlap=0.1)
         }
-        local_search_solver = LocalSearch(problem, start_solution, max_iterations, neighborhood_map[neighborhood_name])
+        local_search_solver = LocalSearch(problem, start_solution_map[neighborhood_name], max_iterations, neighborhood_map[neighborhood_name])
         return local_search_solver.solve()
 
     def generate_bad_solution(rectangles, box_length):

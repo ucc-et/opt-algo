@@ -14,7 +14,6 @@ class NeighborhoodStrategy(ABC):
 
 class GeometryBasedStrategy(NeighborhoodStrategy):
     def __init__(self, problem: OptimizationProblem):
-        self.x = 2
         self.problem = problem
 
     def generate_neighbor(self, solution: RecPac_Solution):
@@ -54,22 +53,42 @@ class GeometryBasedStrategy(NeighborhoodStrategy):
 
 
 class RuleBasedStrategy(NeighborhoodStrategy):
+    def __init__(self, problem: OptimizationProblem):
+        self.problem = problem
+
     def generate_neighbor(self, solution: RecPac_Solution):
         if not solution.boxes:
             return solution
 
-        new_solution = RecPac_Solution()
-        new_solution.set_boxes([Box(box.box_length) for box in solution.boxes])
+        # Create a new empty solution
+        current_solution = RecPac_Solution()
 
+        # Extract all rectangles
         rectangles = [rect for box in solution.boxes for rect in box.rectangles]
-        random.shuffle(rectangles)
 
-        for i, rect in enumerate(rectangles):
-            box_idx = i % len(new_solution.boxes)
-            new_solution.boxes[box_idx].add_rectangle(rect)
+        if len(rectangles) > 1:
+            # Sort rectangles (smallest first)
+            rectangles = sorted(rectangles, key=lambda rect: rect.height, reverse=True)
 
-        return new_solution
+            # Pick a small rectangle from the first half
+            small_rectangles = rectangles[:len(rectangles) // 2]
+            selected = random.choice(small_rectangles)
 
+            # Swap with its neighbor
+            i = rectangles.index(selected)
+            j = i + 1 if i < len(rectangles) - 1 else i - 1
+            rectangles[i], rectangles[j] = rectangles[j], rectangles[i]
+
+        # Place rectangles **from scratch** to prevent overlaps
+        for instance in rectangles:
+            instance.x, instance.y = None, None  # Reset position before placing
+
+            new_solution = self.problem.add_to_solution(current_solution, instance)
+
+            if new_solution is not None:
+                current_solution = new_solution
+
+        return current_solution
 
 class OverlapStrategy(NeighborhoodStrategy):
 
