@@ -70,19 +70,8 @@ class RuleBasedStrategy(NeighborhoodStrategy):
             i, j = random.sample(range(len(rectangles)), 2)
             rectangles[i], rectangles[j] = rectangles[j], rectangles[i]
 
-        # Split rectangles on boxes
-        for rect in rectangles:
-            # find box with the most uncovered space
-            best_box = min(new_solution.boxes, key=lambda box: box.calculate_covered_area())
-            x, y, rotation = self.problem.fit_rectangle_inside_box(best_box, rect)
-            if x is not None and y is not None:
-                rect.x = x
-                rect.y = y
-                if rotation:
-                    rect.width, rect.height = rect.height, rect.width
-            best_box.add_rectangle(rect)
-
-            #Was tun, wenn in box doch kein platz ist?
+        for instance in rectangles:
+            new_solution = self.problem.add_to_solution(new_solution, instance)
 
         return new_solution
 
