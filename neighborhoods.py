@@ -14,7 +14,6 @@ class NeighborhoodStrategy(ABC):
 
 class GeometryBasedStrategy(NeighborhoodStrategy):
     def __init__(self, problem: OptimizationProblem):
-        self.x = 2
         self.problem = problem
 
     def generate_neighbor(self, solution: RecPac_Solution):
@@ -54,6 +53,9 @@ class GeometryBasedStrategy(NeighborhoodStrategy):
 
 
 class RuleBasedStrategy(NeighborhoodStrategy):
+    def __init__(self, problem: OptimizationProblem):
+        self.problem = problem
+
     def generate_neighbor(self, solution: RecPac_Solution):
         if not solution.boxes:
             return solution
@@ -62,11 +64,25 @@ class RuleBasedStrategy(NeighborhoodStrategy):
         new_solution.set_boxes([Box(box.box_length) for box in solution.boxes])
 
         rectangles = [rect for box in solution.boxes for rect in box.rectangles]
-        random.shuffle(rectangles)
 
-        for i, rect in enumerate(rectangles):
-            box_idx = i % len(new_solution.boxes)
-            new_solution.boxes[box_idx].add_rectangle(rect)
+        #swap two random rectangles
+        if len(rectangles) > 1:
+            i, j = random.sample(range(len(rectangles)), 2)
+            rectangles[i], rectangles[j] = rectangles[j], rectangles[i]
+
+        # Split rectangles on boxes
+        for rect in rectangles:
+            # find box with the most uncovered space
+            best_box = min(new_solution.boxes, key=lambda box: box.calculate_covered_area())
+            x, y, rotation = self.problem.fit_rectangle_inside_box(best_box, rect)
+            if x is not None and y is not None:
+                rect.x = x
+                rect.y = y
+                if rotation:
+                    rect.width, rect.height = rect.height, rect.width
+            best_box.add_rectangle(rect)
+
+            #Was tun, wenn in box doch kein platz ist?
 
         return new_solution
 
