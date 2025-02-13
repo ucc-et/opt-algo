@@ -10,6 +10,7 @@ class SolutionViewer:
         self.root = root
         self.solutionsRaw = solutions
         self.solutions = []
+        self.solutionsalgorithms = []
         self.rectangle_colors = {}
         self.current_type = "greedy"  # Start with Greedy solutions
         self.current_index = 0
@@ -31,9 +32,10 @@ class SolutionViewer:
             for box in solution["boxes"]:
                 current_box = Box(box_length)
                 for rectangle in box:
-                    current_box.add_rectangle(Rectangle(rectangle[0], rectangle[1], rectangle[2], rectangle[3]))
+                    current_box.add_rectangle(Rectangle(rectangle["x"], rectangle["y"], rectangle["w"], rectangle["h"]))
                 current_solution.add_box(current_box)
             self.solutions.append(current_solution)
+            self.solutionsalgorithms.append(solution["algorithm"])
     
     def setup_ui(self):
         self.root.title("Optimierungsalgorithmen GUI")
@@ -58,7 +60,7 @@ class SolutionViewer:
         btn_iterate_right = tk.Button(frame_buttons, text=">", command=self.increase_solution_index)
         btn_iterate_right.grid(row=1, column=3, padx=5)
         
-        self.label_solution_type = tk.Label(self.root, text=f"Solution of {self.current_type} algorithm")
+        self.label_solution_type = tk.Label(self.root, text=f"Solution of {self.solutionsalgorithms[self.current_index]} algorithm")
         self.label_solution_type.pack()
         
         self.label_solution_number = tk.Label(self.root, text=f"Solution: {self.current_index+1}/{len(self.solutions)}")
@@ -84,14 +86,14 @@ class SolutionViewer:
     def lower_solution_index(self):
         if(self.current_index > 0):
             self.current_index -= 1
-            self.label_solution_type.config(text=f"Solution of {self.current_type} algorithm")
+            self.label_solution_type.config(text=f"Solution of {self.solutionsalgorithms[self.current_index]} algorithm")
             self.label_solution_number.config(text=f"Solution: {self.current_index+1}/{len(self.solutions)}")
             self.redraw_canvas()
     
     def increase_solution_index(self):
         if(self.current_index < len(self.solutions)-1):
             self.current_index += 1
-            self.label_solution_type.config(text=f"Solution of {self.current_type} algorithm")
+            self.label_solution_type.config(text=f"Solution of {self.solutionsalgorithms[self.current_index]} algorithm")
             self.label_solution_number.config(text=f"Solution: {self.current_index+1}/{len(self.solutions)}")
             self.redraw_canvas()
         
@@ -155,7 +157,6 @@ class SolutionViewer:
             x_offset += scaled_box_length + box_padding
 
         self.update_scrollregion()
-    
     
     def zoom_in(self):
         if self.zoom_steps < self.max_zoom_steps:

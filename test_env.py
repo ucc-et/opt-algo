@@ -1,7 +1,10 @@
+import copy
+import random
 import time
 from algorithms import Greedy, LocalSearch
 from helpers import generate_instances
 from neighborhoods import GeometryBasedStrategy, RuleBasedStrategy, OverlapStrategy
+from objects import Box, RecPac_Solution
 from problem import RectanglePacker
 from strategy import apply_strategy
 
@@ -38,15 +41,36 @@ class Test_Environment:
         print(f"\nGreedy-Algorithmus abgeschlossen. Gesamtdauer: {elapsed_time:.6f} Sekunden für {len(self.instances)} Instanzen")
         pass
     
+    def generate_bad_solution(self, rectangles, box_length):
+        bad_solution = RecPac_Solution()
+
+        for rect in rectangles:
+            new_box = Box(box_length)
+
+            if random.random() < 0.5:
+                rect.width, rect.height = rect.height, rect.width
+
+            rect.x = random.randint(0, box_length - rect.width)
+            rect.y = random.randint(0, box_length - rect.height)
+
+            new_box.add_rectangle(rect)
+            bad_solution.add_box(new_box)
+        return bad_solution
+    
     def run_local_search(self):
         print("\nStarte lokale Suche...")
         start_time = time.time()
+        
         for i, instance_set in enumerate(self.instances):
             print(f"-> Verarbeite Instanz {i+1}/{len(self.instances)} mit {len(instance_set)} Rechtecken...")
-
+            instance_set_copy = copy.deepcopy(instance_set)
             # Erzeuge das Problem und löse es mit Lokaler Suche
-            problem = RectanglePacker(instance_set, self.box_length)
-            solver = LocalSearch(problem, self.max_iterations, self.neighborhood)
+            problem = RectanglePacker(instance_set_copy, self.box_length)
+            local_search_neighborhoods = {1: GeometryBasedStrategy(problem), 2: RuleBasedStrategy(), 3: OverlapStrategy()}
+            if type(self.neighborhood) == int:
+                self.neighborhood = local_search_neighborhoods[self.neighborhood]
+            start_solution = self.generate_bad_solution(instance_set_copy, self.box_length)
+            solver = LocalSearch(problem, start_solution, self.max_iterations, self.neighborhood)
             solution = solver.solve()
             self.local_search_solutions.append(solution)
 
@@ -71,7 +95,7 @@ class Test_Environment:
             for solution in self.greedy_solutions:
                 current = {"boxes": [], "algorithm": "greedy"}
                 for box in solution.boxes:
-                    current_box = [(rect.x, rect.y, rect.width, rect.height) for rect in box.rectangles]
+                    current_box = [{"x": rect.x, "y": rect.y, "w": rect.width, "h": rect.height} for rect in box.rectangles]
                     current["boxes"].append(current_box)
                 obj["solutions"].append(current)
                 
@@ -80,7 +104,7 @@ class Test_Environment:
             for solution in self.local_search_solutions:
                 current = {"boxes": [], "algorithm": "local_search"}
                 for box in solution.boxes:
-                    current_box = [(rect.x, rect.y, rect.width, rect.height) for rect in box.rectangles]
+                    current_box = [{"x": rect.x, "y": rect.y, "w": rect.width, "h": rect.height} for rect in box.rectangles]
                     current["boxes"].append(current_box)
                 obj["solutions"].append(current)
                 
@@ -111,14 +135,13 @@ if __name__ == "__main__":
     test_env.greedy_strategy = greedy_strategies[chosen_strategy]
     
     # Wähle Nachbarschaft für lokale Suche aus
-    local_search_neighborhoods = {1: GeometryBasedStrategy(), 2: RuleBasedStrategy(), 3: OverlapStrategy()}
     
     chosen_neighborhood = int(input("Wähle eine Nachbarschaft für die lokale Suche aus, indem Sie eine Zahl zwischen 1 und 3 eingeben (1: Geometrie basiert, 2: Regel basiert, 3: Überlappen erlauben): "))
     if(int(chosen_neighborhood) > 3):
         chosen_neighborhood = 1
         print("Die Eingabe war fehlerhaft. Es wird die Geometrie basierte Strategy genutzt")
         
-    test_env.neighborhood = local_search_neighborhoods[chosen_neighborhood]
+    test_env.neighborhood = chosen_neighborhood
     
     max_iterations = int(input("Geben Sie die maximale Anzahl an Iterationen für die lokale Suche ein (Standard ist 20): "))
     
