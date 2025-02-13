@@ -115,6 +115,10 @@ if __name__ == "__main__":
     
     # Frage Daten zur Instanzgenerierung ab
     instanzen, rechtecke, min_breite, min_hoehe, max_breite, max_hoehe, box_laenge = None, None, None, None, None, None, None 
+    chosen_strategy = None
+    chosen_neighborhood = None
+    max_iterations = None
+    
     if instanzen is None and rechtecke is None and min_breite is None and min_hoehe is None and max_hoehe is None and max_breite is None and box_laenge is None:
         eingabe = input("Geben Sie die Parameter ein (Anzahl Instanzen, Anzahl Rechtecke, min. Breite, min. Höhe, max. Breite, max. Höhe, Boxlänge) durch Kommas getrennt: ")
         instanzen, rechtecke, min_breite, min_hoehe, max_breite, max_hoehe, box_laenge = map(int, eingabe.split(","))
@@ -127,23 +131,30 @@ if __name__ == "__main__":
     # Wähle Greedy Strategie aus
     greedy_strategies = {1: "Größte Fläche zuerst", 2: "Kleinste Fläche zuerst", 3: "Größtes Seitenverhältnis zuerst", 4: "Kleinstes Seitenverhältnis zuerst"}
     
-    chosen_strategy = int(input("Wähle eine Greedy Strategie für die Rechteck Wahl (1: Größte Fläche zuerst, 2: Kleinste Fläche zuerst, 3: Größtes Seitenverhältnis zuerst, 4: Kleinstes Seitenverhältnis zuerst): "))
-    if(int(chosen_strategy) > 4):
-        chosen_strategy = 1
-        print("Die Eingabe war fehlerhaft. Es wird die größte Fläche zuerst gewählt")
+    if chosen_strategy is None:
+        chosen_strategy = int(input("Wähle eine Greedy Strategie für die Rechteck Wahl (1: Größte Fläche zuerst, 2: Kleinste Fläche zuerst, 3: Größtes Seitenverhältnis zuerst, 4: Kleinstes Seitenverhältnis zuerst): "))
+        if(int(chosen_strategy) > 4):
+            chosen_strategy = 1
+            print("Die Eingabe war fehlerhaft. Es wird die größte Fläche zuerst gewählt")
     
     test_env.greedy_strategy = greedy_strategies[chosen_strategy]
     
     # Wähle Nachbarschaft für lokale Suche aus
-    
-    chosen_neighborhood = int(input("Wähle eine Nachbarschaft für die lokale Suche aus, indem Sie eine Zahl zwischen 1 und 3 eingeben (1: Geometrie basiert, 2: Regel basiert, 3: Überlappen erlauben): "))
-    if(int(chosen_neighborhood) > 3):
-        chosen_neighborhood = 1
-        print("Die Eingabe war fehlerhaft. Es wird die Geometrie basierte Strategy genutzt")
-        
+    if chosen_neighborhood is None:
+        chosen_neighborhood = int(input("Wähle eine Nachbarschaft für die lokale Suche aus, indem Sie eine Zahl zwischen 1 und 3 eingeben (1: Geometrie basiert, 2: Regel basiert, 3: Überlappen erlauben): "))
+        if(int(chosen_neighborhood) > 3):
+            chosen_neighborhood = 1
+            print("Die Eingabe war fehlerhaft. Es wird die Geometrie basierte Strategy genutzt")
+            
     test_env.neighborhood = chosen_neighborhood
     
-    max_iterations = int(input("Geben Sie die maximale Anzahl an Iterationen für die lokale Suche ein (Standard ist 20): "))
+    if max_iterations is None:
+        max_iterations = int(input("Geben Sie die maximale Anzahl an Iterationen für die lokale Suche ein (Standard ist 20): "))
+        if(int(max_iterations)<=0):
+            max_iterations = 20
+            print("Die Eingabe war fehlerhaft. Es wird 20 als maximale Iterationsanzahl gesetzt")
+            
+    test_env.max_iterations = max_iterations
     
     test_env.run()
     
