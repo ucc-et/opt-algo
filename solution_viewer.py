@@ -17,8 +17,8 @@ class SolutionViewer:
         self.zoom_steps = 0
         self.max_zoom_steps = 4
         
-        self.setup_ui()
         self.parse_solutions()
+        self.setup_ui()
         self.visualize_solution()
     
     def parse_solutions(self):
@@ -42,34 +42,6 @@ class SolutionViewer:
         frame_inputs = tk.Frame(self.root)
         frame_inputs.pack(pady=10)
 
-        tk.Label(frame_inputs, text="Anzahl Rechtecke:").grid(row=0, column=0)
-        self.entry_num_rectangles = tk.Entry(frame_inputs)
-        self.entry_num_rectangles.grid(row=0, column=1)
-
-        tk.Label(frame_inputs, text="Min Breite:").grid(row=1, column=0)
-        self.entry_min_width = tk.Entry(frame_inputs)
-        self.entry_min_width.grid(row=1, column=1)
-
-        tk.Label(frame_inputs, text="Max Breite:").grid(row=2, column=0)
-        self.entry_max_width = tk.Entry(frame_inputs)
-        self.entry_max_width.grid(row=2, column=1)
-
-        tk.Label(frame_inputs, text="Min Höhe:").grid(row=3, column=0)
-        self.entry_min_height = tk.Entry(frame_inputs)
-        self.entry_min_height.grid(row=3, column=1)
-
-        tk.Label(frame_inputs, text="Max Höhe:").grid(row=4, column=0)
-        self.entry_max_height = tk.Entry(frame_inputs)
-        self.entry_max_height.grid(row=4, column=1)
-
-        tk.Label(frame_inputs, text="Boxlänge L:").grid(row=5, column=0)
-        self.entry_box_length = tk.Entry(frame_inputs)
-        self.entry_box_length.grid(row=5, column=1)
-
-        # Label for error messages
-        self.error_label = tk.Label(self.root, text="", fg="red")
-        self.error_label.pack()
-
         # Create Buttons in UI to Generate Instances and Start Packer
         frame_buttons = tk.Frame(self.root)
         frame_buttons.pack(pady=10)
@@ -79,6 +51,18 @@ class SolutionViewer:
         
         btn_zoom_out = tk.Button(frame_buttons, text="Zoom Out", command=self.zoom_out)
         btn_zoom_out.grid(row=0, column=3, padx=5)
+        
+        btn_iterate_left = tk.Button(frame_buttons, text="<", command=self.lower_solution_index)
+        btn_iterate_left.grid(row=1, column=2, padx=5)
+        
+        btn_iterate_right = tk.Button(frame_buttons, text=">", command=self.increase_solution_index)
+        btn_iterate_right.grid(row=1, column=3, padx=5)
+        
+        self.label_solution_type = tk.Label(self.root, text=f"Solution of {self.current_type} algorithm")
+        self.label_solution_type.pack()
+        
+        self.label_solution_number = tk.Label(self.root, text=f"Solution: {self.current_index+1}/{len(self.solutions)}")
+        self.label_solution_number.pack()
 
         # Create the scrollable canvas frame
         canvas_frame = tk.Frame(self.root)
@@ -96,6 +80,20 @@ class SolutionViewer:
         self.canvas.configure(yscrollcommand=v_scrollbar.set)
         
         self.canvas.bind_all("<MouseWheel>", self.on_mousewheel)
+        
+    def lower_solution_index(self):
+        if(self.current_index > 0):
+            self.current_index -= 1
+            self.label_solution_type.config(text=f"Solution of {self.current_type} algorithm")
+            self.label_solution_number.config(text=f"Solution: {self.current_index+1}/{len(self.solutions)}")
+            self.redraw_canvas()
+    
+    def increase_solution_index(self):
+        if(self.current_index < len(self.solutions)-1):
+            self.current_index += 1
+            self.label_solution_type.config(text=f"Solution of {self.current_type} algorithm")
+            self.label_solution_number.config(text=f"Solution: {self.current_index+1}/{len(self.solutions)}")
+            self.redraw_canvas()
         
     def get_rectangle_color(self, rect):
         if len(self.rectangle_colors.keys()) == 0 or rect not in self.rectangle_colors.keys():
@@ -121,7 +119,7 @@ class SolutionViewer:
         length = self.solutions[self.current_index].boxes[0].box_length
 
         for box_id, box in enumerate(self.solutions[self.current_index].boxes):
-            scaled_box_length = int(length * length)
+            scaled_box_length = int(length * self.zoom_factor)
 
             # Überprüfen, ob die Box in die aktuelle Zeile passt
             if x_offset + scaled_box_length + box_padding > canvas_width:
@@ -158,15 +156,6 @@ class SolutionViewer:
 
         self.update_scrollregion()
     
-    def prev_solution(self):
-        if self.current_index > 0:
-            self.current_index -= 1
-            self.display_solution()
-    
-    def next_solution(self):
-        if self.current_index < len(self.solutions.get(self.current_type, [])) - 1:
-            self.current_index += 1
-            self.display_solution()
     
     def zoom_in(self):
         if self.zoom_steps < self.max_zoom_steps:
@@ -176,7 +165,7 @@ class SolutionViewer:
     
     def redraw_canvas(self):
         self.canvas.delete("all")
-        self.visualize_solution(self.current_solution) 
+        self.visualize_solution() 
     
     def on_mousewheel(self, event):
         self.canvas.yview_scroll(-1 * (event.delta // 120), "units")
