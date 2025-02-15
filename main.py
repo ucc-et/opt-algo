@@ -20,12 +20,13 @@ def main():
         start_solution_map = {
             "Geometriebasiert": generate_bad_solution(rectangles, box_length),
             "Regelbasiert": greedy_algorithm(rectangles, box_length, "Größte Fläche zuerst"),
+            "Überlappungen teilweise zulassen": generate_bad_solution_overlapping(rectangles, box_length),
         }
         problem = RectanglePacker(rectangles, box_length)
         neighborhood_map = {
             "Geometriebasiert": GeometryBasedStrategy(problem),
             "Regelbasiert": RuleBasedStrategy(problem),
-            "Überlappungen teilweise zulassen": OverlapStrategy(initial_overlap=0.1)
+            "Überlappungen teilweise zulassen": OverlapStrategy(problem),
         }
         local_search_solver = LocalSearch(problem, start_solution_map[neighborhood_name], max_iterations, neighborhood_map[neighborhood_name])
         return local_search_solver.solve()
@@ -44,6 +45,17 @@ def main():
 
             new_box.add_rectangle(rect)
             bad_solution.add_box(new_box)
+        return bad_solution
+
+    def generate_bad_solution_overlapping(rectangles, box_length):
+        bad_solution = RecPac_Solution()
+        new_box = Box(box_length)
+        for rect in rectangles:
+            rect.x = 0
+            rect.y = 0
+            new_box.add_rectangle(rect)
+
+        bad_solution.add_box(new_box)
         return bad_solution
 
     root = tk.Tk()
