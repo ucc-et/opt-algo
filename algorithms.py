@@ -13,8 +13,7 @@ class Greedy:
     def solve(self):
         start_time = time.time()
 
-        current_solution = RecPac_Solution() # Start with an empty solution
-        # Iterate over all instances and place each one
+        current_solution = RecPac_Solution()
         for instance in self.problem.rectangles:
             new_solution = self.problem.add_to_solution(current_solution, instance)
             if new_solution is not None:
@@ -44,7 +43,6 @@ class LocalSearch:
         iteration = 0
 
         while iteration < self.max_iterations:
-            # Generate a single neighbor (adjust to match your strategy's behavior)
             neighbor = self.neighborhood_strategy.generate_neighbor(current_solution)
             neighbor_value = neighbor.evaluate_solution()
             if neighbor_value <= best_value:
@@ -73,25 +71,8 @@ class Backtracking:
     def solve(self):
         start_time = time.time()
 
-        # Initialize an empty solution
         current_solution = RecPac_Solution()
 
-        # Start the backtracking process
-        result = self._backtrack(current_solution, 0)
-
-        end_time = time.time()
-        elapsed_time = end_time - start_time
-        print(f"Laufzeit Backtracking: {elapsed_time:.6f} Sekunden")
-
-        return result
-
-    def solve(self):
-        start_time = time.time()
-
-        # Initialize an empty solution
-        current_solution = RecPac_Solution()
-
-        # Start the backtracking process
         result = self._backtrack(current_solution, 0)
 
         end_time = time.time()
