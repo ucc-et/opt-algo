@@ -222,7 +222,6 @@ class GUI:
         
     # Changes visibility for widgets based on the selected algorithm    
     def update_algorithm(self, *args):
-        print("UPDATING")
         if self.algo_selector.get() == "Greedy":
             self.local_search_neighborhood_selector.grid_remove()
             self.local_search_max_iterations.grid_remove()
@@ -240,7 +239,6 @@ class GUI:
             self.neighborhood_label.grid()
             self.local_search_max_iterations_is_visible = True
             if self.local_search_neighborhood_selector.get() == "Regelbasiert":
-                print("RULE based")
                 self.rulebased_strat.grid()
                 self.rulebased_strategy_label.grid()
             else:
@@ -252,8 +250,10 @@ class GUI:
             self.local_search_max_iterations_label.grid_remove()
             self.rulebased_strat.grid_remove()
             self.rulebased_strategy_label.grid_remove()
+            self.neighborhood_label.grid_remove()
             self.local_search_max_iterations_is_visible = False
             self.greedy_strat.grid_remove()
+            self.strategy_label.grid_remove()
            
 
     def validate_inputs(self):
