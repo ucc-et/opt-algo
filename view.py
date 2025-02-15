@@ -107,27 +107,38 @@ class GUI:
         self.strategy_label.grid(row=8, column=0, padx=5)
         self.greedy_strat = ttk.Combobox(frame_inputs, state="readonly", values=["Größte Fläche zuerst", "Kleinste Fläche zuerst", "Größtes Seitenverhältnis zuerst", "Kleinstes Seitenverhältnis zuerst"])
         self.greedy_strat.set("Größte Fläche zuerst")
-        self.greedy_strat.grid(row=8, column=1)
+        self.greedy_strat.grid(row=8, column=1, pady=5)
         self.greedy_strat.grid_remove()
         self.strategy_label.grid_remove()
 
         # Choose Local Search strategy
         self.neighborhood_label = ttk.Label(frame_inputs, text="Nachbarschaft wählen")
         self.neighborhood_label.grid(row=9, column=0, padx=5)
-        self.local_search_neighborhood_selector = ttk.Combobox(frame_inputs, values=["Geometriebasiert", "Regelbasiert", "Überlappungen teilweise zulassen"])
+        self.local_search_neighborhood_selector = ttk.Combobox(frame_inputs, state="readonly", values=["Geometriebasiert", "Regelbasiert", "Überlappungen teilweise zulassen"])
         self.local_search_neighborhood_selector.set("Geometriebasiert")
-        self.local_search_neighborhood_selector.grid(row=9, column=1)
+        self.local_search_neighborhood_selector.grid(row=9, column=1, pady=5)
         self.local_search_neighborhood_selector.grid_remove()
         self.neighborhood_label.grid_remove()
+        
+        #Choose rulebased strategy
+        self.rulebased_strategy_label = ttk.Label(frame_inputs, text="Regel wählen: ")
+        self.rulebased_strategy_label.grid(row=10, column=0, padx=5)
+        self.rulebased_strat = ttk.Combobox(frame_inputs, state="readonly", values=["Absteigend nach Höhe", "Absteigend nach Breite", "Absteigend nach Fläche"])
+        self.rulebased_strat.set("Absteigend nach Höhe")
+        self.rulebased_strat.grid(row=10, column=1, pady=5)
+        self.rulebased_strat.grid_remove()
+        self.rulebased_strategy_label.grid_remove()
 
         # Maximum Iterations for Local Search
         self.local_search_max_iterations_label = tk.Label(frame_inputs, text="Maximum Iterationen")
-        self.local_search_max_iterations_label.grid(row=10, column=0, pady=5)
+        self.local_search_max_iterations_label.grid(row=11, column=0, pady=5)
         self.local_search_max_iterations = tk.Entry(frame_inputs)
-        self.local_search_max_iterations.grid(row=10, column=1)
+        self.local_search_max_iterations.grid(row=11, column=1)
+        self.local_search_max_iterations.insert(0, "20")
 
         # Function to toggle visibility based on strategy
         self.algo_selector.bind("<<ComboboxSelected>>", self.update_algorithm)
+        self.local_search_neighborhood_selector.bind("<<ComboboxSelected>>", self.update_algorithm)
         self.update_algorithm()
 
         # Label for error messages
@@ -211,6 +222,7 @@ class GUI:
         
     # Changes visibility for widgets based on the selected algorithm    
     def update_algorithm(self, *args):
+        print("UPDATING")
         if self.algo_selector.get() == "Greedy":
             self.local_search_neighborhood_selector.grid_remove()
             self.local_search_max_iterations.grid_remove()
@@ -227,6 +239,13 @@ class GUI:
             self.local_search_max_iterations_label.grid()
             self.neighborhood_label.grid()
             self.local_search_max_iterations_is_visible = True
+            if self.local_search_neighborhood_selector.get() == "Regelbasiert":
+                print("RULE based")
+                self.rulebased_strat.grid()
+                self.rulebased_strategy_label.grid()
+            else:
+                self.rulebased_strat.grid_remove()
+                self.rulebased_strategy_label.grid_remove()
 
     def validate_inputs(self):
         errors = []
@@ -290,10 +309,15 @@ class GUI:
                 self.greedy_strat.get()
             )
         elif algorithm == "Lokale Suche":
+            neighborhood = self.local_search_neighborhood_selector.get()
+            rulebased_strategy = ""
+            if neighborhood == "Regelbasiert":
+                rulebased_strategy = self.rulebased_strat.get()
             solution = self.local_search(
                 self.instances, 
                 self.box_size, 
-                self.local_search_neighborhood_selector.get(),
+                neighborhood,
+                rulebased_strategy,
                 int(self.local_search_max_iterations.get())
             )
         self.current_solution = solution
