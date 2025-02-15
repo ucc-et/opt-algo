@@ -1,7 +1,7 @@
 import tkinter as tk
 import random
 
-from algorithms import Greedy, LocalSearch
+from algorithms import Greedy, LocalSearch, Backtracking
 from neighborhoods import GeometryBasedStrategy, RuleBasedStrategy, OverlapStrategy
 from objects import RecPac_Solution, Box
 from problem import RectanglePacker
@@ -16,7 +16,7 @@ def main():
         greedy_solver = Greedy(problem, strategy_name)
         return greedy_solver.solve()
 
-    def local_search_algorithm(rectangles, box_length, neighborhood_name, max_iterations):
+    def local_search_algorithm(rectangles, box_length, neighborhood_name, strategy_rulebased="", max_iterations=20):
         start_solution_map = {
             "Geometriebasiert": generate_bad_solution(rectangles, box_length),
             "Regelbasiert": greedy_algorithm(rectangles, box_length, "Größte Fläche zuerst"),
@@ -25,11 +25,17 @@ def main():
         problem = RectanglePacker(rectangles, box_length)
         neighborhood_map = {
             "Geometriebasiert": GeometryBasedStrategy(problem),
-            "Regelbasiert": RuleBasedStrategy(problem),
-            "Überlappungen teilweise zulassen": OverlapStrategy(problem),
+            "Regelbasiert": RuleBasedStrategy(problem, strategy_rulebased),
+            "Überlappungen teilweise zulassen": OverlapStrategy(problem)
         }
         local_search_solver = LocalSearch(problem, start_solution_map[neighborhood_name], max_iterations, neighborhood_map[neighborhood_name])
         return local_search_solver.solve()
+
+    def backtracking_algorithm(rectangles, box_length):
+        problem = RectanglePacker(rectangles, box_length)
+        backtracking_solver = Backtracking(problem)
+        solution = backtracking_solver.solve()
+        return solution
 
     def generate_bad_solution(rectangles, box_length):
         bad_solution = RecPac_Solution()
@@ -59,7 +65,7 @@ def main():
         return bad_solution
 
     root = tk.Tk()
-    app = GUI(root, greedy_algorithm, local_search_algorithm)
+    app = GUI(root, greedy_algorithm, local_search_algorithm, backtracking_algorithm)
     root.mainloop()
 
 
