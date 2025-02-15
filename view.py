@@ -36,11 +36,11 @@ class Tooltip:
 
 
 class GUI:
-    
-    def __init__(self, root, greedy_algorithm, local_search):
+    def __init__(self, root, greedy_algorithm, local_search, backtracking):
         self.root = root
         self.greedy_algorithm = greedy_algorithm
         self.local_search = local_search
+        self.backtracking = backtracking
         self.current_solution = None
         self.can_export_rectangles = "disabled"
         self.can_zoom = "disabled"
@@ -98,7 +98,7 @@ class GUI:
 
         # Choose the selected algorithm
         self.algo_select_label = tk.Label(frame_inputs, text="Algorithmus wählen: ").grid(row=7, column=0, padx=5)
-        self.algo_selector = ttk.Combobox(frame_inputs, values=["Greedy", "Lokale Suche"], state="readonly")
+        self.algo_selector = ttk.Combobox(frame_inputs, values=["Greedy", "Lokale Suche", "Backtracking"], state="readonly")
         self.algo_selector.set("Greedy")
         self.algo_selector.grid(row=7, column=1, pady=5)
 
@@ -222,7 +222,6 @@ class GUI:
         
     # Changes visibility for widgets based on the selected algorithm    
     def update_algorithm(self, *args):
-        print("UPDATING")
         if self.algo_selector.get() == "Greedy":
             self.local_search_neighborhood_selector.grid_remove()
             self.local_search_max_iterations.grid_remove()
@@ -240,12 +239,22 @@ class GUI:
             self.neighborhood_label.grid()
             self.local_search_max_iterations_is_visible = True
             if self.local_search_neighborhood_selector.get() == "Regelbasiert":
-                print("RULE based")
                 self.rulebased_strat.grid()
                 self.rulebased_strategy_label.grid()
             else:
                 self.rulebased_strat.grid_remove()
                 self.rulebased_strategy_label.grid_remove()
+        elif self.algo_selector.get() == "Backtracking":
+            self.local_search_neighborhood_selector.grid_remove()
+            self.local_search_max_iterations.grid_remove()
+            self.local_search_max_iterations_label.grid_remove()
+            self.rulebased_strat.grid_remove()
+            self.rulebased_strategy_label.grid_remove()
+            self.neighborhood_label.grid_remove()
+            self.local_search_max_iterations_is_visible = False
+            self.greedy_strat.grid_remove()
+            self.strategy_label.grid_remove()
+           
 
     def validate_inputs(self):
         errors = []
@@ -320,6 +329,8 @@ class GUI:
                 rulebased_strategy,
                 int(self.local_search_max_iterations.get())
             )
+        elif algorithm == "Backtracking":
+            solution = self.backtracking(self.instances, self.box_size)
         self.current_solution = solution
         self.visualize_solution(solution)
 
