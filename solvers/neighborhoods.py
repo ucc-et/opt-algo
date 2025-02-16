@@ -58,7 +58,6 @@ class RuleBasedStrategy(Neighborhood):
             return solution
 
         current_solution = RecPac_Solution()
-        print(solution)
         items = [item for box in solution.boxes for item in box.items]
 
         if len(items) > 1:
