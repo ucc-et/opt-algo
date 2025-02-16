@@ -176,7 +176,7 @@ class RectanglePackerVisualizer(GUI):
         
     def redraw_canvas(self):
         self.canvas.delete("all")
-        self.visualize_solution(self.current_solution)
+        self.draw()
          
     def update_algorithm(self, *args):
         if self.algo_selector.get() == "Greedy":

@@ -2,12 +2,14 @@ import time
 import sys
 
 from classes import OptimizationProblem, Solution, Neighborhood
+from classes.helpers import apply_greedy_strategy
 
 class Greedy:
     def __init__(self, problem: OptimizationProblem, solution_type: type, strategy="largest_area_first"):
         self.problem = problem
-        self.strategy = strategy
         self.solution_type = solution_type
+        
+        self.problem.items = apply_greedy_strategy(self.problem.items, strategy)
 
     def solve(self):
         start_time = time.time()
@@ -27,11 +29,11 @@ class Greedy:
 
 class LocalSearch:
     def __init__(self, problem: OptimizationProblem, start_solution: Solution, max_iterations: int,
-                 neighborhood_strategy: Neighborhood):
+                 neighborhood: Neighborhood):
         self.problem = problem
         self.start_solution = start_solution
         self.max_iterations = max_iterations
-        self.neighborhood_strategy = neighborhood_strategy
+        self.neighborhood = neighborhood
 
     def solve(self):
         start_time = time.time()
@@ -42,7 +44,7 @@ class LocalSearch:
         iteration = 0
 
         while iteration < self.max_iterations:
-            neighbor = self.neighborhood_strategy.generate_neighbor(current_solution)
+            neighbor = self.neighborhood.generate_neighbor(current_solution)
             neighbor_value = neighbor.evaluate_solution()
             if neighbor_value <= best_value:
                 current_solution = neighbor
@@ -85,9 +87,9 @@ class Backtracking:
         if index >= len(self.problem.items):
             return current_solution
 
-        rectangle = self.problem.items[index]
+        item = self.problem.items[index]
 
-        new_solution = self.problem.add_to_solution(current_solution, rectangle)
+        new_solution = self.problem.add_to_solution(current_solution, item)
 
         if new_solution is not None:
             result = self._backtrack(new_solution, index + 1)
