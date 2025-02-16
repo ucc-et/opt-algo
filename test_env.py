@@ -4,12 +4,11 @@ import time
 from algorithms import Greedy, LocalSearch
 from helpers import generate_instances
 from neighborhoods import GeometryBasedStrategy, RuleBasedStrategy, OverlapStrategy
-from objects import Box, RecPac_Solution
-from problem import RectanglePacker
 from strategy import apply_strategy
 
 import json
 
+from classes import Box, RecPac_Solution, RectanglePacker
 
 class Test_Environment:
     def __init__(self):

@@ -1,9 +1,7 @@
 import time
 import sys
-from neighborhoods import NeighborhoodStrategy
-from objects import RecPac_Solution, Solution
-from problem import OptimizationProblem
 
+from classes import OptimizationProblem, Solution, NeighborhoodStrategy
 
 class Greedy:
     def __init__(self, problem: OptimizationProblem, solution_type: type, strategy="largest_area_first"):

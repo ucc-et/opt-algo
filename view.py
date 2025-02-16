@@ -3,9 +3,10 @@ from tkinter import ttk, filedialog
 import random
 from typing import List
 from helpers import generate_instances
-from objects import Rectangle
 from PIL import Image, ImageTk
 import json
+
+from classes import Rectangle
 
 class Tooltip:
         def __init__(self, widget, text):
@@ -17,13 +18,13 @@ class Tooltip:
 
         def show_tooltip(self, event):
             """Display the tooltip near the widget."""
-            x, y, _, _ = self.widget.bbox("insert")  # Get widget position
-            x += self.widget.winfo_rootx() + 25  # Offset for better placement
+            x, y, _, _ = self.widget.bbox("insert")
+            x += self.widget.winfo_rootx() + 25
             y += self.widget.winfo_rooty() + 25
 
             self.tooltip_window = tk.Toplevel(self.widget)
-            self.tooltip_window.wm_overrideredirect(True)  # Remove window border
-            self.tooltip_window.geometry(f"+{x}+{y}")  # Position the tooltip
+            self.tooltip_window.wm_overrideredirect(True)
+            self.tooltip_window.geometry(f"+{x}+{y}")
 
             label = tk.Label(self.tooltip_window, text=self.text, bg="lightyellow", relief="solid", borderwidth=1, padx=5, pady=2)
             label.pack()
@@ -68,7 +69,6 @@ class GUI:
         self.export_icon = Image.open("assets/export.png").resize((30, 30))
         self.export_icon = ImageTk.PhotoImage(self.export_icon)
 
-        # Create input fields and place them in UI
         frame_inputs = tk.Frame(self.root)
         frame_inputs.pack(pady=10)
 
@@ -96,13 +96,11 @@ class GUI:
         self.entry_box_length = tk.Entry(frame_inputs)
         self.entry_box_length.grid(row=5, column=1, pady=5)
 
-        # Choose the selected algorithm
         self.algo_select_label = tk.Label(frame_inputs, text="Algorithmus wählen: ").grid(row=7, column=0, padx=5)
         self.algo_selector = ttk.Combobox(frame_inputs, values=["Greedy", "Lokale Suche", "Backtracking"], state="readonly")
         self.algo_selector.set("Greedy")
         self.algo_selector.grid(row=7, column=1, pady=5)
 
-        # Choose Greedy strategy
         self.strategy_label = ttk.Label(frame_inputs, text="Greedy Strategie wählen: ")
         self.strategy_label.grid(row=8, column=0, padx=5)
         self.greedy_strat = ttk.Combobox(frame_inputs, state="readonly", values=["Größte Fläche zuerst", "Kleinste Fläche zuerst", "Größtes Seitenverhältnis zuerst", "Kleinstes Seitenverhältnis zuerst"])
@@ -111,7 +109,6 @@ class GUI:
         self.greedy_strat.grid_remove()
         self.strategy_label.grid_remove()
 
-        # Choose Local Search strategy
         self.neighborhood_label = ttk.Label(frame_inputs, text="Nachbarschaft wählen")
         self.neighborhood_label.grid(row=9, column=0, padx=5)
         self.local_search_neighborhood_selector = ttk.Combobox(frame_inputs, state="readonly", values=["Geometriebasiert", "Regelbasiert", "Überlappungen teilweise zulassen"])
@@ -120,7 +117,6 @@ class GUI:
         self.local_search_neighborhood_selector.grid_remove()
         self.neighborhood_label.grid_remove()
         
-        #Choose rulebased strategy
         self.rulebased_strategy_label = ttk.Label(frame_inputs, text="Regel wählen: ")
         self.rulebased_strategy_label.grid(row=10, column=0, padx=5)
         self.rulebased_strat = ttk.Combobox(frame_inputs, state="readonly", values=["Absteigend nach Höhe", "Absteigend nach Breite", "Absteigend nach Fläche"])
@@ -129,23 +125,19 @@ class GUI:
         self.rulebased_strat.grid_remove()
         self.rulebased_strategy_label.grid_remove()
 
-        # Maximum Iterations for Local Search
         self.local_search_max_iterations_label = tk.Label(frame_inputs, text="Maximum Iterationen")
         self.local_search_max_iterations_label.grid(row=11, column=0, pady=5)
         self.local_search_max_iterations = tk.Entry(frame_inputs)
         self.local_search_max_iterations.grid(row=11, column=1)
         self.local_search_max_iterations.insert(0, "20")
 
-        # Function to toggle visibility based on strategy
         self.algo_selector.bind("<<ComboboxSelected>>", self.update_algorithm)
         self.local_search_neighborhood_selector.bind("<<ComboboxSelected>>", self.update_algorithm)
         self.update_algorithm()
 
-        # Label for error messages
         self.error_label = tk.Label(self.root, text="", fg="red")
         self.error_label.pack()
 
-        # Create Buttons in UI to Generate Instances and Start Packer
         frame_buttons = tk.Frame(self.root)
         frame_buttons.pack(pady=10)
 
@@ -171,25 +163,18 @@ class GUI:
         self.btn_zoom_out.grid(row=1, column=4, padx=5)
         Tooltip(self.btn_zoom_out, "Zoome Out")
 
-        
-
-        # Display Status of Program and the canvas with the rectangles
         self.label_status = tk.Label(self.root, text="Status: Bereit")
         self.label_status.pack()
 
-        # Create the scrollable canvas frame
         canvas_frame = tk.Frame(self.root)
         canvas_frame.pack(fill="both", expand=True)
 
-        # Create the canvas
         self.canvas = tk.Canvas(canvas_frame, bg="white")
         self.canvas.pack(fill="both", expand=True)
 
-        # Add vertical scrollbar
         v_scrollbar = tk.Scrollbar(canvas_frame, orient="vertical", command=self.canvas.yview)
         v_scrollbar.pack(side="right", fill="y")
 
-        # Configure the canvas to work with the vertical scrollbar
         self.canvas.configure(yscrollcommand=v_scrollbar.set)
         
         self.canvas.bind_all("<MouseWheel>", self.on_mousewheel)
@@ -218,9 +203,7 @@ class GUI:
     def redraw_canvas(self):
         self.canvas.delete("all")
         self.visualize_solution(self.current_solution)
-        
-        
-    # Changes visibility for widgets based on the selected algorithm    
+         
     def update_algorithm(self, *args):
         if self.algo_selector.get() == "Greedy":
             self.local_search_neighborhood_selector.grid_remove()
@@ -283,7 +266,6 @@ class GUI:
                     errors.append("Es muss mindestens eine Iteration ausgeführt werden")
 
         except ValueError:
-            # Converting into ints fails
             errors.append("Bitte geben Sie gültige Zahlen ein und befüllen Sie alle Felder")
 
         return errors
@@ -345,7 +327,7 @@ class GUI:
     def visualize_solution(self, solution):
         self.canvas.delete("all")
 
-        box_padding = 10 * self.zoom_factor  # Skaliere den Abstand zwischen den Boxen
+        box_padding = 10 * self.zoom_factor
         x_offset = 0
         y_offset = 0
         row_height = 0
@@ -354,7 +336,6 @@ class GUI:
         for box_id, box in enumerate(solution.boxes):
             scaled_box_length = int(self.box_size * self.zoom_factor)
 
-            # Überprüfen, ob die Box in die aktuelle Zeile passt
             if x_offset + scaled_box_length + box_padding > canvas_width:
                 x_offset = 0
                 y_offset += row_height + box_padding
@@ -362,14 +343,12 @@ class GUI:
 
             row_height = max(row_height, scaled_box_length)
 
-            # Zeichne die Box
             self.canvas.create_rectangle(
                 x_offset, y_offset,
                 x_offset + scaled_box_length, y_offset + scaled_box_length,
                 outline="black"
             )
 
-            # Zeichne die Rechtecke innerhalb der Box
             for rect in box.items:
                 x, y, w, h = rect.x, rect.y, rect.width, rect.height
                 scaled_x = int(x * self.zoom_factor) + x_offset
@@ -384,7 +363,6 @@ class GUI:
                     outline="black"
                 )
 
-            # Aktualisiere den x_offset für die nächste Box
             x_offset += scaled_box_length + box_padding
         self.btn_zoom_in.config(state="normal")
         self.btn_zoom_out.config(state="normal")
@@ -401,11 +379,9 @@ class GUI:
                 with open(file_path, "r") as file:
                     data = json.load(file)
                     
-                    # Populate rectangles and box length
                     self.instances = [Rectangle(rect[0], rect[1], rect[2], rect[3]) for rect in data.get("rectangles", [])]
                     self.box_size = data.get("box_length", 0)
                     
-                    # Update input fields
                     self.entry_num_rectangles.delete(0, tk.END)
                     self.entry_num_rectangles.insert(0, data.get("num_rectangles", ""))
                     

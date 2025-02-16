@@ -2,9 +2,7 @@ import copy
 import random
 from abc import ABC, abstractmethod
 
-from objects import Box, RecPac_Solution, Rectangle
-from problem import OptimizationProblem
-
+from classes import OptimizationProblem, Solution, RecPac_Solution, Box, Rectangle
 
 class NeighborhoodStrategy(ABC):
     @abstractmethod
@@ -17,7 +15,7 @@ class GeometryBasedStrategy(NeighborhoodStrategy):
         self.problem = problem
         self.solution_type = solution_type
 
-    def generate_neighbor(self, solution: RecPac_Solution):
+    def generate_neighbor(self, solution: Solution):
         if not solution.boxes:
             return solution
 
@@ -58,7 +56,7 @@ class RuleBasedStrategy(NeighborhoodStrategy):
         self.problem = problem
         self.rule = rule
 
-    def generate_neighbor(self, solution: RecPac_Solution):
+    def generate_neighbor(self, solution: Solution):
         if not solution.boxes:
             return solution
 

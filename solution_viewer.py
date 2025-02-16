@@ -3,7 +3,7 @@ import tkinter as tk
 from tkinter import filedialog
 import random
 
-from objects import Box, RecPac_Solution, Rectangle
+from classes import Box, RecPac_Solution, Rectangle
 
 class SolutionViewer:
     def __init__(self, root, solutions):

@@ -1,7 +1,7 @@
 import random
 from typing import List
 
-from objects import Rectangle
+from classes import Rectangle
 
 def generate_instances(n, min_width, max_width, min_height, max_height) -> List[Rectangle]:
     """

@@ -1,12 +1,11 @@
 import tkinter as tk
-import random
 
 from algorithms import Greedy, LocalSearch, Backtracking
 from neighborhoods import GeometryBasedStrategy, RuleBasedStrategy, OverlapStrategy
-from objects import RecPac_Solution, Box
-from problem import RectanglePacker
 from strategy import apply_strategy
 from view import GUI
+
+from classes import RecPac_Solution, RectanglePacker
 
 
 def main():
