@@ -18,11 +18,7 @@ class OptimizationProblem(ABC):
         pass
 
     @abstractmethod
-    def fit_rectangle_inside_box(self, box: Box, rectangle: Rectangle):
-        pass
-
-    @abstractmethod
-    def fit_rectangle_inside_box_with_overlap(self, box: Box, rectangle: Rectangle, overlap_percentage: float):
+    def fit_rectangle_inside_box(self, box: Box, rectangle: Rectangle, overlap_percentage: float = 0.0):
         pass
 
 
@@ -96,7 +92,7 @@ class RectanglePacker(OptimizationProblem):
 
         return solution
 
-    def fit_rectangle_inside_box(self, box: Box, rectangle: Rectangle):
+    def fit_rectangle_inside_box(self, box: Box, rectangle: Rectangle, overlap_percentage: float = 0.0):
         """Wrapper function that prepares data and calls the Numba-optimized function"""
         box_length = self.box_length
 
@@ -123,32 +119,6 @@ class RectanglePacker(OptimizationProblem):
 
         return None, None, False  # No valid position found
 
-    def fit_rectangle_inside_box_with_overlap(self, box: Box, rectangle: Rectangle, overlap_percentage: float):
-        """Wrapper function that prepares data and calls the Numba-optimized function"""
-        box_length = self.box_length
-
-        # Convert Box data to NumPy arrays for Numba
-        rectangles_x = np.array([r.x for r in box.rectangles], dtype=np.int32)
-        rectangles_y = np.array([r.y for r in box.rectangles], dtype=np.int32)
-        rectangles_width = np.array([r.width for r in box.rectangles], dtype=np.int32)
-        rectangles_height = np.array([r.height for r in box.rectangles], dtype=np.int32)
-
-        # Try normal orientation
-        x, y = fit_rectangle_inside_box_numba(box_length, rectangles_x, rectangles_y, rectangles_width,
-                                              rectangles_height,
-                                              rectangle.width, rectangle.height, overlap_percentage)
-        if x != -1:
-            return x, y, False  # No rotation needed
-
-        # Try rotated orientation
-        if rectangle.width != rectangle.height:  # Only rotate if dimensions are different
-            x, y = fit_rectangle_inside_box_numba(box_length, rectangles_x, rectangles_y, rectangles_width,
-                                                  rectangles_height,
-                                                  rectangle.height, rectangle.width, overlap_percentage)
-            if x != -1:
-                return x, y, True  # Rotation needed
-
-        return None, None, False  # No valid position found
 
     def basic_solution(self):
         """Creates a solution, in which each rectangle has its own box

@@ -111,7 +111,7 @@ class OverlapStrategy(NeighborhoodStrategy):
                 # Check if the rectangle's overlap is within the allowed limit
                 if not self.check_overlap(box, rect):
                     # Try to find a new position in the current box
-                    x, y, rotated = self.problem.fit_rectangle_inside_box_with_overlap(box, rect, self.overlap_percentage)
+                    x, y, rotated = self.problem.fit_rectangle_inside_box(box, rect, self.overlap_percentage)
 
                     if x is not None and y is not None:
                         # Move the rectangle to the new position
@@ -123,7 +123,7 @@ class OverlapStrategy(NeighborhoodStrategy):
                         placed = False
                         for other_box in new_solution.boxes:
                             if other_box is not box:
-                                x, y, rotated = self.problem.fit_rectangle_inside_box_with_overlap(other_box, rect, self.overlap_percentage)
+                                x, y, rotated = self.problem.fit_rectangle_inside_box(other_box, rect, self.overlap_percentage)
                                 if x is not None and y is not None:
                                     rect.x, rect.y = x, y
                                     if rotated:
@@ -147,7 +147,7 @@ class OverlapStrategy(NeighborhoodStrategy):
         return new_solution
 
     def check_overlap(self, box: Box, rect: Rectangle):
-        max_rect_area = max(rect.width * rect.height, 1)
+        max_rect_area = rect.width * rect.height
 
         for existing_rect in box.rectangles:
             if existing_rect == rect:
@@ -157,7 +157,7 @@ class OverlapStrategy(NeighborhoodStrategy):
             y_overlap = max(0, min(existing_rect.y + existing_rect.height, rect.y + rect.height) - max(existing_rect.y, rect.y))
 
             overlap_area = x_overlap * y_overlap
-            max_existing_area = max(existing_rect.width * existing_rect.height, 1)
+            max_existing_area = existing_rect.width * existing_rect.height
 
             # Check each overlap individually instead of summing them
             denominator = min(max_rect_area, max_existing_area)  # Use smaller area for fairness
