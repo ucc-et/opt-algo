@@ -10,18 +10,19 @@ from view import GUI
 
 
 def main():
-    def greedy_algorithm(rectangles, box_length, strategy_name):
-        rectangles = apply_strategy(rectangles, strategy_name)
-        problem = RectanglePacker(rectangles, box_length)
-        greedy_solver = Greedy(problem, strategy_name)
+    def greedy_algorithm(items, container_size, strategy_name):
+        items = apply_strategy(items, strategy_name)
+        problem = RectanglePacker(items, container_size)
+        greedy_solver = Greedy(problem, RecPac_Solution, strategy_name)
         return greedy_solver.solve()
 
-    def local_search_algorithm(rectangles, box_length, neighborhood_name, strategy_rulebased="", max_iterations=20):
+    def local_search_algorithm(items, container_size, neighborhood_name, strategy_rulebased="", max_iterations=20):
+        problem = RectanglePacker(items, container_size)
+        
         start_solution_map = {
-            "Geometriebasiert": generate_bad_solution(rectangles, box_length),
-            "Regelbasiert": greedy_algorithm(rectangles, box_length, "Größte Fläche zuerst"),
+            "Geometriebasiert": problem.generate_initial_solution(items, container_size),
+            "Regelbasiert": greedy_algorithm(items, container_size, "Größte Fläche zuerst"),
         }
-        problem = RectanglePacker(rectangles, box_length)
         neighborhood_map = {
             "Geometriebasiert": GeometryBasedStrategy(problem),
             "Regelbasiert": RuleBasedStrategy(problem, strategy_rulebased),
@@ -30,27 +31,11 @@ def main():
         local_search_solver = LocalSearch(problem, start_solution_map[neighborhood_name], max_iterations, neighborhood_map[neighborhood_name])
         return local_search_solver.solve()
 
-    def backtracking_algorithm(rectangles, box_length):
-        problem = RectanglePacker(rectangles, box_length)
+    def backtracking_algorithm(items, container_size):
+        problem = RectanglePacker(items, container_size)
         backtracking_solver = Backtracking(problem)
         solution = backtracking_solver.solve()
         return solution
-
-    def generate_bad_solution(rectangles, box_length):
-        bad_solution = RecPac_Solution()
-
-        for rect in rectangles:
-            new_box = Box(box_length)
-
-            if random.random() < 0.5:
-                rect.width, rect.height = rect.height, rect.width
-
-            rect.x = random.randint(0, box_length - rect.width)
-            rect.y = random.randint(0, box_length - rect.height)
-
-            new_box.add_rectangle(rect)
-            bad_solution.add_box(new_box)
-        return bad_solution
 
     root = tk.Tk()
     app = GUI(root, greedy_algorithm, local_search_algorithm, backtracking_algorithm)

@@ -6,16 +6,17 @@ from problem import OptimizationProblem
 
 
 class Greedy:
-    def __init__(self, problem: OptimizationProblem, strategy="largest_area_first"):
+    def __init__(self, problem: OptimizationProblem, solution_type, strategy="largest_area_first"):
         self.problem = problem
         self.strategy = strategy
+        self.solution_type = solution_type
 
     def solve(self):
         start_time = time.time()
 
-        current_solution = RecPac_Solution()
-        for instance in self.problem.rectangles:
-            new_solution = self.problem.add_to_solution(current_solution, instance)
+        current_solution = self.solution_type()
+        for item in self.problem.items:
+            new_solution = self.problem.add_to_solution(current_solution, item)
             if new_solution is not None:
                 current_solution = new_solution
 

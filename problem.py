@@ -9,11 +9,15 @@ from objects import Box, RecPac_Solution, Rectangle
 
 class OptimizationProblem(ABC):
     @abstractmethod
-    def add_to_solution(self, solution, item) -> object:
+    def add_to_solution(self, *args):
         pass
 
     @abstractmethod
-    def find_valid_assignment(self, box: Box, item: Rectangle):
+    def find_valid_assignment(self, *args):
+        pass
+    
+    @abstractmethod
+    def generate_initial_solution(self, *args):
         pass
 
 
@@ -73,14 +77,14 @@ class RectanglePacker(OptimizationProblem):
 
         return solution
 
-    def find_valid_assignment(self, box: Box, item: Rectangle):
+    def find_valid_assignment(self, container: Box, item: Rectangle):
         """Wrapper function that prepares data and calls the Numba-optimized function"""
 
         # Convert Box data to NumPy arrays for Numba
-        items_x = np.array([r.x for r in box.rectangles], dtype=np.int32)
-        items_y = np.array([r.y for r in box.rectangles], dtype=np.int32)
-        items_width = np.array([r.width for r in box.rectangles], dtype=np.int32)
-        items_height = np.array([r.height for r in box.rectangles], dtype=np.int32)
+        items_x = np.array([r.x for r in container.rectangles], dtype=np.int32)
+        items_y = np.array([r.y for r in container.rectangles], dtype=np.int32)
+        items_width = np.array([r.width for r in container.rectangles], dtype=np.int32)
+        items_height = np.array([r.height for r in container.rectangles], dtype=np.int32)
 
         # Try normal orientation
         x, y = find_valid_assignment_numba(self.container_size, items_x, items_y, items_width, items_height, item.width, item.height)

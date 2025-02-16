@@ -3,18 +3,19 @@ import random
 from abc import ABC, abstractmethod
 
 from objects import Box, RecPac_Solution, Rectangle
-from problem import RectanglePacker, OptimizationProblem
+from problem import OptimizationProblem
 
 
 class NeighborhoodStrategy(ABC):
     @abstractmethod
-    def generate_neighbor(self, solution):
+    def generate_neighbor(self, *args):
         pass
 
 
 class GeometryBasedStrategy(NeighborhoodStrategy):
-    def __init__(self, problem: OptimizationProblem):
+    def __init__(self, problem: OptimizationProblem, solution_type):
         self.problem = problem
+        self.solution_type = solution_type
 
     def generate_neighbor(self, solution: RecPac_Solution):
         if not solution.boxes:
