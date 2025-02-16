@@ -1,13 +1,13 @@
            
             
-def apply_strategy(instances, strategy_name):
+def apply_strategy(items, strategy_name):
     if strategy_name == "Größte Fläche zuerst":
-        instances = sorted(instances, key=lambda r: r.width * r.height, reverse=True)
+        items = sorted(items, key=lambda i: i.width * i.height, reverse=True)
     elif strategy_name == "Kleinste Fläche zuerst":
-        instances = sorted(instances, key=lambda r: r.width * r.height)
+        items = sorted(items, key=lambda i: i.width * i.height)
     elif strategy_name == "Größtes Seitenverhältnis zuerst":
-        instances = sorted(instances, key=lambda r: max(r.width / r.height, r.height / r.width), reverse=True)
+        items = sorted(items, key=lambda i: max(i.width / i.height, i.height / i.width), reverse=True)
     elif strategy_name == "Kleinstes Seitenverhältnis zuerst":
-        instances = sorted(instances, key=lambda r: max(r.width / r.height, r.height / r.width))
+        items = sorted(items, key=lambda i: max(i.width / i.height, i.height / i.width))
         
-    return instances
+    return items

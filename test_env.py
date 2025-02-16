@@ -95,7 +95,7 @@ class Test_Environment:
             for solution in self.greedy_solutions:
                 current = {"boxes": [], "algorithm": "greedy"}
                 for box in solution.boxes:
-                    current_box = [{"x": rect.x, "y": rect.y, "w": rect.width, "h": rect.height} for rect in box.rectangles]
+                    current_box = [{"x": rect.x, "y": rect.y, "w": rect.width, "h": rect.height} for rect in box.items]
                     current["boxes"].append(current_box)
                 obj["solutions"].append(current)
                 
@@ -104,7 +104,7 @@ class Test_Environment:
             for solution in self.local_search_solutions:
                 current = {"boxes": [], "algorithm": "local_search"}
                 for box in solution.boxes:
-                    current_box = [{"x": rect.x, "y": rect.y, "w": rect.width, "h": rect.height} for rect in box.rectangles]
+                    current_box = [{"x": rect.x, "y": rect.y, "w": rect.width, "h": rect.height} for rect in box.items]
                     current["boxes"].append(current_box)
                 obj["solutions"].append(current)
                 

@@ -1,12 +1,12 @@
 import time
 import sys
 from neighborhoods import NeighborhoodStrategy
-from objects import RecPac_Solution
+from objects import RecPac_Solution, Solution
 from problem import OptimizationProblem
 
 
 class Greedy:
-    def __init__(self, problem: OptimizationProblem, solution_type, strategy="largest_area_first"):
+    def __init__(self, problem: OptimizationProblem, solution_type: type, strategy="largest_area_first"):
         self.problem = problem
         self.strategy = strategy
         self.solution_type = solution_type
@@ -28,7 +28,7 @@ class Greedy:
 
 
 class LocalSearch:
-    def __init__(self, problem: OptimizationProblem, start_solution: RecPac_Solution, max_iterations: int,
+    def __init__(self, problem: OptimizationProblem, start_solution: Solution, max_iterations: int,
                  neighborhood_strategy: NeighborhoodStrategy):
         self.problem = problem
         self.start_solution = start_solution
@@ -65,14 +65,15 @@ class SimmulatedAnnealing:
 
 
 class Backtracking:
-    def __init__(self, problem: OptimizationProblem):
+    def __init__(self, problem: OptimizationProblem, solution_type: type):
         self.problem = problem
+        self.solution_type = solution_type
         sys.setrecursionlimit(10**6)
 
     def solve(self):
         start_time = time.time()
 
-        current_solution = RecPac_Solution()
+        current_solution = self.solution_type()
 
         result = self._backtrack(current_solution, 0)
 
@@ -82,13 +83,13 @@ class Backtracking:
 
         return result
 
-    def _backtrack(self, current_solution: RecPac_Solution, index: int):
+    def _backtrack(self, current_solution: Solution, index: int):
         # Wenn alle Rechtecke platziert sind, return
-        if index >= len(self.problem.rectangles):
+        if index >= len(self.problem.items):
             return current_solution
 
         # aktuelles Rechteck zum platzieren
-        rectangle = self.problem.rectangles[index]
+        rectangle = self.problem.items[index]
 
         # Platziere Rechteck in Lösung
         new_solution = self.problem.add_to_solution(current_solution, rectangle)

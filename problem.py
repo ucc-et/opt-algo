@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import List
+import random
 
 import numpy as np
 from numba import njit
 
-from objects import Box, RecPac_Solution, Rectangle
+from objects import Box, Container, Item, RecPac_Solution, Rectangle
 
 
 class OptimizationProblem(ABC):
@@ -77,14 +78,14 @@ class RectanglePacker(OptimizationProblem):
 
         return solution
 
-    def find_valid_assignment(self, container: Box, item: Rectangle):
+    def find_valid_assignment(self, container: Container, item: Item):
         """Wrapper function that prepares data and calls the Numba-optimized function"""
 
         # Convert Box data to NumPy arrays for Numba
-        items_x = np.array([r.x for r in container.rectangles], dtype=np.int32)
-        items_y = np.array([r.y for r in container.rectangles], dtype=np.int32)
-        items_width = np.array([r.width for r in container.rectangles], dtype=np.int32)
-        items_height = np.array([r.height for r in container.rectangles], dtype=np.int32)
+        items_x = np.array([r.x for r in container.items], dtype=np.int32)
+        items_y = np.array([r.y for r in container.items], dtype=np.int32)
+        items_width = np.array([r.width for r in container.items], dtype=np.int32)
+        items_height = np.array([r.height for r in container.items], dtype=np.int32)
 
         # Try normal orientation
         x, y = find_valid_assignment_numba(self.container_size, items_x, items_y, items_width, items_height, item.width, item.height)
@@ -98,3 +99,19 @@ class RectanglePacker(OptimizationProblem):
                 return x, y, True  # Rotation needed
 
         return None, None, False  # No valid position found
+    
+    def generate_initial_solution(self, rectangles, box_length):
+        bad_solution = RecPac_Solution()
+
+        for rect in rectangles:
+            new_box = Box(box_length)
+
+            if random.random() < 0.5:
+                rect.width, rect.height = rect.height, rect.width
+
+            rect.x = random.randint(0, box_length - rect.width)
+            rect.y = random.randint(0, box_length - rect.height)
+
+            new_box.add_rectangle(rect)
+            bad_solution.add_box(new_box)
+        return bad_solution

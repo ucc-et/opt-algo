@@ -370,7 +370,7 @@ class GUI:
             )
 
             # Zeichne die Rechtecke innerhalb der Box
-            for rect in box.rectangles:
+            for rect in box.items:
                 x, y, w, h = rect.x, rect.y, rect.width, rect.height
                 scaled_x = int(x * self.zoom_factor) + x_offset
                 scaled_y = int(y * self.zoom_factor) + y_offset

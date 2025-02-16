@@ -24,7 +24,7 @@ def main():
             "Regelbasiert": greedy_algorithm(items, container_size, "Größte Fläche zuerst"),
         }
         neighborhood_map = {
-            "Geometriebasiert": GeometryBasedStrategy(problem),
+            "Geometriebasiert": GeometryBasedStrategy(problem, RecPac_Solution),
             "Regelbasiert": RuleBasedStrategy(problem, strategy_rulebased),
             "Überlappungen teilweise zulassen": OverlapStrategy(initial_overlap=0.1)
         }
@@ -33,7 +33,7 @@ def main():
 
     def backtracking_algorithm(items, container_size):
         problem = RectanglePacker(items, container_size)
-        backtracking_solver = Backtracking(problem)
+        backtracking_solver = Backtracking(problem ,RecPac_Solution)
         solution = backtracking_solver.solve()
         return solution
 

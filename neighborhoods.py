@@ -13,7 +13,7 @@ class NeighborhoodStrategy(ABC):
 
 
 class GeometryBasedStrategy(NeighborhoodStrategy):
-    def __init__(self, problem: OptimizationProblem, solution_type):
+    def __init__(self, problem: OptimizationProblem, solution_type: type):
         self.problem = problem
         self.solution_type = solution_type
 
@@ -24,11 +24,11 @@ class GeometryBasedStrategy(NeighborhoodStrategy):
         new_solution = copy.deepcopy(solution)
 
         box_from = new_solution.boxes[-1]
-        if not box_from.rectangles:
+        if not box_from.items:
             return new_solution
 
-        for _ in range(len(box_from.rectangles)):
-            rect_to_move = random.choice(box_from.rectangles)
+        for _ in range(len(box_from.items)):
+            rect_to_move = random.choice(box_from.items)
             box_from.remove_rectangle(rect_to_move)
 
             index = 0
@@ -66,7 +66,7 @@ class RuleBasedStrategy(NeighborhoodStrategy):
         current_solution = RecPac_Solution()
 
         # Extract all rectangles
-        rectangles = [rect for box in solution.boxes for rect in box.rectangles]
+        rectangles = [rect for box in solution.boxes for rect in box.items]
 
         if len(rectangles) > 1:
             if self.rule == "Absteigend nach Höhe":
@@ -110,14 +110,14 @@ class OverlapStrategy(NeighborhoodStrategy):
         new_solution.set_boxes([Box(box.box_length) for box in solution.boxes])
 
         for box in solution.boxes:
-            for rect in box.rectangles:
+            for rect in box.items:
                 new_solution.boxes[solution.boxes.index(box)].add_rectangle(rect)
 
         box_from = random.choice(new_solution.boxes)
-        if not box_from.rectangles:
+        if not box_from.items:
             return new_solution
 
-        rect_to_move = random.choice(box_from.rectangles)
+        rect_to_move = random.choice(box_from.items)
         box_from.remove_rectangle(rect_to_move)
 
         box_to = random.choice(new_solution.boxes)
@@ -137,7 +137,7 @@ class OverlapStrategy(NeighborhoodStrategy):
         total_area = box.box_length ** 2
         overlapping_area = 0
 
-        for existing_rect in box.rectangles:
+        for existing_rect in box.items:
             x_overlap = max(0, min(existing_rect.x + existing_rect.width, rect.x + rect.width) - max(existing_rect.x,
                                                                                                      rect.x))
             y_overlap = max(0, min(existing_rect.y + existing_rect.height, rect.y + rect.height) - max(existing_rect.y,
