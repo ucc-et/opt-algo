@@ -1,9 +1,9 @@
 import copy
 import random
 
-from classes import OptimizationProblem, Solution, RecPac_Solution, Box, Rectangle, NeighborhoodStrategy
+from classes import OptimizationProblem, Solution, RecPac_Solution, Box, Rectangle, Neighborhood
 
-class GeometryBasedStrategy(NeighborhoodStrategy):
+class GeometryBasedStrategy(Neighborhood):
     def __init__(self, problem: OptimizationProblem, solution_type: type):
         self.problem = problem
         self.solution_type = solution_type
@@ -44,7 +44,7 @@ class GeometryBasedStrategy(NeighborhoodStrategy):
         return new_solution
 
 
-class RuleBasedStrategy(NeighborhoodStrategy):
+class RuleBasedStrategy(Neighborhood):
     def __init__(self, problem: OptimizationProblem, rule: str = "Absteigend nach Höhe"):
         self.problem = problem
         self.rule = rule
@@ -87,7 +87,7 @@ class RuleBasedStrategy(NeighborhoodStrategy):
 
         return current_solution
 
-class OverlapStrategy(NeighborhoodStrategy):
+class OverlapStrategy(Neighborhood):
 
     def __init__(self, initial_overlap: float = 1.0, decay_rate: float = 0.05):
         self.overlap_percentage = initial_overlap

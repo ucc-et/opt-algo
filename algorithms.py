@@ -1,7 +1,7 @@
 import time
 import sys
 
-from classes import OptimizationProblem, Solution, NeighborhoodStrategy
+from classes import OptimizationProblem, Solution, Neighborhood
 
 class Greedy:
     def __init__(self, problem: OptimizationProblem, solution_type: type, strategy="largest_area_first"):
@@ -27,7 +27,7 @@ class Greedy:
 
 class LocalSearch:
     def __init__(self, problem: OptimizationProblem, start_solution: Solution, max_iterations: int,
-                 neighborhood_strategy: NeighborhoodStrategy):
+                 neighborhood_strategy: Neighborhood):
         self.problem = problem
         self.start_solution = start_solution
         self.max_iterations = max_iterations

@@ -21,7 +21,7 @@ class OptimizationProblem(ABC):
 #                 Neighborhood
 # =================================================
     
-class NeighborhoodStrategy(ABC):
+class Neighborhood(ABC):
     @abstractmethod
     def generate_neighbor(self, *args):
         pass
