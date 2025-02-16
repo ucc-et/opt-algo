@@ -43,7 +43,6 @@ def check_collision(x, y, width, height, rect_x, rect_y, rect_width, rect_height
     actual_overlap = overlap_area / max_area if max_area > 0 else 0.0
 
     # If overlap under overlap_percentage, overlap is allowed
-    print(actual_overlap <= overlap_percentage)
     return actual_overlap >= overlap_percentage
 
 

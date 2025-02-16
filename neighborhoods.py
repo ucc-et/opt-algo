@@ -102,44 +102,47 @@ class OverlapStrategy(NeighborhoodStrategy):
         self.problem = problem
 
     def generate_neighbor(self, solution: RecPac_Solution):
-        if not solution.boxes:
-            return solution
-
+        # Copy the current solution
         new_solution = copy.deepcopy(solution)
 
-        for box_from in new_solution.boxes:
-
-            for rect_to_move in box_from.rectangles:
-                box_from.remove_rectangle(rect_to_move)
-
-                position_found = False
-
-                # check all boxes in this solution
-                for box_to in new_solution.boxes:
-                    x, y, rotated = self.problem.fit_rectangle_inside_box_with_overlap(box_to, rect_to_move,
-                                                                                       self.overlap_percentage)
+        # Iterate through all boxes and their rectangles
+        for box in new_solution.boxes:
+            for rect in box.rectangles:
+                # Check if the rectangle's overlap is within the allowed limit
+                if not self.check_overlap(box, rect):
+                    # Try to find a new position in the current box
+                    x, y, rotated = self.problem.fit_rectangle_inside_box_with_overlap(box, rect, self.overlap_percentage)
 
                     if x is not None and y is not None:
-                        rect_to_move.x = x
-                        rect_to_move.y = y
+                        # Move the rectangle to the new position
+                        rect.x, rect.y = x, y
                         if rotated:
-                            rect_to_move.width, rect_to_move.height = rect_to_move.height, rect_to_move.width
-                        box_to.add_rectangle(rect_to_move)
-                        position_found = True
-                        break
+                            rect.x, rect.y = rect.y, rect.x
+                    else:
+                        # If no valid position in the current box, search other boxes
+                        placed = False
+                        for other_box in new_solution.boxes:
+                            if other_box is not box:
+                                x, y, rotated = self.problem.fit_rectangle_inside_box_with_overlap(other_box, rect, self.overlap_percentage)
+                                if x is not None and y is not None:
+                                    rect.x, rect.y = x, y
+                                    if rotated:
+                                        rect.x, rect.y = rect.y, rect.x
+                                    box.remove_rectangle(rect)
+                                    other_box.add_rectangle(rect)
+                                    placed = True
+                                    break
 
-                # if there is no valid position create new box
-                if not position_found:
-                    new_box = Box(new_solution.boxes[0].box_length)
-                    rect_to_move.x, rect_to_move.y = 0, 0
-                    new_box.add_rectangle(rect_to_move)
-                    new_solution.add_box(new_box)
-                    break
+                        # If no valid box was found, create a new one
+                        if not placed:
+                            new_box = Box(new_solution.boxes[0].box_length)
+                            rect.x, rect.y = 0, 0  # Default placement in the new box
+                            new_box.add_rectangle(rect)
+                            new_solution.add_box(new_box)
+                            box.remove_rectangle(rect)
 
-            new_solution.check_if_box_empty(box_from)
-
-        # decrease overlap_percentage
-        self.overlap_percentage = max(0, self.overlap_percentage - self.decay_rate)
+        # Reduce the overlap percentage
+        self.overlap_percentage = max(0, round(self.overlap_percentage - self.decay_rate, 6))
 
         return new_solution
 
@@ -149,16 +152,18 @@ class OverlapStrategy(NeighborhoodStrategy):
         max_existing_area = 1
 
         for existing_rect in box.rectangles:
+            if existing_rect == rect:
+                continue  # Avoid checking itself
+
             x_overlap = max(0, min(existing_rect.x + existing_rect.width, rect.x + rect.width) - max(existing_rect.x, rect.x))
             y_overlap = max(0, min(existing_rect.y + existing_rect.height, rect.y + rect.height) - max(existing_rect.y, rect.y))
 
             overlap_area = x_overlap * y_overlap
-            overlapping_area += overlap_area
+            max_existing_area = max(existing_rect.width * existing_rect.height, 1)
 
-            max_existing_area = max(max_existing_area, existing_rect.width * existing_rect.height)
+            # Check each overlap individually instead of summing them
+            denominator = min(max_rect_area, max_existing_area)  # Use smaller area for fairness
+            if overlap_area / denominator > self.overlap_percentage:
+                return False  # Overlap exceeds allowed percentage
 
-        denominator = max(max_rect_area, max_existing_area)
-        if overlapping_area / denominator <= self.overlap_percentage:
-            return True
-
-        return False
+        return True  # No overlaps beyond allowed percentage
