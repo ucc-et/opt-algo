@@ -1,4 +1,6 @@
 import copy
+from datetime import datetime
+import os
 import random
 import time
 from solvers.algorithms import Greedy, LocalSearch
@@ -18,14 +20,17 @@ class Test_Environment:
         self.max_iterations = 20
         self.greedy_solutions = []
         self.local_search_solutions = []
+        
+        self.times_greedy = []
+        self.times_local_search = []
     
     def __repr__(self):
         return f"Test_Environment(box_length={self.box_length}, greedy_strategy={self.greedy_strategy}, neighborhood={self.neighborhood}, max_iterations={self.max_iterations})"
     
     def run_greedy(self):
         print("\nStarte Greedy-Algorithmus...")
-        start_time = time.time()
         for i, instance_set in enumerate(self.instances):
+            start_time = time.time()
             print(f"->Verarbeite Instanz {i+1}/{len(self.instances)} mit {len(instance_set)} Rechtecken...")
             
             instance_set = apply_greedy_strategy(instance_set, self.greedy_strategy)
@@ -33,10 +38,10 @@ class Test_Environment:
             problem = RectanglePacker(instance_set, self.box_length)
             solver = Greedy(problem, RecPac_Solution, self.greedy_strategy)
             solution = solver.solve()
+            self.times_greedy.append(time.time() - start_time)
             self.greedy_solutions.append(solution)
             
-        elapsed_time = time.time() - start_time
-        print(f"\nGreedy-Algorithmus abgeschlossen. Gesamtdauer: {elapsed_time:.6f} Sekunden für {len(self.instances)} Instanzen")
+        print(f"\nGreedy-Algorithmen abgeschlossen.")
         pass
     
     def generate_bad_solution(self, rectangles, box_length):
@@ -57,24 +62,28 @@ class Test_Environment:
     
     def run_local_search(self):
         print("\nStarte lokale Suche...")
-        start_time = time.time()
-        
         for i, instance_set in enumerate(self.instances):
+            start_time = time.time()
             print(f"-> Verarbeite Instanz {i+1}/{len(self.instances)} mit {len(instance_set)} Rechtecken...")
+            
             instance_set_copy = copy.deepcopy(instance_set)
             problem = RectanglePacker(instance_set_copy, self.box_length)
+            
             local_search_neighborhoods = {1: GeometryBasedStrategy(problem, RecPac_Solution), 2: RuleBasedStrategy(problem), 3: OverlapStrategy()}
+            
             if type(self.neighborhood) == int:
                 self.neighborhood = local_search_neighborhoods[self.neighborhood]
             start_solution = self.generate_bad_solution(instance_set_copy, self.box_length)
             solver = LocalSearch(problem, start_solution, self.max_iterations, self.neighborhood)
             solution = solver.solve()
+            
+            self.times_local_search.append(time.time() - start_time)
             self.local_search_solutions.append(solution)
 
         elapsed_time = time.time() - start_time
         print(f"\nLokale Suche abgeschlossen. Gesamtdauer: {elapsed_time:.6f} Sekunden")
     
-    def generate_multiple_instances(self, instance_count, rectangle_count, min_breite, min_hoehe, max_breite, max_hoehe):        
+    def generate_instances(self, instance_count, rectangle_count, min_breite, min_hoehe, max_breite, max_hoehe):        
         for _ in range(instance_count):
             self.instances.append(generate_instances(rectangle_count, min_breite, max_breite, min_hoehe, max_hoehe))
         
@@ -82,6 +91,7 @@ class Test_Environment:
         self.run_greedy()
         self.run_local_search()
         self.save_solutions()
+        self.create_protocol()
 
     def save_solutions(self):
         with open("test_env_solutions.json", "w") as f:
@@ -105,15 +115,53 @@ class Test_Environment:
                 
             json.dump(obj, f, indent=4)
 
+    def create_protocol(self):
+        if not os.path.exists("protocols"):
+            os.makedirs("protocols")
+        
+        protocol_data = {
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "totale_run_time": sum(x for x in self.times_greedy)+sum(x for x in self.times_local_search),
+            "box_length": self.box_length,
+            "greedy_strategy": self.greedy_strategy,
+            "neighborhood": str(self.neighborhood.__class__.__name__) if not isinstance(self.neighborhood, int) else self.neighborhood,
+            "max_iterations": self.max_iterations,
+            "total_instances": len(self.instances),
+            "solutions": []
+        }
+        
+        for i, solution in enumerate(self.greedy_solutions):
+            protocol_data["solutions"].append({
+                "algorithm": "Greedy",
+                "instance": i + 1,
+                "num_boxes": len(solution.boxes),
+                "time": self.times_greedy[i]
+            })
+        
+        for i, solution in enumerate(self.local_search_solutions):
+            protocol_data["solutions"].append({
+                "algorithm": "Local Search",
+                "instance": i + 1,
+                "num_boxes": len(solution.boxes),
+                "time": self.times_local_search[i]
+            })
+        
+        file_name = f"protocols/protocol_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        with open(file_name, "w") as f:
+            json.dump(protocol_data, f, indent=4)
+        
+        print(f"Protokoll gespeichert unter: {file_name}")
+
+
 if __name__ == "__main__":
     test_env = Test_Environment()
     
-    instanzen, rechtecke, min_breite, min_hoehe, max_breite, max_hoehe, box_laenge = None, None, None, None, None, None, None 
-    #instanzen, rechtecke, min_breite, min_hoehe, max_breite, max_hoehe, box_laenge = 10, 150, 10, 15, 18, 23, 100 
+    #instanzen, rechtecke, min_breite, min_hoehe, max_breite, max_hoehe, box_laenge = None, None, None, None, None, None, None 
+    instanzen, rechtecke, min_breite, min_hoehe, max_breite, max_hoehe, box_laenge = 10, 150, 10, 15, 18, 23, 100 
     
-    chosen_strategy = None
-    chosen_neighborhood = None
-    max_iterations = None
+    chosen_strategy = 1
+    chosen_neighborhood = 1
+    max_iterations = 20
     
     if instanzen is None and rechtecke is None and min_breite is None and min_hoehe is None and max_hoehe is None and max_breite is None and box_laenge is None:
         eingabe = input("Geben Sie die Parameter ein (Anzahl Instanzen, Anzahl Rechtecke, min. Breite, min. Höhe, max. Breite, max. Höhe, Boxlänge) durch Kommas getrennt: ")
@@ -121,7 +169,7 @@ if __name__ == "__main__":
     
     test_env.box_length = box_laenge
     
-    test_env.generate_multiple_instances(instanzen, rechtecke, min_breite, min_hoehe, max_breite, max_hoehe)
+    test_env.generate_instances(instanzen, rechtecke, min_breite, min_hoehe, max_breite, max_hoehe)
     
     greedy_strategies = {1: "Größte Fläche zuerst", 2: "Kleinste Fläche zuerst", 3: "Größtes Seitenverhältnis zuerst", 4: "Kleinstes Seitenverhältnis zuerst"}
     
