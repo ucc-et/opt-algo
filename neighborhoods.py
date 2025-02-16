@@ -110,6 +110,7 @@ class OverlapStrategy(NeighborhoodStrategy):
             for rect in box.rectangles:
                 # Check if the rectangle's overlap is within the allowed limit
                 if not self.check_overlap(box, rect):
+                    box.remove_rectangle(rect)
                     # Try to find a new position in the current box
                     x, y, rotated = self.problem.fit_rectangle_inside_box(box, rect, self.overlap_percentage)
 
@@ -118,6 +119,7 @@ class OverlapStrategy(NeighborhoodStrategy):
                         rect.x, rect.y = x, y
                         if rotated:
                             rect.x, rect.y = rect.y, rect.x
+                        box.add_rectangle(rect)
                     else:
                         # If no valid position in the current box, search other boxes
                         placed = False
@@ -128,7 +130,6 @@ class OverlapStrategy(NeighborhoodStrategy):
                                     rect.x, rect.y = x, y
                                     if rotated:
                                         rect.x, rect.y = rect.y, rect.x
-                                    box.remove_rectangle(rect)
                                     other_box.add_rectangle(rect)
                                     placed = True
                                     break
@@ -139,7 +140,6 @@ class OverlapStrategy(NeighborhoodStrategy):
                             rect.x, rect.y = 0, 0  # Default placement in the new box
                             new_box.add_rectangle(rect)
                             new_solution.add_box(new_box)
-                            box.remove_rectangle(rect)
 
         # Reduce the overlap percentage
         self.overlap_percentage = max(0, round(self.overlap_percentage - self.decay_rate, 6))
