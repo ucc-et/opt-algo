@@ -147,9 +147,7 @@ class OverlapStrategy(NeighborhoodStrategy):
         return new_solution
 
     def check_overlap(self, box: Box, rect: Rectangle):
-        overlapping_area = 0
         max_rect_area = max(rect.width * rect.height, 1)
-        max_existing_area = 1
 
         for existing_rect in box.rectangles:
             if existing_rect == rect:
