@@ -2,6 +2,8 @@ import copy
 import random
 
 from classes import OptimizationProblem, Solution, RecPac_Solution, Box, Rectangle, Neighborhood
+from classes.helpers import apply_rule
+from solvers.enums import Rules
 
 class GeometryBasedStrategy(Neighborhood):
     def __init__(self, problem: OptimizationProblem, solution_type: type):
@@ -45,7 +47,7 @@ class GeometryBasedStrategy(Neighborhood):
 
 
 class RuleBasedStrategy(Neighborhood):
-    def __init__(self, problem: OptimizationProblem, rule: str = "Absteigend nach Höhe"):
+    def __init__(self, problem: OptimizationProblem, rule: str = Rules.HEIGHT_FIRST):
         self.problem = problem
         self.rule = rule
 
@@ -55,27 +57,22 @@ class RuleBasedStrategy(Neighborhood):
 
         current_solution = RecPac_Solution()
 
-        rectangles = [rect for box in solution.boxes for rect in box.items]
+        items = [item for box in solution.boxes for item in box.items]
 
-        if len(rectangles) > 1:
-            if self.rule == "Absteigend nach Höhe":
-                rectangles = sorted(rectangles, key=lambda rect: rect.height, reverse=True)
-            elif self.rule == "Absteigend nach Breite":
-                rectangles = sorted(rectangles, key=lambda rect: rect.width, reverse=True)
-            elif self.rule == "Absteigend nach Fläche":
-                rectangles = sorted(rectangles, key=lambda rect: rect.height*rect.width, reverse=True)
+        if len(items) > 1:
+            items = apply_rule(items, self.rule)
 
-            small_rectangles = rectangles[:len(rectangles) // 2]
+            small_rectangles = items[:len(items) // 2]
             selected = random.choice(small_rectangles)
 
-            i = rectangles.index(selected)
-            j = i + 1 if i < len(rectangles) - 1 else i - 1
-            rectangles[i], rectangles[j] = rectangles[j], rectangles[i]
+            i = items.index(selected)
+            j = i + 1 if i < len(items) - 1 else i - 1
+            items[i], items[j] = items[j], items[i]
 
-        for instance in rectangles:
-            instance.x, instance.y = None, None
+        for item in items:
+            item.x, item.y = None, None
 
-            new_solution = self.problem.add_to_solution(current_solution, instance)
+            new_solution = self.problem.add_to_solution(current_solution, item)
 
             if new_solution is not None:
                 current_solution = new_solution

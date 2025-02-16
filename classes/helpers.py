@@ -2,6 +2,7 @@ import random
 from typing import List
 
 from classes import Rectangle
+from solvers.enums import Rules
 
 def generate_instances(n, min_width, max_width, min_height, max_height) -> List[Rectangle]:
 
@@ -25,3 +26,11 @@ def apply_greedy_strategy(items, strategy_name):
         items = sorted(items, key=lambda i: max(i.width / i.height, i.height / i.width))
         
     return items
+
+def apply_rule(items, rule_name):
+    if rule_name == Rules.HEIGHT_FIRST:
+        return sorted(items, key=lambda item: item.height, reverse=True)
+    elif rule_name == Rules.AREA_FIRST:
+        return sorted(items, key=lambda item: item.height*item.width, reverse=True)
+    elif rule_name == Rules.WIDTH_FIRST:
+        return sorted(items, key=lambda item: item.width, reverse=True)
