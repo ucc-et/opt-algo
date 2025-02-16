@@ -9,32 +9,31 @@ from objects import Box, RecPac_Solution, Rectangle
 
 class OptimizationProblem(ABC):
     @abstractmethod
-    def add_to_solution(self, solution, instance) -> object:
+    def add_to_solution(self, solution, item) -> object:
         pass
 
     @abstractmethod
-    def fit_rectangle_inside_box(self, box: Box, rectangle: Rectangle):
+    def find_valid_assignment(self, box: Box, item: Rectangle):
         pass
 
 
 @njit
-def check_collision(x, y, width, height, rect_x, rect_y, rect_width, rect_height):
+def detect_item_invalidity(x, y, width, height, item_x, item_y, item_width, item_height):
     """Fast overlap check using Numba"""
-    return not (x >= rect_x + rect_width or x + width <= rect_x or
-                y >= rect_y + rect_height or y + height <= rect_y)
-
+    return not (x >= item_x + item_width or x + width <= item_x or
+                y >= item_y + item_height or y + height <= item_y)
 
 @njit
-def fit_rectangle_inside_box_numba(box_length, rectangles_x, rectangles_y, rectangles_width, rectangles_height,
-                                   rect_width, rect_height):
+def find_valid_assignment_numba(container_size, items_x, items_y, items_width, items_height,
+                                   item_width, item_height):
     """Fast brute-force search for a valid rectangle position"""
-    for y in range(box_length - rect_height + 1):
-        for x in range(box_length - rect_width + 1):
+    for y in range(container_size - item_width + 1):
+        for x in range(container_size - item_height + 1):
             fits = True
-            for i in range(len(rectangles_x)):  # Check all existing rectangles
-                if check_collision(x, y, rect_width, rect_height,
-                                   rectangles_x[i], rectangles_y[i],
-                                   rectangles_width[i], rectangles_height[i]):
+            for i in range(len(items_x)):  # Check all existing rectangles
+                if detect_item_invalidity(x, y, item_width, item_height,
+                                   items_x[i], items_y[i],
+                                   items_width[i], items_height[i]):
                     fits = False
                     break  # If overlap, stop checking
             if fits:
@@ -50,7 +49,7 @@ class RectanglePacker(OptimizationProblem):
         self.container_size = container_size
 
     def __repr__(self):
-        return f"RectanglePacker(items={self.items}, box_length={self.container_size}"
+        return f"RectanglePacker(items={self.items}, container_size={self.container_size}"
 
     def add_to_solution(self, solution: RecPac_Solution, item: Rectangle):
         """Attempts to place a rectangle into an existing box. If no space is found, a new box is created."""
@@ -58,7 +57,7 @@ class RectanglePacker(OptimizationProblem):
             return None
 
         for box in solution.boxes:
-            x, y, rotated = self.fit_rectangle_inside_box(box, item)
+            x, y, rotated = self.find_valid_assignment(box, item)
             if x is not None and y is not None:
                 item.x, item.y = x, y
                 if rotated:
@@ -74,7 +73,7 @@ class RectanglePacker(OptimizationProblem):
 
         return solution
 
-    def fit_rectangle_inside_box(self, box: Box, item: Rectangle):
+    def find_valid_assignment(self, box: Box, item: Rectangle):
         """Wrapper function that prepares data and calls the Numba-optimized function"""
 
         # Convert Box data to NumPy arrays for Numba
@@ -84,13 +83,13 @@ class RectanglePacker(OptimizationProblem):
         items_height = np.array([r.height for r in box.rectangles], dtype=np.int32)
 
         # Try normal orientation
-        x, y = fit_rectangle_inside_box_numba(self.container_size, items_x, items_y, items_width, items_height, item.width, item.height)
+        x, y = find_valid_assignment_numba(self.container_size, items_x, items_y, items_width, items_height, item.width, item.height)
         if x != -1:
             return x, y, False  # No rotation needed
 
         # Try rotated orientation
         if item.width != item.height:  # Only rotate if dimensions are different
-            x, y = fit_rectangle_inside_box_numba(self.container_size, items_x, items_y, items_width, items_height, item.height, item.width)
+            x, y = find_valid_assignment_numba(self.container_size, items_x, items_y, items_width, items_height, item.height, item.width)
             if x != -1:
                 return x, y, True  # Rotation needed
 

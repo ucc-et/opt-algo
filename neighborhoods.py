@@ -35,7 +35,7 @@ class GeometryBasedStrategy(NeighborhoodStrategy):
             while True:
                 box_to = new_solution.boxes[index]
 
-                x, y, rotated = self.problem.fit_rectangle_inside_box(box_to, rect_to_move)
+                x, y, rotated = self.problem.find_valid_assignment(box_to, rect_to_move)
 
                 if x is not None and y is not None:
                     rect_to_move.x = x
