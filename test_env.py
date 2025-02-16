@@ -62,7 +62,6 @@ class Test_Environment:
         for i, instance_set in enumerate(self.instances):
             print(f"-> Verarbeite Instanz {i+1}/{len(self.instances)} mit {len(instance_set)} Rechtecken...")
             instance_set_copy = copy.deepcopy(instance_set)
-            # Erzeuge das Problem und löse es mit Lokaler Suche
             problem = RectanglePacker(instance_set_copy, self.box_length)
             local_search_neighborhoods = {1: GeometryBasedStrategy(problem), 2: RuleBasedStrategy(), 3: OverlapStrategy()}
             if type(self.neighborhood) == int:
@@ -109,7 +108,6 @@ class Test_Environment:
 if __name__ == "__main__":
     test_env = Test_Environment()
     
-    # Frage Daten zur Instanzgenerierung ab
     instanzen, rechtecke, min_breite, min_hoehe, max_breite, max_hoehe, box_laenge = None, None, None, None, None, None, None 
     chosen_strategy = None
     chosen_neighborhood = None
@@ -121,10 +119,8 @@ if __name__ == "__main__":
     
     test_env.box_length = box_laenge
     
-    # Generiere Instanzen
     test_env.generate_multiple_instances(instanzen, rechtecke, min_breite, min_hoehe, max_breite, max_hoehe)
     
-    # Wähle Greedy Strategie aus
     greedy_strategies = {1: "Größte Fläche zuerst", 2: "Kleinste Fläche zuerst", 3: "Größtes Seitenverhältnis zuerst", 4: "Kleinstes Seitenverhältnis zuerst"}
     
     if chosen_strategy is None:
@@ -135,7 +131,6 @@ if __name__ == "__main__":
     
     test_env.greedy_strategy = greedy_strategies[chosen_strategy]
     
-    # Wähle Nachbarschaft für lokale Suche aus
     if chosen_neighborhood is None:
         chosen_neighborhood = int(input("Wähle eine Nachbarschaft für die lokale Suche aus, indem Sie eine Zahl zwischen 1 und 3 eingeben (1: Geometrie basiert, 2: Regel basiert, 3: Überlappen erlauben): "))
         if(int(chosen_neighborhood) > 3):

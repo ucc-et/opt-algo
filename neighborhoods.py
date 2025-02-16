@@ -53,10 +53,8 @@ class RuleBasedStrategy(Neighborhood):
         if not solution.boxes:
             return solution
 
-        # Create a new empty solution
         current_solution = RecPac_Solution()
 
-        # Extract all rectangles
         rectangles = [rect for box in solution.boxes for rect in box.items]
 
         if len(rectangles) > 1:
@@ -67,18 +65,15 @@ class RuleBasedStrategy(Neighborhood):
             elif self.rule == "Absteigend nach Fläche":
                 rectangles = sorted(rectangles, key=lambda rect: rect.height*rect.width, reverse=True)
 
-            # Pick a small rectangle from the first half
             small_rectangles = rectangles[:len(rectangles) // 2]
             selected = random.choice(small_rectangles)
 
-            # Swap with its neighbor
             i = rectangles.index(selected)
             j = i + 1 if i < len(rectangles) - 1 else i - 1
             rectangles[i], rectangles[j] = rectangles[j], rectangles[i]
 
-        # Place rectangles **from scratch** to prevent overlaps
         for instance in rectangles:
-            instance.x, instance.y = None, None  # Reset position before placing
+            instance.x, instance.y = None, None
 
             new_solution = self.problem.add_to_solution(current_solution, instance)
 
@@ -118,7 +113,7 @@ class OverlapStrategy(Neighborhood):
         if self.check_overlap(box_to, rect_to_move):
             box_to.add_rectangle(rect_to_move)
         else:
-            box_from.add_rectangle(rect_to_move)  # Revert the move if too much overlap
+            box_from.add_rectangle(rect_to_move)
 
         self.overlap_percentage = max(0, self.overlap_percentage - self.decay_rate)
 

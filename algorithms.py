@@ -82,21 +82,16 @@ class Backtracking:
         return result
 
     def _backtrack(self, current_solution: Solution, index: int):
-        # Wenn alle Rechtecke platziert sind, return
         if index >= len(self.problem.items):
             return current_solution
 
-        # aktuelles Rechteck zum platzieren
         rectangle = self.problem.items[index]
 
-        # Platziere Rechteck in Lösung
         new_solution = self.problem.add_to_solution(current_solution, rectangle)
 
         if new_solution is not None:
-            # Wenn neue Lösung None ist, versuche rekursiv weiter
             result = self._backtrack(new_solution, index + 1)
             if result is not None:
                 return result
 
-        # If no valid placement is found even after rotation, backtrack
         return None
