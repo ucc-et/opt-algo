@@ -1,14 +1,7 @@
 import copy
 import random
-from abc import ABC, abstractmethod
 
-from classes import OptimizationProblem, Solution, RecPac_Solution, Box, Rectangle
-
-class NeighborhoodStrategy(ABC):
-    @abstractmethod
-    def generate_neighbor(self, *args):
-        pass
-
+from classes import OptimizationProblem, Solution, RecPac_Solution, Box, Rectangle, NeighborhoodStrategy
 
 class GeometryBasedStrategy(NeighborhoodStrategy):
     def __init__(self, problem: OptimizationProblem, solution_type: type):

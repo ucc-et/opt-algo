@@ -2,7 +2,7 @@ import tkinter as tk
 
 from algorithms import Greedy, LocalSearch, Backtracking
 from neighborhoods import GeometryBasedStrategy, RuleBasedStrategy, OverlapStrategy
-from strategy import apply_strategy
+from helpers import apply_greedy_strategy
 from view import RectanglePackerVisualizer
 
 from classes import RecPac_Solution, RectanglePacker
@@ -10,7 +10,7 @@ from classes import RecPac_Solution, RectanglePacker
 
 def main():
     def greedy_algorithm(items, container_size, strategy_name):
-        items = apply_strategy(items, strategy_name)
+        items = apply_greedy_strategy(items, strategy_name)
         problem = RectanglePacker(items, container_size)
         greedy_solver = Greedy(problem, RecPac_Solution, strategy_name)
         return greedy_solver.solve()

@@ -2,9 +2,8 @@ import copy
 import random
 import time
 from algorithms import Greedy, LocalSearch
-from helpers import generate_instances
+from helpers import generate_instances, apply_greedy_strategy
 from neighborhoods import GeometryBasedStrategy, RuleBasedStrategy, OverlapStrategy
-from strategy import apply_strategy
 
 import json
 
@@ -29,7 +28,7 @@ class Test_Environment:
         for i, instance_set in enumerate(self.instances):
             print(f"->Verarbeite Instanz {i+1}/{len(self.instances)} mit {len(instance_set)} Rechtecken...")
             
-            instance_set = apply_strategy(instance_set, self.greedy_strategy)
+            instance_set = apply_greedy_strategy(instance_set, self.greedy_strategy)
             
             problem = RectanglePacker(instance_set, self.box_length)
             solver = Greedy(problem, self.greedy_strategy)
@@ -97,8 +96,6 @@ class Test_Environment:
                     current_box = [{"x": rect.x, "y": rect.y, "w": rect.width, "h": rect.height} for rect in box.items]
                     current["boxes"].append(current_box)
                 obj["solutions"].append(current)
-                
-            
             
             for solution in self.local_search_solutions:
                 current = {"boxes": [], "algorithm": "local_search"}
