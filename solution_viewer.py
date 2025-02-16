@@ -4,8 +4,9 @@ from tkinter import filedialog
 import random
 
 from classes import Box, RecPac_Solution, Rectangle
+from view import GUI
 
-class SolutionViewer:
+class SolutionViewer(GUI):
     def __init__(self, root, solutions):
         self.root = root
         self.solutionsRaw = solutions
@@ -20,7 +21,7 @@ class SolutionViewer:
         
         self.parse_solutions()
         self.setup_ui()
-        self.visualize_solution()
+        self.draw()
     
     def parse_solutions(self):
         
@@ -103,7 +104,10 @@ class SolutionViewer:
         self.canvas.update_idletasks()
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
         
-    def visualize_solution(self):
+    def run_algorithm(self):
+        pass
+        
+    def draw(self):
         self.canvas.delete("all")
 
         box_padding = 10 * self.zoom_factor
@@ -156,7 +160,7 @@ class SolutionViewer:
     
     def redraw_canvas(self):
         self.canvas.delete("all")
-        self.visualize_solution() 
+        self.draw() 
     
     def on_mousewheel(self, event):
         self.canvas.yview_scroll(-1 * (event.delta // 120), "units")

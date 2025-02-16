@@ -1,8 +1,8 @@
 import tkinter as tk
 
-from algorithms import Greedy, LocalSearch, Backtracking
-from neighborhoods import GeometryBasedStrategy, RuleBasedStrategy, OverlapStrategy
-from helpers import apply_greedy_strategy
+from solvers.algorithms import Greedy, LocalSearch, Backtracking
+from solvers.neighborhoods import GeometryBasedStrategy, RuleBasedStrategy, OverlapStrategy
+from classes.helpers import apply_greedy_strategy
 from view import RectanglePackerVisualizer
 
 from classes import RecPac_Solution, RectanglePacker

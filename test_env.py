@@ -1,9 +1,9 @@
 import copy
 import random
 import time
-from algorithms import Greedy, LocalSearch
-from helpers import generate_instances, apply_greedy_strategy
-from neighborhoods import GeometryBasedStrategy, RuleBasedStrategy, OverlapStrategy
+from solvers.algorithms import Greedy, LocalSearch
+from classes.helpers import generate_instances, apply_greedy_strategy
+from solvers.neighborhoods import GeometryBasedStrategy, RuleBasedStrategy, OverlapStrategy
 
 import json
 
@@ -31,7 +31,7 @@ class Test_Environment:
             instance_set = apply_greedy_strategy(instance_set, self.greedy_strategy)
             
             problem = RectanglePacker(instance_set, self.box_length)
-            solver = Greedy(problem, self.greedy_strategy)
+            solver = Greedy(problem, RecPac_Solution, self.greedy_strategy)
             solution = solver.solve()
             self.greedy_solutions.append(solution)
             
@@ -63,7 +63,7 @@ class Test_Environment:
             print(f"-> Verarbeite Instanz {i+1}/{len(self.instances)} mit {len(instance_set)} Rechtecken...")
             instance_set_copy = copy.deepcopy(instance_set)
             problem = RectanglePacker(instance_set_copy, self.box_length)
-            local_search_neighborhoods = {1: GeometryBasedStrategy(problem), 2: RuleBasedStrategy(), 3: OverlapStrategy()}
+            local_search_neighborhoods = {1: GeometryBasedStrategy(problem, RecPac_Solution), 2: RuleBasedStrategy(problem), 3: OverlapStrategy()}
             if type(self.neighborhood) == int:
                 self.neighborhood = local_search_neighborhoods[self.neighborhood]
             start_solution = self.generate_bad_solution(instance_set_copy, self.box_length)
@@ -109,6 +109,8 @@ if __name__ == "__main__":
     test_env = Test_Environment()
     
     instanzen, rechtecke, min_breite, min_hoehe, max_breite, max_hoehe, box_laenge = None, None, None, None, None, None, None 
+    #instanzen, rechtecke, min_breite, min_hoehe, max_breite, max_hoehe, box_laenge = 10, 150, 10, 15, 18, 23, 100 
+    
     chosen_strategy = None
     chosen_neighborhood = None
     max_iterations = None

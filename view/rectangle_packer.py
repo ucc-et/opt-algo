@@ -1,6 +1,6 @@
 import json
 import random
-from helpers import generate_instances
+from classes.helpers import generate_instances
 from .base_classes import GUI, Tooltip
 from typing import List
 from classes import Rectangle
