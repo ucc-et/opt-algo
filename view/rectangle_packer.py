@@ -1,6 +1,7 @@
 import json
 import random
 from classes.helpers import generate_instances
+from solvers.enums import GreedyStrategy, Rules
 from .base_classes import GUI, Tooltip
 from typing import List
 from classes import Rectangle
@@ -77,8 +78,8 @@ class RectanglePackerVisualizer(GUI):
 
         self.strategy_label = ttk.Label(frame_inputs, text="Greedy Strategie wählen: ")
         self.strategy_label.grid(row=8, column=0, padx=5)
-        self.greedy_strat = ttk.Combobox(frame_inputs, state="readonly", values=["Größte Fläche zuerst", "Kleinste Fläche zuerst", "Größtes Seitenverhältnis zuerst", "Kleinstes Seitenverhältnis zuerst"])
-        self.greedy_strat.set("Größte Fläche zuerst")
+        self.greedy_strat = ttk.Combobox(frame_inputs, state="readonly", values=[GreedyStrategy.LARGEST_AREA_FIRST.value, GreedyStrategy.SMALLEST_AREA_FIRST.value, GreedyStrategy.LARGEST_ASPECT_RATIO_FIRST.value, GreedyStrategy.SMALLEST_ASPECT_RATIO.value])
+        self.greedy_strat.set(GreedyStrategy.LARGEST_AREA_FIRST.value)
         self.greedy_strat.grid(row=8, column=1, pady=5)
         self.greedy_strat.grid_remove()
         self.strategy_label.grid_remove()
@@ -93,8 +94,8 @@ class RectanglePackerVisualizer(GUI):
         
         self.rulebased_strategy_label = ttk.Label(frame_inputs, text="Regel wählen: ")
         self.rulebased_strategy_label.grid(row=10, column=0, padx=5)
-        self.rulebased_strat = ttk.Combobox(frame_inputs, state="readonly", values=["Absteigend nach Höhe", "Absteigend nach Breite", "Absteigend nach Fläche"])
-        self.rulebased_strat.set("Absteigend nach Höhe")
+        self.rulebased_strat = ttk.Combobox(frame_inputs, state="readonly", values=[Rules.HEIGHT_FIRST.value, Rules.WIDTH_FIRST.value, Rules.AREA_FIRST.value])
+        self.rulebased_strat.set(Rules.HEIGHT_FIRST.value)
         self.rulebased_strat.grid(row=10, column=1, pady=5)
         self.rulebased_strat.grid_remove()
         self.rulebased_strategy_label.grid_remove()

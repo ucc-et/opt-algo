@@ -2,7 +2,7 @@ import random
 from typing import List
 
 from classes import Rectangle
-from solvers.enums import Rules
+from solvers.enums import GreedyStrategy, Rules
 
 def generate_instances(n, min_width, max_width, min_height, max_height) -> List[Rectangle]:
 
@@ -16,13 +16,13 @@ def generate_instances(n, min_width, max_width, min_height, max_height) -> List[
     return instances
 
 def apply_greedy_strategy(items, strategy_name):
-    if strategy_name == "Größte Fläche zuerst":
+    if strategy_name == GreedyStrategy.LARGEST_AREA_FIRST:
         items = sorted(items, key=lambda i: i.width * i.height, reverse=True)
-    elif strategy_name == "Kleinste Fläche zuerst":
+    elif strategy_name == GreedyStrategy.SMALLEST_AREA_FIRST:
         items = sorted(items, key=lambda i: i.width * i.height)
-    elif strategy_name == "Größtes Seitenverhältnis zuerst":
+    elif strategy_name == GreedyStrategy.LARGEST_ASPECT_RATIO_FIRST:
         items = sorted(items, key=lambda i: max(i.width / i.height, i.height / i.width), reverse=True)
-    elif strategy_name == "Kleinstes Seitenverhältnis zuerst":
+    elif strategy_name == GreedyStrategy.SMALLEST_ASPECT_RATIO:
         items = sorted(items, key=lambda i: max(i.width / i.height, i.height / i.width))
         
     return items

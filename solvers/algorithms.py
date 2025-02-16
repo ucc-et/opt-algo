@@ -1,7 +1,7 @@
 import time
 import sys
 
-from classes import OptimizationProblem, Solution, Neighborhood
+from classes.base_classes import OptimizationProblem, Solution, Neighborhood
 from classes.helpers import apply_greedy_strategy
 
 class Greedy:

@@ -1,9 +1,11 @@
 import copy
 import random
 
-from classes import OptimizationProblem, Solution, RecPac_Solution, Box, Rectangle, Neighborhood
+from classes.base_classes import  OptimizationProblem, Solution, Neighborhood
+from classes.rectangle_packer_types import RecPac_Solution, Rectangle, Box
 from classes.helpers import apply_rule
-from solvers.enums import Rules
+
+from .enums import Rules
 
 class GeometryBasedStrategy(Neighborhood):
     def __init__(self, problem: OptimizationProblem, solution_type: type):
@@ -56,7 +58,7 @@ class RuleBasedStrategy(Neighborhood):
             return solution
 
         current_solution = RecPac_Solution()
-
+        print(solution)
         items = [item for box in solution.boxes for item in box.items]
 
         if len(items) > 1:
