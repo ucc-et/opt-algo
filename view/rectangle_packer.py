@@ -1,42 +1,14 @@
-import tkinter as tk
-from tkinter import ttk, filedialog
-import random
-from typing import List
-from helpers import generate_instances
-from PIL import Image, ImageTk
 import json
-
+import random
+from helpers import generate_instances
+from .base_classes import GUI, Tooltip
+from typing import List
 from classes import Rectangle
+from PIL import Image, ImageTk
+from tkinter import ttk, filedialog
+import tkinter as tk
 
-class Tooltip:
-        def __init__(self, widget, text):
-            self.widget = widget
-            self.text = text
-            self.tooltip_window = None
-            self.widget.bind("<Enter>", self.show_tooltip)
-            self.widget.bind("<Leave>", self.hide_tooltip)
-
-        def show_tooltip(self, event):
-            """Display the tooltip near the widget."""
-            x, y, _, _ = self.widget.bbox("insert")
-            x += self.widget.winfo_rootx() + 25
-            y += self.widget.winfo_rooty() + 25
-
-            self.tooltip_window = tk.Toplevel(self.widget)
-            self.tooltip_window.wm_overrideredirect(True)
-            self.tooltip_window.geometry(f"+{x}+{y}")
-
-            label = tk.Label(self.tooltip_window, text=self.text, bg="lightyellow", relief="solid", borderwidth=1, padx=5, pady=2)
-            label.pack()
-
-        def hide_tooltip(self, event):
-            """Destroy the tooltip window when mouse leaves."""
-            if self.tooltip_window:
-                self.tooltip_window.destroy()
-                self.tooltip_window = None
-
-
-class GUI:
+class RectanglePackerVisualizer(GUI):
     def __init__(self, root, greedy_algorithm, local_search, backtracking):
         self.root = root
         self.greedy_algorithm = greedy_algorithm
@@ -54,6 +26,8 @@ class GUI:
         self.zoom_factor = 1.0
         self.zoom_steps = 0
         self.max_zoom_steps = 4
+        
+        self.solution = None
         
         self.setup_ui()
     
@@ -238,7 +212,6 @@ class GUI:
             self.greedy_strat.grid_remove()
             self.strategy_label.grid_remove()
            
-
     def validate_inputs(self):
         errors = []
 
@@ -294,7 +267,7 @@ class GUI:
         self.zoom_steps = 0
         self.rectangle_colors = {}
         if algorithm == "Greedy":
-            solution = self.greedy_algorithm(
+            self.solution = self.greedy_algorithm(
                 self.instances, 
                 self.box_size, 
                 self.greedy_strat.get()
@@ -304,7 +277,7 @@ class GUI:
             rulebased_strategy = ""
             if neighborhood == "Regelbasiert":
                 rulebased_strategy = self.rulebased_strat.get()
-            solution = self.local_search(
+            self.solution = self.local_search(
                 self.instances, 
                 self.box_size, 
                 neighborhood,
@@ -312,9 +285,8 @@ class GUI:
                 int(self.local_search_max_iterations.get())
             )
         elif algorithm == "Backtracking":
-            solution = self.backtracking(self.instances, self.box_size)
-        self.current_solution = solution
-        self.visualize_solution(solution)
+            self.solution = self.backtracking(self.instances, self.box_size)
+        self.draw()
 
     def get_rectangle_color(self, rect):
         if len(self.rectangle_colors.keys()) == 0 or rect not in self.rectangle_colors.keys():
@@ -324,7 +296,7 @@ class GUI:
             color = self.rectangle_colors[rect]
         return color
 
-    def visualize_solution(self, solution):
+    def draw(self):
         self.canvas.delete("all")
 
         box_padding = 10 * self.zoom_factor
@@ -333,7 +305,7 @@ class GUI:
         row_height = 0
         canvas_width = self.canvas.winfo_width()
 
-        for box_id, box in enumerate(solution.boxes):
+        for box_id, box in enumerate(self.solution.boxes):
             scaled_box_length = int(self.box_size * self.zoom_factor)
 
             if x_offset + scaled_box_length + box_padding > canvas_width:

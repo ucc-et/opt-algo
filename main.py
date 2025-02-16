@@ -3,7 +3,7 @@ import tkinter as tk
 from algorithms import Greedy, LocalSearch, Backtracking
 from neighborhoods import GeometryBasedStrategy, RuleBasedStrategy, OverlapStrategy
 from strategy import apply_strategy
-from view import GUI
+from view import RectanglePackerVisualizer
 
 from classes import RecPac_Solution, RectanglePacker
 
@@ -37,7 +37,7 @@ def main():
         return solution
 
     root = tk.Tk()
-    app = GUI(root, greedy_algorithm, local_search_algorithm, backtracking_algorithm)
+    app = RectanglePackerVisualizer(root, greedy_algorithm, local_search_algorithm, backtracking_algorithm)
     root.mainloop()
 
 
