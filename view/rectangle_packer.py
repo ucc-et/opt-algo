@@ -18,6 +18,7 @@ class RectanglePackerVisualizer(GUI):
         self.simulated_annealing = simulated_annealing
         self.can_export_rectangles = "disabled"
         self.can_zoom = "disabled"
+        self.color_choices = "red, green, blue, yellow, purple, orange, cyan"
         
         self.instances: List[Rectangle] = []
         self.box_size: int = 0
@@ -105,6 +106,12 @@ class RectanglePackerVisualizer(GUI):
         self.local_search_max_iterations = tk.Entry(frame_inputs)
         self.local_search_max_iterations.grid(row=11, column=1)
         self.local_search_max_iterations.insert(0, "20")
+        
+        self.color_scheme_label = tk.Label(frame_inputs, text="Rechteckfarben: ")
+        self.color_scheme_label.grid(row=12, column=0, pady=5)
+        self.color_scheme_input = tk.Entry(frame_inputs)
+        self.color_scheme_input.grid(row=12, column=1)
+        self.color_scheme_input.insert(0,self.color_choices)
 
         self.algo_selector.bind("<<ComboboxSelected>>", self.update_algorithm)
         self.local_search_neighborhood_selector.bind("<<ComboboxSelected>>", self.update_algorithm)
@@ -307,7 +314,11 @@ class RectanglePackerVisualizer(GUI):
 
     def get_rectangle_color(self, rect):
         if len(self.rectangle_colors.keys()) == 0 or rect not in self.rectangle_colors.keys():
-            color = random.choice(["red", "green", "blue", "yellow", "purple", "orange", "cyan"])
+            split_color = self.color_choices.split(",")
+            choices = []
+            for color in split_color:
+                choices.append(color.strip())
+            color = random.choice(choices)
             self.rectangle_colors[rect] = color
         else:
             color = self.rectangle_colors[rect]
@@ -316,6 +327,10 @@ class RectanglePackerVisualizer(GUI):
     def draw(self):
         self.canvas.delete("all")
 
+        color_input_list = self.color_scheme_input.get()
+        if not (color_input_list == self.color_choices or  color_input_list == ""):
+            self.color_choices = color_input_list
+        
         box_padding = 10 * self.zoom_factor
         x_offset = 0
         y_offset = 0
