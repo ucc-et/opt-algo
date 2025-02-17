@@ -1,7 +1,9 @@
+import random
 import tkinter as tk
 
-from solvers.algorithms import Greedy, LocalSearch, Backtracking
+from solvers.algorithms import Greedy, LocalSearch, Backtracking, SimulatedAnnealing
 from solvers.neighborhoods import GeometryBasedStrategy, RuleBasedStrategy, OverlapStrategy
+from classes.rectangle_packer_types import RectanglePacker, RecPac_Solution, Box
 from view import RectanglePackerVisualizer
 
 from classes import RecPac_Solution, RectanglePacker, apply_greedy_strategy
@@ -18,11 +20,12 @@ def main():
         start_solution_map = {
             "Geometriebasiert": problem.generate_initial_solution(items, container_size),
             "Regelbasiert": greedy_algorithm(items, container_size, "Größte Fläche zuerst"),
+            "Überlappungen teilweise zulassen": generate_bad_solution_overlapping(items, container_size),
         }
         neighborhood_map = {
             "Geometriebasiert": GeometryBasedStrategy(problem, RecPac_Solution),
             "Regelbasiert": RuleBasedStrategy(problem, strategy_rulebased),
-            "Überlappungen teilweise zulassen": OverlapStrategy(initial_overlap=0.1)
+            "Überlappungen teilweise zulassen": OverlapStrategy(problem)
         }
         local_search_solver = LocalSearch(problem, start_solution_map[neighborhood_name], max_iterations, neighborhood_map[neighborhood_name])
         return local_search_solver.solve()
@@ -33,8 +36,46 @@ def main():
         solution = backtracking_solver.solve()
         return solution
 
+    def simulated_annealing_algorithm(items, container_size, neighborhood_name, strategy_rulebased, initial_temperature=1000, end_temperature=1, cooling_rate=0.95, iterations_per_temp=10):
+        problem = RectanglePacker(items, container_size)
+        start_solution_map = {
+            "Geometriebasiert": problem.generate_initial_solution(items, container_size),
+            "Regelbasiert": greedy_algorithm(items, container_size, "Größte Fläche zuerst"),
+            "Überlappungen teilweise zulassen": generate_bad_solution_overlapping(items, container_size),
+        }
+
+        
+        neighborhood_map = {
+            "Geometriebasiert": GeometryBasedStrategy(problem),
+            "Regelbasiert": RuleBasedStrategy(problem, strategy_rulebased),
+            "Überlappungen teilweise zulassen": OverlapStrategy(initial_overlap=0.1)
+        }
+
+        simulated_annealing_solver = SimulatedAnnealing(
+            problem=problem,
+            start_solution=start_solution_map[neighborhood_name],
+            initial_temperature=initial_temperature,
+            end_temperature=end_temperature,
+            cooling_rate=cooling_rate,
+            iterations_per_temp=iterations_per_temp,
+            neighborhood_strategy=neighborhood_map[neighborhood_name]
+        )
+
+        return simulated_annealing_solver.solve()
+
+    def generate_bad_solution_overlapping(items, box_length):
+        bad_solution = RecPac_Solution()
+        new_box = Box(box_length)
+        for item in items:
+            item.x = 0
+            item.y = 0
+            new_box.add_rectangle(item)
+
+        bad_solution.add_box(new_box)
+        return bad_solution
+
     root = tk.Tk()
-    app = RectanglePackerVisualizer(root, greedy_algorithm, local_search_algorithm, backtracking_algorithm)
+    app = RectanglePackerVisualizer(root, greedy_algorithm, local_search_algorithm, backtracking_algorithm, simulated_annealing_algorithm)
     root.mainloop()
 
 

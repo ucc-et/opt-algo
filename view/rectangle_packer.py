@@ -10,11 +10,12 @@ from tkinter import ttk, filedialog
 import tkinter as tk
 
 class RectanglePackerVisualizer(GUI):
-    def __init__(self, root, greedy_algorithm, local_search, backtracking):
+    def __init__(self, root, greedy_algorithm, local_search, backtracking, simulated_annealing):
         self.root = root
         self.greedy_algorithm = greedy_algorithm
         self.local_search = local_search
         self.backtracking = backtracking
+        self.simulated_annealing = simulated_annealing
         self.current_solution = None
         self.can_export_rectangles = "disabled"
         self.can_zoom = "disabled"
@@ -72,7 +73,7 @@ class RectanglePackerVisualizer(GUI):
         self.entry_box_length.grid(row=5, column=1, pady=5)
 
         self.algo_select_label = tk.Label(frame_inputs, text="Algorithmus wählen: ").grid(row=7, column=0, padx=5)
-        self.algo_selector = ttk.Combobox(frame_inputs, values=["Greedy", "Lokale Suche", "Backtracking"], state="readonly")
+        self.algo_selector = ttk.Combobox(frame_inputs, values=["Greedy", "Lokale Suche", "Backtracking", "Simulated Annealing"], state="readonly")
         self.algo_selector.set("Greedy")
         self.algo_selector.grid(row=7, column=1, pady=5)
 
@@ -212,6 +213,16 @@ class RectanglePackerVisualizer(GUI):
             self.local_search_max_iterations_is_visible = False
             self.greedy_strat.grid_remove()
             self.strategy_label.grid_remove()
+        elif self.algo_selector.get() == "Simulated Annealing":
+            self.local_search_neighborhood_selector.grid_remove()
+            self.local_search_max_iterations.grid_remove()
+            self.local_search_max_iterations_label.grid_remove()
+            self.rulebased_strat.grid_remove()
+            self.rulebased_strategy_label.grid_remove()
+            self.neighborhood_label.grid_remove()
+            self.local_search_max_iterations_is_visible = False
+            self.greedy_strat.grid_remove()
+            self.strategy_label.grid_remove()
            
     def validate_inputs(self):
         errors = []
@@ -286,7 +297,14 @@ class RectanglePackerVisualizer(GUI):
                 int(self.local_search_max_iterations.get())
             )
         elif algorithm == "Backtracking":
-            self.solution = self.backtracking(self.instances, self.box_size)
+            solution = self.backtracking(self.instances, self.box_size)
+        elif algorithm == "Simulated Annealing":
+            neighborhood = self.local_search_neighborhood_selector.get()
+            rulebased_strategy = ""
+            if neighborhood == "Regelbasiert":
+                rulebased_strategy = self.rulebased_strat.get()
+            solution = self.simulated_annealing(self.instances, self.box_size, neighborhood, rulebased_strategy)    
+        self.current_solution = solution
         self.draw()
 
     def get_rectangle_color(self, rect):

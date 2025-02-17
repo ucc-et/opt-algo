@@ -81,53 +81,63 @@ class RuleBasedStrategy(Neighborhood):
         return current_solution
 
 class OverlapStrategy(Neighborhood):
-
-    def __init__(self, initial_overlap: float = 1.0, decay_rate: float = 0.05):
+    def __init__(self,problem: OptimizationProblem, initial_overlap: float = 1.0, decay_rate: float = 0.05):
         self.overlap_percentage = initial_overlap
         self.decay_rate = decay_rate
+        self.problem = problem
 
-    def generate_neighbor(self, solution: RecPac_Solution):
-        if not solution.boxes:
-            return solution
+    def generate_neighbor(self, solution: Solution):
+        new_solution = copy.deepcopy(solution)
 
-        new_solution = RecPac_Solution()
-        new_solution.set_boxes([Box(box.box_length) for box in solution.boxes])
+        for box in new_solution.boxes:
+            for item in box.rectangles:
+                if not self.check_overlap(box, item):
+                    box.remove_rectangle(item)
+                    x, y, rotated = self.problem.fit_rectangle_inside_box(box, item, self.overlap_percentage)
 
-        for box in solution.boxes:
-            for rect in box.items:
-                new_solution.boxes[solution.boxes.index(box)].add_rectangle(rect)
+                    if x is not None and y is not None:
+                        item.x, item.y = x, y
+                        if rotated:
+                            item.x, item.y = item.y, item.x
+                        box.add_rectangle(item)
+                    else:
+                        placed = False
+                        for other_box in new_solution.boxes:
+                            if other_box is not box:
+                                x, y, rotated = self.problem.fit_rectangle_inside_box(other_box, item, self.overlap_percentage)
+                                if x is not None and y is not None:
+                                    item.x, item.y = x, y
+                                    if rotated:
+                                        item.x, item.y = item.y, item.x
+                                    other_box.add_rectangle(item)
+                                    placed = True
+                                    break
 
-        box_from = random.choice(new_solution.boxes)
-        if not box_from.items:
-            return new_solution
-
-        rect_to_move = random.choice(box_from.items)
-        box_from.remove_rectangle(rect_to_move)
-
-        box_to = random.choice(new_solution.boxes)
-        rect_to_move.x = random.randint(0, box_to.box_length - rect_to_move.width)
-        rect_to_move.y = random.randint(0, box_to.box_length - rect_to_move.height)
-
-        if self.check_overlap(box_to, rect_to_move):
-            box_to.add_rectangle(rect_to_move)
-        else:
-            box_from.add_rectangle(rect_to_move)
-
-        self.overlap_percentage = max(0, self.overlap_percentage - self.decay_rate)
+                        if not placed:
+                            new_box = Box(new_solution.boxes[0].box_length)
+                            item.x, item.y = 0, 0
+                            new_box.add_rectangle(item)
+                            new_solution.add_box(new_box)
+                            
+        self.overlap_percentage = max(0, round(self.overlap_percentage - self.decay_rate, 6))
 
         return new_solution
 
     def check_overlap(self, box: Box, rect: Rectangle):
-        total_area = box.box_length ** 2
-        overlapping_area = 0
+        max_rect_area = rect.width * rect.height
 
-        for existing_rect in box.items:
-            x_overlap = max(0, min(existing_rect.x + existing_rect.width, rect.x + rect.width) - max(existing_rect.x,
-                                                                                                     rect.x))
-            y_overlap = max(0, min(existing_rect.y + existing_rect.height, rect.y + rect.height) - max(existing_rect.y,
-                                                                                                       rect.y))
-            overlapping_area += x_overlap * y_overlap
+        for existing_rect in box.rectangles:
+            if existing_rect == rect:
+                continue
 
-        if overlapping_area / max(rect.width * rect.height, 1) <= self.overlap_percentage:
-            return True
-        return False
+            x_overlap = max(0, min(existing_rect.x + existing_rect.width, rect.x + rect.width) - max(existing_rect.x, rect.x))
+            y_overlap = max(0, min(existing_rect.y + existing_rect.height, rect.y + rect.height) - max(existing_rect.y, rect.y))
+
+            overlap_area = x_overlap * y_overlap
+            max_existing_area = existing_rect.width * existing_rect.height
+
+            denominator = min(max_rect_area, max_existing_area)
+            if overlap_area / denominator > self.overlap_percentage:
+                return False
+
+        return True
