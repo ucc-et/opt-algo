@@ -169,7 +169,7 @@ class RectanglePacker(OptimizationProblem):
 
         return None, None, False  # No valid position found
     
-    def generate_initial_solution(self, rectangles, n=4):
+    def generate_item_samples(self, rectangles, n=4):
         
         avg_size = len(rectangles) // n
         remainder = len(rectangles) % n
@@ -182,3 +182,14 @@ class RectanglePacker(OptimizationProblem):
             start = end
         
         return sub_lists
+    
+    def generate_initial_solution(self, items, box_length):
+        bad_solution = RecPac_Solution()
+        new_box = Box(box_length)
+        for item in items:
+            item.x = 0
+            item.y = 0
+            new_box.add_rectangle(item)
+
+        bad_solution.add_box(new_box)
+        return bad_solution

@@ -15,9 +15,9 @@ def main():
     
     def get_neighborhood_and_start_solution(problem: OptimizationProblem, neighborhood_name, items, container_size, rulebased_strategy):
         start_solution_map = {
-            "Geometriebasiert": problem.generate_initial_solution(items),
+            "Geometriebasiert": problem.generate_item_samples(items),
             "Regelbasiert": greedy_algorithm(items, container_size, GreedyStrategy.LARGEST_AREA_FIRST.value),
-            "Überlappungen teilweise zulassen": generate_bad_solution_overlapping(items, container_size),
+            "Überlappungen teilweise zulassen": problem.generate_initial_solution(items, container_size),
         }
         neighborhood_map = {
             "Geometriebasiert": GeometryBasedStrategy(problem, RecPac_Solution),
@@ -68,16 +68,7 @@ def main():
 
         return simulated_annealing_solver.solve()
 
-    def generate_bad_solution_overlapping(items, box_length):
-        bad_solution = RecPac_Solution()
-        new_box = Box(box_length)
-        for item in items:
-            item.x = 0
-            item.y = 0
-            new_box.add_rectangle(item)
-
-        bad_solution.add_box(new_box)
-        return bad_solution
+    
 
     root = tk.Tk()
     app = RectanglePackerVisualizer(root, greedy_algorithm, local_search_algorithm, backtracking_algorithm, simulated_annealing_algorithm)
