@@ -87,8 +87,6 @@ class RecPac_Solution(Solution):
 
 @njit
 def detect_item_invalidity(x, y, width, height, item_x, item_y, item_width, item_height, overlap_percentage):
-    
-    
     if overlap_percentage == 0.0:
         return not (x >= item_x + item_width or x + width <= item_x or y >= item_y + item_height or y + height <= item_y)
     
@@ -113,7 +111,7 @@ def find_valid_assignment_numba(container_size, items_x, items_y, items_width, i
                 if detect_item_invalidity(x, y, item_width, item_height, items_x[i], items_y[i], items_width[i], items_height[i], overlap_percentage):
                     fits = False
                     break  # If overlap, stop checking
-            if fits:
+            if fits and (x+item_width <= container_size) and (y+item_height <= container_size):
                 return x, y  # Found a valid position
 
     return -1, -1  # No valid position found

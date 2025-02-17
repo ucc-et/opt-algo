@@ -98,7 +98,7 @@ class OverlapStrategy(Neighborhood):
                     if x is not None and y is not None:
                         item.x, item.y = x, y
                         if rotated:
-                            item.x, item.y = item.y, item.x
+                            item.width, item.height = item.height, item.width
                         box.add_rectangle(item)
                     else:
                         placed = False
@@ -108,7 +108,7 @@ class OverlapStrategy(Neighborhood):
                                 if x is not None and y is not None:
                                     item.x, item.y = x, y
                                     if rotated:
-                                        item.x, item.y = item.y, item.x
+                                        item.width, item.height = item.height, item.width
                                     other_box.add_rectangle(item)
                                     placed = True
                                     break
