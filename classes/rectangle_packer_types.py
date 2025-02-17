@@ -55,7 +55,7 @@ class RecPac_Solution(Solution):
         if len(box.items) == 0:
             self.boxes.remove(box)
 
-    def evaluate_solution(self, w1=1.0, w2=0.5, w3=0.2, w4=1000):
+    def evaluate_solution(self, w1=1.0, w2=0.5, w3=0.2, w4=100):
         num_boxes = len(self.boxes)
 
         total_area_used, total_box_area, total_overlap_area = 0, 0, 0
@@ -169,18 +169,16 @@ class RectanglePacker(OptimizationProblem):
 
         return None, None, False  # No valid position found
     
-    def generate_initial_solution(self, rectangles, box_length):
-        bad_solution = RecPac_Solution()
-
-        for rect in rectangles:
-            new_box = Box(box_length)
-
-            if random.random() < 0.5:
-                rect.width, rect.height = rect.height, rect.width
-
-            rect.x = random.randint(0, box_length - rect.width)
-            rect.y = random.randint(0, box_length - rect.height)
-
-            new_box.add_rectangle(rect)
-            bad_solution.add_box(new_box)
-        return bad_solution
+    def generate_initial_solution(self, rectangles, n=4):
+        
+        avg_size = len(rectangles) // n
+        remainder = len(rectangles) % n
+        sub_lists = []
+        start = 0
+        for i in range(n):
+            extra = 1 if i < remainder else 0
+            end = start + avg_size + extra
+            sub_lists.append(rectangles[start:end])
+            start = end
+        
+        return sub_lists

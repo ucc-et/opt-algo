@@ -13,10 +13,6 @@ class OptimizationProblem(ABC):
     def find_valid_assignment(self, *args):
         pass
     
-    @abstractmethod
-    def generate_initial_solution(self, *args):
-        pass
-    
 # =================================================
 #                 Neighborhood
 # =================================================
