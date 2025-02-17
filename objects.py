@@ -72,7 +72,7 @@ class RecPac_Solution:
         total_covered_area = (rectangle_areas / (box_length**2)*box_amounts)* 100
         return total_covered_area
 
-    def evaluate_solution(self, w1=1.0, w2=0.5, w3=0.2, w4=100):
+    def evaluate_solution(self, w1=1.0, w2=0.5, w3=0.2, w4=1000):
         num_boxes = len(self.boxes)
 
         total_area_used, total_box_area, total_overlap_area = 0, 0, 0
