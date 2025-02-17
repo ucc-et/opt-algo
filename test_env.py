@@ -4,7 +4,8 @@ import os
 import random
 import time
 from solvers.algorithms import Greedy, LocalSearch
-from classes.helpers import generate_instances, apply_greedy_strategy
+#from classes.helpers import generate_instances, apply_greedy_strategy
+import classes.helpers
 from solvers.neighborhoods import GeometryBasedStrategy, RuleBasedStrategy, OverlapStrategy
 
 import json
@@ -33,7 +34,7 @@ class Test_Environment:
             start_time = time.time()
             print(f"->Verarbeite Instanz {i+1}/{len(self.instances)} mit {len(instance_set)} Rechtecken...")
             
-            instance_set = apply_greedy_strategy(instance_set, self.greedy_strategy)
+            instance_set = classes.helpers.apply_greedy_strategy(instance_set, self.greedy_strategy)
             
             problem = RectanglePacker(instance_set, self.box_length)
             solver = Greedy(problem, RecPac_Solution, self.greedy_strategy)
@@ -85,7 +86,7 @@ class Test_Environment:
     
     def generate_instances(self, instance_count, rectangle_count, min_breite, min_hoehe, max_breite, max_hoehe):        
         for _ in range(instance_count):
-            self.instances.append(generate_instances(rectangle_count, min_breite, max_breite, min_hoehe, max_hoehe))
+            self.instances.append(classes.helpers.generate_instances(rectangle_count, min_breite, max_breite, min_hoehe, max_hoehe))
         
     def run(self):
         self.run_greedy()

@@ -3,7 +3,7 @@ import random
 
 from classes.base_classes import  OptimizationProblem, Solution, Neighborhood
 from classes.rectangle_packer_types import RecPac_Solution, Rectangle, Box
-from classes.helpers import apply_rule
+import classes.helpers
 
 from .enums import Rules
 
@@ -61,7 +61,7 @@ class RuleBasedStrategy(Neighborhood):
         items = [item for box in solution.boxes for item in box.items]
 
         if len(items) > 1:
-            items = apply_rule(items, self.rule)
+            items = classes.helpers.apply_rule(items, self.rule)
 
             small_rectangles = items[:len(items) // 2]
             selected = random.choice(small_rectangles)

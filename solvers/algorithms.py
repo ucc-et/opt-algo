@@ -4,7 +4,7 @@ import time
 import sys
 
 from classes.base_classes import OptimizationProblem, Solution, Neighborhood
-from classes.helpers import apply_greedy_strategy
+import classes.helpers
 from classes.rectangle_packer_types import RecPac_Solution
 
 class Greedy:
@@ -12,7 +12,7 @@ class Greedy:
         self.problem = problem
         self.solution_type = solution_type
         
-        self.problem.items = apply_greedy_strategy(self.problem.items, strategy)
+        self.problem.items = classes.helpers.apply_greedy_strategy(self.problem.items, strategy)
 
     def solve(self):
         start_time = time.time()
