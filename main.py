@@ -1,7 +1,7 @@
 import tkinter as tk
 import random
 
-from algorithms import Greedy, LocalSearch, Backtracking
+from algorithms import Greedy, LocalSearch, Backtracking, SimulatedAnnealing
 from neighborhoods import GeometryBasedStrategy, RuleBasedStrategy, OverlapStrategy
 from objects import RecPac_Solution, Box
 from problem import RectanglePacker
@@ -37,6 +37,33 @@ def main():
         solution = backtracking_solver.solve()
         return solution
 
+    def simulated_annealing_algorithm(rectangles, box_length, neighborhood_name, strategy_rulebased="",
+                                  initial_temperature=1000, end_temperature=1, cooling_rate=0.95,
+                                  iterations_per_temp=10):
+        start_solution_map = {
+            "Geometriebasiert": generate_bad_solution(rectangles, box_length),
+            "Regelbasiert": greedy_algorithm(rectangles, box_length, "Größte Fläche zuerst"),
+        }
+
+        problem = RectanglePacker(rectangles, box_length)
+        neighborhood_map = {
+            "Geometriebasiert": GeometryBasedStrategy(problem),
+            "Regelbasiert": RuleBasedStrategy(problem, strategy_rulebased),
+            "Überlappungen teilweise zulassen": OverlapStrategy(initial_overlap=0.1)
+        }
+
+        simulated_annealing_solver = SimulatedAnnealing(
+            problem=problem,
+            start_solution=start_solution_map[neighborhood_name],
+            initial_temperature=initial_temperature,
+            end_temperature=end_temperature,
+            cooling_rate=cooling_rate,
+            iterations_per_temp=iterations_per_temp,
+            neighborhood_strategy=neighborhood_map[neighborhood_name]
+        )
+
+        return simulated_annealing_solver.solve()
+
     def generate_bad_solution(rectangles, box_length):
         bad_solution = RecPac_Solution()
 
@@ -65,7 +92,7 @@ def main():
         return bad_solution
 
     root = tk.Tk()
-    app = GUI(root, greedy_algorithm, local_search_algorithm, backtracking_algorithm)
+    app = GUI(root, greedy_algorithm, local_search_algorithm, backtracking_algorithm, simulated_annealing_algorithm)
     root.mainloop()
 
 

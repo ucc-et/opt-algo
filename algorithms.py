@@ -3,6 +3,8 @@ import sys
 from neighborhoods import NeighborhoodStrategy
 from objects import RecPac_Solution
 from problem import OptimizationProblem
+import random
+import math
 
 
 class Greedy:
@@ -59,8 +61,46 @@ class LocalSearch:
         return best_solution
 
 
-class SimmulatedAnnealing:
-    pass
+class SimulatedAnnealing:
+    def __init__(self, problem: OptimizationProblem, start_solution: RecPac_Solution,
+                 initial_temperature: float, end_temperature: float, cooling_rate: float,
+                 iterations_per_temp: int, neighborhood_strategy: NeighborhoodStrategy):
+        self.problem = problem
+        self.start_solution = start_solution
+        self.initial_temperature = initial_temperature
+        self.end_temperature = end_temperature
+        self.cooling_rate = cooling_rate
+        self.iterations_per_temp = iterations_per_temp
+        self.neighborhood_strategy = neighborhood_strategy
+
+    def solve(self):
+        start_time = time.time()
+
+        current_solution = self.start_solution
+        best_solution = current_solution
+        best_value = best_solution.evaluate_solution()
+        temperature = self.initial_temperature
+
+        while temperature > self.end_temperature:
+            for _ in range(self.iterations_per_temp):
+                neighbor = self.neighborhood_strategy.generate_neighbor(current_solution)
+                neighbor_value = neighbor.evaluate_solution()
+
+                delta = neighbor_value - best_value
+
+                if delta < 0 or random.uniform(0, 1) < math.exp(-delta / temperature):
+                    current_solution = neighbor
+                    if neighbor_value < best_value:
+                        best_solution = neighbor
+                        best_value = neighbor_value
+
+            temperature *= self.cooling_rate
+
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print(f"Laufzeit Simulated Annealing: {elapsed_time:.6f} Sekunden")
+
+        return best_solution
 
 
 class Backtracking:
