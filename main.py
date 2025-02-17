@@ -6,7 +6,7 @@ from solvers.neighborhoods import GeometryBasedStrategy, RuleBasedStrategy, Over
 from classes.rectangle_packer_types import RectanglePacker, RecPac_Solution, Box
 from view import RectanglePackerVisualizer
 
-from classes import RecPac_Solution, RectanglePacker, apply_greedy_strategy
+from classes import RecPac_Solution, RectanglePacker
 
 def main():
     def greedy_algorithm(items, container_size, strategy_name):
@@ -43,12 +43,11 @@ def main():
             "Regelbasiert": greedy_algorithm(items, container_size, "Größte Fläche zuerst"),
             "Überlappungen teilweise zulassen": generate_bad_solution_overlapping(items, container_size),
         }
-
-        
+   
         neighborhood_map = {
-            "Geometriebasiert": GeometryBasedStrategy(problem),
+            "Geometriebasiert": GeometryBasedStrategy(problem, RecPac_Solution),
             "Regelbasiert": RuleBasedStrategy(problem, strategy_rulebased),
-            "Überlappungen teilweise zulassen": OverlapStrategy(initial_overlap=0.1)
+            "Überlappungen teilweise zulassen": OverlapStrategy(problem)
         }
 
         simulated_annealing_solver = SimulatedAnnealing(

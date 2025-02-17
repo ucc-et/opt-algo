@@ -90,10 +90,10 @@ class OverlapStrategy(Neighborhood):
         new_solution = copy.deepcopy(solution)
 
         for box in new_solution.boxes:
-            for item in box.rectangles:
+            for item in box.items:
                 if not self.check_overlap(box, item):
                     box.remove_rectangle(item)
-                    x, y, rotated = self.problem.fit_rectangle_inside_box(box, item, self.overlap_percentage)
+                    x, y, rotated = self.problem.find_valid_assignment(box, item, self.overlap_percentage)
 
                     if x is not None and y is not None:
                         item.x, item.y = x, y
@@ -104,7 +104,7 @@ class OverlapStrategy(Neighborhood):
                         placed = False
                         for other_box in new_solution.boxes:
                             if other_box is not box:
-                                x, y, rotated = self.problem.fit_rectangle_inside_box(other_box, item, self.overlap_percentage)
+                                x, y, rotated = self.problem.find_valid_assignment(other_box, item, self.overlap_percentage)
                                 if x is not None and y is not None:
                                     item.x, item.y = x, y
                                     if rotated:
@@ -126,7 +126,7 @@ class OverlapStrategy(Neighborhood):
     def check_overlap(self, box: Box, rect: Rectangle):
         max_rect_area = rect.width * rect.height
 
-        for existing_rect in box.rectangles:
+        for existing_rect in box.items:
             if existing_rect == rect:
                 continue
 

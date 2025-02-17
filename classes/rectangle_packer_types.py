@@ -55,7 +55,7 @@ class RecPac_Solution(Solution):
         if len(box.items) == 0:
             self.boxes.remove(box)
 
-    def evaluate_solution(self, w1=1.0, w2=0.5, w3=0.2, w4=100):
+    def evaluate_solution(self, w1=1.0, w2=0.5, w3=0.2, w4=1000):
         num_boxes = len(self.boxes)
 
         total_area_used, total_box_area, total_overlap_area = 0, 0, 0
@@ -86,22 +86,31 @@ class RecPac_Solution(Solution):
         return f"RecPac_Solution(boxes={self.boxes})"
 
 @njit
-def detect_item_invalidity(x, y, width, height, item_x, item_y, item_width, item_height):
-    """Fast overlap check using Numba"""
-    return not (x >= item_x + item_width or x + width <= item_x or
-                y >= item_y + item_height or y + height <= item_y)
+def detect_item_invalidity(x, y, width, height, item_x, item_y, item_width, item_height, overlap_percentage):
+    
+    
+    if overlap_percentage == 0.0:
+        return not (x >= item_x + item_width or x + width <= item_x or y >= item_y + item_height or y + height <= item_y)
+    
+    # Calculate Overlap
+    x_overlap = max(0, min(x + width, item_x + item_width) - max(x, item_x))
+    y_overlap = max(0, min(y + height, item_y + item_height) - max(y, item_y))
+    overlap_area = x_overlap * y_overlap
+
+    max_area = max(width * height, item_width * item_height)
+    actual_overlap = overlap_area / max_area if max_area > 0 else 0.0
+
+    # If overlap under overlap_percentage, overlap is allowed
+    return actual_overlap >= overlap_percentage
 
 @njit
-def find_valid_assignment_numba(container_size, items_x, items_y, items_width, items_height,
-                                   item_width, item_height):
+def find_valid_assignment_numba(container_size, items_x, items_y, items_width, items_height, item_width, item_height, overlap_percentage):
     """Fast brute-force search for a valid rectangle position"""
     for y in range(container_size - item_width + 1):
         for x in range(container_size - item_height + 1):
             fits = True
             for i in range(len(items_x)):  # Check all existing rectangles
-                if detect_item_invalidity(x, y, item_width, item_height,
-                                   items_x[i], items_y[i],
-                                   items_width[i], items_height[i]):
+                if detect_item_invalidity(x, y, item_width, item_height, items_x[i], items_y[i], items_width[i], items_height[i], overlap_percentage):
                     fits = False
                     break  # If overlap, stop checking
             if fits:
@@ -140,7 +149,7 @@ class RectanglePacker(OptimizationProblem):
 
         return solution
 
-    def find_valid_assignment(self, container: Container, item: Item):
+    def find_valid_assignment(self, container: Container, item: Item, overlap_percentage: float = 0.0):
         """Wrapper function that prepares data and calls the Numba-optimized function"""
 
         # Convert Box data to NumPy arrays for Numba
@@ -150,13 +159,13 @@ class RectanglePacker(OptimizationProblem):
         items_height = np.array([r.height for r in container.items], dtype=np.int32)
 
         # Try normal orientation
-        x, y = find_valid_assignment_numba(self.container_size, items_x, items_y, items_width, items_height, item.width, item.height)
+        x, y = find_valid_assignment_numba(self.container_size, items_x, items_y, items_width, items_height, item.width, item.height, overlap_percentage)
         if x != -1:
             return x, y, False  # No rotation needed
 
         # Try rotated orientation
         if item.width != item.height:  # Only rotate if dimensions are different
-            x, y = find_valid_assignment_numba(self.container_size, items_x, items_y, items_width, items_height, item.height, item.width)
+            x, y = find_valid_assignment_numba(self.container_size, items_x, items_y, items_width, items_height, item.height, item.width, overlap_percentage)
             if x != -1:
                 return x, y, True  # Rotation needed
 

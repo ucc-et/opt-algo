@@ -16,7 +16,6 @@ class RectanglePackerVisualizer(GUI):
         self.local_search = local_search
         self.backtracking = backtracking
         self.simulated_annealing = simulated_annealing
-        self.current_solution = None
         self.can_export_rectangles = "disabled"
         self.can_zoom = "disabled"
         
@@ -297,14 +296,13 @@ class RectanglePackerVisualizer(GUI):
                 int(self.local_search_max_iterations.get())
             )
         elif algorithm == "Backtracking":
-            solution = self.backtracking(self.instances, self.box_size)
+            self.solution = self.backtracking(self.instances, self.box_size)
         elif algorithm == "Simulated Annealing":
             neighborhood = self.local_search_neighborhood_selector.get()
             rulebased_strategy = ""
             if neighborhood == "Regelbasiert":
                 rulebased_strategy = self.rulebased_strat.get()
-            solution = self.simulated_annealing(self.instances, self.box_size, neighborhood, rulebased_strategy)    
-        self.current_solution = solution
+            self.solution = self.simulated_annealing(self.instances, self.box_size, neighborhood, rulebased_strategy)    
         self.draw()
 
     def get_rectangle_color(self, rect):
