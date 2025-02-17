@@ -3,16 +3,17 @@ import tkinter as tk
 from tkinter import filedialog
 import random
 
-from objects import Box, RecPac_Solution, Rectangle
+from classes import Box, RecPac_Solution, Rectangle
+from view import GUI
 
-class SolutionViewer:
+class SolutionViewer(GUI):
     def __init__(self, root, solutions):
         self.root = root
         self.solutionsRaw = solutions
         self.solutions = []
         self.solutionsalgorithms = []
         self.rectangle_colors = {}
-        self.current_type = "greedy"  # Start with Greedy solutions
+        self.current_type = "greedy"
         self.current_index = 0
         self.zoom_factor = 1.0
         self.zoom_steps = 0
@@ -20,7 +21,7 @@ class SolutionViewer:
         
         self.parse_solutions()
         self.setup_ui()
-        self.visualize_solution()
+        self.draw()
     
     def parse_solutions(self):
         
@@ -40,11 +41,9 @@ class SolutionViewer:
     def setup_ui(self):
         self.root.title("Optimierungsalgorithmen GUI")
 
-        # Create input fields and place them in UI
         frame_inputs = tk.Frame(self.root)
         frame_inputs.pack(pady=10)
 
-        # Create Buttons in UI to Generate Instances and Start Packer
         frame_buttons = tk.Frame(self.root)
         frame_buttons.pack(pady=10)
 
@@ -66,19 +65,15 @@ class SolutionViewer:
         self.label_solution_number = tk.Label(self.root, text=f"Solution: {self.current_index+1}/{len(self.solutions)}")
         self.label_solution_number.pack()
 
-        # Create the scrollable canvas frame
         canvas_frame = tk.Frame(self.root)
         canvas_frame.pack(fill="both", expand=True)
 
-        # Create the canvas
         self.canvas = tk.Canvas(canvas_frame, bg="white")
         self.canvas.pack(fill="both", expand=True)
 
-        # Add vertical scrollbar
         v_scrollbar = tk.Scrollbar(canvas_frame, orient="vertical", command=self.canvas.yview)
         v_scrollbar.pack(side="right", fill="y")
 
-        # Configure the canvas to work with the vertical scrollbar
         self.canvas.configure(yscrollcommand=v_scrollbar.set)
         
         self.canvas.bind_all("<MouseWheel>", self.on_mousewheel)
@@ -109,10 +104,13 @@ class SolutionViewer:
         self.canvas.update_idletasks()
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
         
-    def visualize_solution(self):
+    def run_algorithm(self):
+        pass
+        
+    def draw(self):
         self.canvas.delete("all")
 
-        box_padding = 10 * self.zoom_factor  # Skaliere den Abstand zwischen den Boxen
+        box_padding = 10 * self.zoom_factor
         x_offset = 0
         y_offset = 0
         row_height = 0
@@ -123,7 +121,6 @@ class SolutionViewer:
         for box_id, box in enumerate(self.solutions[self.current_index].boxes):
             scaled_box_length = int(length * self.zoom_factor)
 
-            # Überprüfen, ob die Box in die aktuelle Zeile passt
             if x_offset + scaled_box_length + box_padding > canvas_width:
                 x_offset = 0
                 y_offset += row_height + box_padding
@@ -131,15 +128,13 @@ class SolutionViewer:
 
             row_height = max(row_height, scaled_box_length)
 
-            # Zeichne die Box
             self.canvas.create_rectangle(
                 x_offset, y_offset,
                 x_offset + scaled_box_length, y_offset + scaled_box_length,
                 outline="black"
             )
 
-            # Zeichne die Rechtecke innerhalb der Box
-            for rect in box.rectangles:
+            for rect in box.items:
                 x, y, w, h = rect.x, rect.y, rect.width, rect.height
                 scaled_x = int(x * self.zoom_factor) + x_offset
                 scaled_y = int(y * self.zoom_factor) + y_offset
@@ -153,7 +148,6 @@ class SolutionViewer:
                     outline="black"
                 )
 
-            # Aktualisiere den x_offset für die nächste Box
             x_offset += scaled_box_length + box_padding
 
         self.update_scrollregion()
@@ -166,7 +160,7 @@ class SolutionViewer:
     
     def redraw_canvas(self):
         self.canvas.delete("all")
-        self.visualize_solution() 
+        self.draw() 
     
     def on_mousewheel(self, event):
         self.canvas.yview_scroll(-1 * (event.delta // 120), "units")

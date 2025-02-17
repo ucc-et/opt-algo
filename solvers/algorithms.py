@@ -1,23 +1,25 @@
+import math
+import random
 import time
 import sys
-from neighborhoods import NeighborhoodStrategy
-from objects import RecPac_Solution
-from problem import OptimizationProblem
-import random
-import math
 
+from classes.base_classes import OptimizationProblem, Solution, Neighborhood
+import classes.helpers
+from classes.rectangle_packer_types import RecPac_Solution
 
 class Greedy:
-    def __init__(self, problem: OptimizationProblem, strategy="largest_area_first"):
+    def __init__(self, problem: OptimizationProblem, solution_type: type, strategy="largest_area_first"):
         self.problem = problem
-        self.strategy = strategy
+        self.solution_type = solution_type
+        
+        self.problem.items = classes.helpers.apply_greedy_strategy(self.problem.items, strategy)
 
     def solve(self):
         start_time = time.time()
 
-        current_solution = RecPac_Solution()
-        for instance in self.problem.rectangles:
-            new_solution = self.problem.add_to_solution(current_solution, instance)
+        current_solution = self.solution_type()
+        for item in self.problem.items:
+            new_solution = self.problem.add_to_solution(current_solution, item)
             if new_solution is not None:
                 current_solution = new_solution
 
@@ -29,12 +31,12 @@ class Greedy:
 
 
 class LocalSearch:
-    def __init__(self, problem: OptimizationProblem, start_solution: RecPac_Solution, max_iterations: int,
-                 neighborhood_strategy: NeighborhoodStrategy):
+    def __init__(self, problem: OptimizationProblem, start_solution: Solution, max_iterations: int,
+                 neighborhood: Neighborhood):
         self.problem = problem
         self.start_solution = start_solution
         self.max_iterations = max_iterations
-        self.neighborhood_strategy = neighborhood_strategy
+        self.neighborhood = neighborhood
 
     def solve(self):
         start_time = time.time()
@@ -45,7 +47,7 @@ class LocalSearch:
         iteration = 0
 
         while iteration < self.max_iterations:
-            neighbor = self.neighborhood_strategy.generate_neighbor(current_solution)
+            neighbor = self.neighborhood.generate_neighbor(current_solution)
             neighbor_value = neighbor.evaluate_solution()
             if neighbor_value <= best_value:
                 current_solution = neighbor
@@ -64,7 +66,7 @@ class LocalSearch:
 class SimulatedAnnealing:
     def __init__(self, problem: OptimizationProblem, start_solution: RecPac_Solution,
                  initial_temperature: float, end_temperature: float, cooling_rate: float,
-                 iterations_per_temp: int, neighborhood_strategy: NeighborhoodStrategy):
+                 iterations_per_temp: int, neighborhood_strategy: Neighborhood):
         self.problem = problem
         self.start_solution = start_solution
         self.initial_temperature = initial_temperature
@@ -104,14 +106,15 @@ class SimulatedAnnealing:
 
 
 class Backtracking:
-    def __init__(self, problem: OptimizationProblem):
+    def __init__(self, problem: OptimizationProblem, solution_type: type):
         self.problem = problem
+        self.solution_type = solution_type
         sys.setrecursionlimit(10**6)
 
     def solve(self):
         start_time = time.time()
 
-        current_solution = RecPac_Solution()
+        current_solution = self.solution_type()
 
         result = self._backtrack(current_solution, 0)
 
@@ -121,22 +124,17 @@ class Backtracking:
 
         return result
 
-    def _backtrack(self, current_solution: RecPac_Solution, index: int):
-        # Wenn alle Rechtecke platziert sind, return
-        if index >= len(self.problem.rectangles):
+    def _backtrack(self, current_solution: Solution, index: int):
+        if index >= len(self.problem.items):
             return current_solution
 
-        # aktuelles Rechteck zum platzieren
-        rectangle = self.problem.rectangles[index]
+        item = self.problem.items[index]
 
-        # Platziere Rechteck in Lösung
-        new_solution = self.problem.add_to_solution(current_solution, rectangle)
+        new_solution = self.problem.add_to_solution(current_solution, item)
 
         if new_solution is not None:
-            # Wenn neue Lösung None ist, versuche rekursiv weiter
             result = self._backtrack(new_solution, index + 1)
             if result is not None:
                 return result
 
-        # If no valid placement is found even after rotation, backtrack
         return None
