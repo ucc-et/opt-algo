@@ -85,6 +85,52 @@ class OverlapStrategy(Neighborhood):
         self.overlap_percentage = initial_overlap
         self.decay_rate = decay_rate
         self.problem = problem
+        
+    def check_strict_overlap(self, rect1: Rectangle, rect2: Rectangle) -> bool:
+        """Returns True if two rectangles overlap (without considering overlap_percentage)."""
+        
+        return not (
+            rect1.x + rect1.width <= rect2.x or
+            rect1.x >= rect2.x + rect2.width or
+            rect1.y + rect1.height <= rect2.y or
+            rect1.y >= rect2.y + rect2.height
+    )
+
+    def resolve_overlaps(self, solution: Solution):
+        for box in solution.boxes:
+            for i, rect1 in enumerate(box.items):
+                for j, rect2 in enumerate(box.items):
+                    if i != j:
+                        if self.check_strict_overlap(rect1, rect2):
+                            
+                            box.remove_rectangle(rect2)
+                            x, y, rotated = self.problem.find_valid_assignment(box, rect2, overlap_percentage=0.0)  # No overlap allowed now
+
+                            if x is not None and y is not None:
+                                rect2.x, rect2.y = x, y
+                                if rotated:
+                                    rect2.width, rect2.height = rect2.height, rect2.width
+                                box.add_rectangle(rect2)
+                            else:
+                                
+                                placed = False
+                                for other_box in solution.boxes:
+                                    if other_box is not box:
+                                        x, y, rotated = self.problem.find_valid_assignment(other_box, rect2, overlap_percentage=0.0)
+                                        if x is not None and y is not None:
+                                            rect2.x, rect2.y = x, y
+                                            if rotated:
+                                                rect2.width, rect2.height = rect2.height, rect2.width
+                                            other_box.add_rectangle(rect2)
+                                            placed = True
+                                            break
+
+                                if not placed:
+                                    
+                                    new_box = Box(solution.boxes[0].box_length)
+                                    rect2.x, rect2.y = 0, 0
+                                    new_box.add_rectangle(rect2)
+                                    solution.add_box(new_box)
 
     def generate_neighbor(self, solution: Solution):
         new_solution = copy.deepcopy(solution)

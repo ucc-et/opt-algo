@@ -35,7 +35,10 @@ def main():
         problem = RectanglePacker(items, container_size)
         start_solution, neighborhood = get_neighborhood_and_start_solution(problem, neighborhood_name, items, container_size, strategy_rulebased)
         local_search_solver = LocalSearch(problem, start_solution, max_iterations, neighborhood)
-        return local_search_solver.solve()
+        solution = local_search_solver.solve()
+        if neighborhood_name == "Überlappungen teilweise zulassen":
+            neighborhood.resolve_overlaps(solution)
+        return solution
 
     def backtracking_algorithm(items, container_size):
         problem = RectanglePacker(items, container_size)
