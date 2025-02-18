@@ -105,7 +105,7 @@ class RectanglePackerVisualizer(GUI):
         self.local_search_max_iterations_label.grid(row=11, column=0, pady=5)
         self.local_search_max_iterations = tk.Entry(frame_inputs)
         self.local_search_max_iterations.grid(row=11, column=1)
-        self.local_search_max_iterations.insert(0, "20")
+        self.local_search_max_iterations.insert(0, "21")
         
         self.color_scheme_label = tk.Label(frame_inputs, text="Rechteckfarben: ")
         self.color_scheme_label.grid(row=12, column=0, pady=5)

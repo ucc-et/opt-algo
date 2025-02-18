@@ -31,7 +31,7 @@ def main():
         greedy_solver = Greedy(problem, RecPac_Solution, strategy_name)
         return greedy_solver.solve()
 
-    def local_search_algorithm(items, container_size, neighborhood_name, strategy_rulebased="", max_iterations=20):
+    def local_search_algorithm(items, container_size, neighborhood_name, strategy_rulebased="", max_iterations=21):
         problem = RectanglePacker(items, container_size)
         if neighborhood_name == "Geometriebasiert":
             sub_lists, neighborhood = get_neighborhood_and_start_solution(problem, neighborhood_name, items, container_size, strategy_rulebased)

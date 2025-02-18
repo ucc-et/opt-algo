@@ -18,7 +18,7 @@ class Test_Environment:
         self.box_length = -1
         self.greedy_strategy = None
         self.neighborhood = None
-        self.max_iterations = 20
+        self.max_iterations = 21
         self.greedy_solutions = []
         self.local_search_solutions = []
         
@@ -162,7 +162,7 @@ if __name__ == "__main__":
     
     chosen_strategy = 1
     chosen_neighborhood = 1
-    max_iterations = 20
+    max_iterations = 21
     
     if instanzen is None and rechtecke is None and min_breite is None and min_hoehe is None and max_hoehe is None and max_breite is None and box_laenge is None:
         eingabe = input("Geben Sie die Parameter ein (Anzahl Instanzen, Anzahl Rechtecke, min. Breite, min. Höhe, max. Breite, max. Höhe, Boxlänge) durch Kommas getrennt: ")
@@ -191,10 +191,10 @@ if __name__ == "__main__":
     test_env.neighborhood = chosen_neighborhood
     
     if max_iterations is None:
-        max_iterations = int(input("Geben Sie die maximale Anzahl an Iterationen für die lokale Suche ein (Standard ist 20): "))
+        max_iterations = int(input("Geben Sie die maximale Anzahl an Iterationen für die lokale Suche ein (Standard ist 21): "))
         if(int(max_iterations)<=0):
-            max_iterations = 20
-            print("Die Eingabe war fehlerhaft. Es wird 20 als maximale Iterationsanzahl gesetzt")
+            max_iterations = 21
+            print("Die Eingabe war fehlerhaft. Es wird 21 als maximale Iterationsanzahl gesetzt")
             
     test_env.max_iterations = max_iterations
     
