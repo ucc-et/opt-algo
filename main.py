@@ -33,16 +33,17 @@ def main():
 
     def local_search_algorithm(items, container_size, neighborhood_name, strategy_rulebased="", max_iterations=20):
         problem = RectanglePacker(items, container_size)
-        sub_lists, neighborhood = get_neighborhood_and_start_solution(problem, neighborhood_name, items, container_size, strategy_rulebased)
-        start_solution = RecPac_Solution()
-        for sub_list in sub_lists:
-            temp_sol = greedy_algorithm(sub_list, container_size, GreedyStrategy.LARGEST_AREA_FIRST.value)
-            for box in temp_sol.boxes:
-                start_solution.add_box(box)
+        if neighborhood_name == "Geometriebasiert":
+            sub_lists, neighborhood = get_neighborhood_and_start_solution(problem, neighborhood_name, items, container_size, strategy_rulebased)
+            start_solution = RecPac_Solution()
+            for sub_list in sub_lists:
+                temp_sol = greedy_algorithm(sub_list, container_size, GreedyStrategy.LARGEST_AREA_FIRST.value)
+                for box in temp_sol.boxes:
+                    start_solution.add_box(box)
+        else:
+            start_solution, neighborhood = get_neighborhood_and_start_solution(problem, neighborhood_name, items, container_size, strategy_rulebased)
         local_search_solver = LocalSearch(problem, start_solution, max_iterations, neighborhood)
         solution = local_search_solver.solve()
-        if neighborhood_name == "Überlappungen teilweise zulassen":
-            neighborhood.resolve_overlaps(solution)
         return solution
 
     def backtracking_algorithm(items, container_size):
