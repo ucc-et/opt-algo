@@ -1,5 +1,6 @@
 import copy
 import random
+import itertools
 
 from classes.base_classes import  OptimizationProblem, Solution, Neighborhood
 from classes.rectangle_packer_types import RecPac_Solution, Rectangle, Box
@@ -81,7 +82,7 @@ class RuleBasedStrategy(Neighborhood):
         return current_solution
 
 class OverlapStrategy(Neighborhood):
-    def __init__(self,problem: OptimizationProblem, initial_overlap: float = 1.0, decay_rate: float = 0.05):
+    def __init__(self, problem: OptimizationProblem, initial_overlap: float = 1.0, decay_rate: float = 0.05):
         self.overlap_percentage = initial_overlap
         self.decay_rate = decay_rate
         self.problem = problem
@@ -89,71 +90,47 @@ class OverlapStrategy(Neighborhood):
     def generate_neighbor(self, solution: Solution):
         new_solution = copy.deepcopy(solution)
 
-        # Process each box
-        for box_index, box in enumerate(new_solution.boxes):
-            # Get items to relocate (those that have overlap)
-            items_to_relocate = []
-            for item in box.items:
-                if not self.check_overlap(box, item):
-                    items_to_relocate.append(item)
-                    box.remove_rectangle(item)
-
-            # Try placing each item
+        for box in new_solution.boxes:
+            items_to_relocate = [item for item in box.items if not self.check_overlap(box, item)]
             for item in items_to_relocate:
-                # First, attempt placing inside the current box
-                x, y, rotated = self.problem.find_valid_assignment(box, item, self.overlap_percentage * 0.3)
-                if x is not None and y is not None:
-                    # Item placed successfully, update its position
-                    item.x, item.y = x, y
-                    if rotated:
-                        item.width, item.height = item.height, item.width
-                    box.add_rectangle(item)
-                    continue  # Early exit if placed successfully
+                box.remove_rectangle(item)
 
-                # If it couldn't be placed in the current box, try the last box
+            for item in items_to_relocate:
                 placed = False
-                for other_box in new_solution.boxes:
-                    if other_box is not box:
-                        x, y, rotated = self.problem.find_valid_assignment(other_box, item,
-                                                                           self.overlap_percentage * 0.3)
-                        if x is not None and y is not None:
-                            item.x, item.y = x, y
-                            if rotated:
-                                item.width, item.height = item.height, item.width
-                            other_box.add_rectangle(item)
-                            placed = True
-                            break  # Exit once placed in another box
+                for target_box in itertools.chain([box], new_solution.boxes):  # Prioritize current box
+                    if placed:
+                        break
+                    x, y, rotated = self.problem.find_valid_assignment(target_box, item, self.overlap_percentage * 0.3)
+                    if x is not None:
+                        item.x, item.y = x, y
+                        if rotated:
+                            item.width, item.height = item.height, item.width
+                        target_box.add_rectangle(item)
+                        placed = True
 
-                # If no place found in the last box, create a new box
                 if not placed:
-                    new_box = Box(new_solution.boxes[0].box_length)  # Create a new box based on first box length
-                    item.x, item.y = 0, 0  # Place at (0, 0) initially
+                    new_box = Box(new_solution.boxes[0].box_length)
+                    item.x, item.y = 0, 0
                     new_box.add_rectangle(item)
                     new_solution.add_box(new_box)
 
-        # Apply decay rate efficiently
         self.overlap_percentage = max(0.0, round(self.overlap_percentage - self.decay_rate, 6))
-
         return new_solution
 
     def check_overlap(self, box: Box, rect: Rectangle):
         max_rect_area = rect.width * rect.height
-
         for existing_rect in box.items:
-            if existing_rect == rect:
+            if existing_rect is rect:
                 continue
 
             x_overlap = max(0, min(existing_rect.x + existing_rect.width, rect.x + rect.width) - max(existing_rect.x, rect.x))
             y_overlap = max(0, min(existing_rect.y + existing_rect.height, rect.y + rect.height) - max(existing_rect.y, rect.y))
 
             overlap_area = x_overlap * y_overlap
-
             if self.overlap_percentage == 0.0 and overlap_area > 0:
                 return False
 
-            max_existing_area = existing_rect.width * existing_rect.height
-
-            denominator = min(max_rect_area, max_existing_area)
+            denominator = min(max_rect_area, existing_rect.width * existing_rect.height)
             if overlap_area / denominator > self.overlap_percentage:
                 return False
 
