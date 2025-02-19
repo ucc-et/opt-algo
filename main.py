@@ -31,15 +31,19 @@ def main():
         greedy_solver = Greedy(problem, RecPac_Solution, strategy_name)
         return greedy_solver.solve()
 
+    def merge_geometry_based_solutions(problem, neighborhood_name, items, container_size, rulebased_strategy):
+        start_solution = RecPac_Solution()
+        sub_lists, neighborhood = get_neighborhood_and_start_solution(problem, neighborhood_name, items, container_size, rulebased_strategy)
+        for sub_list in sub_lists:
+            temp_solt = greedy_algorithm(sub_list, container_size, GreedyStrategy.LARGEST_AREA_FIRST.value)
+            for box in temp_solt.boxes:
+                start_solution.add_box(box)
+        return start_solution, neighborhood
+
     def local_search_algorithm(items, container_size, neighborhood_name, strategy_rulebased="", max_iterations=21):
         problem = RectanglePacker(items, container_size)
         if neighborhood_name == "Geometriebasiert":
-            sub_lists, neighborhood = get_neighborhood_and_start_solution(problem, neighborhood_name, items, container_size, strategy_rulebased)
-            start_solution = RecPac_Solution()
-            for sub_list in sub_lists:
-                temp_sol = greedy_algorithm(sub_list, container_size, GreedyStrategy.LARGEST_AREA_FIRST.value)
-                for box in temp_sol.boxes:
-                    start_solution.add_box(box)
+            start_solution, neighborhood = merge_geometry_based_solutions(problem, neighborhood_name, items, container_size, strategy_rulebased)
         else:
             start_solution, neighborhood = get_neighborhood_and_start_solution(problem, neighborhood_name, items, container_size, strategy_rulebased)
         local_search_solver = LocalSearch(problem, start_solution, max_iterations, neighborhood)
@@ -52,10 +56,10 @@ def main():
         solution = backtracking_solver.solve()
         return solution
 
-    def simulated_annealing_algorithm(items, container_size, neighborhood_name, strategy_rulebased, initial_temperature=1000, end_temperature=1, cooling_rate=0.95, iterations_per_temp=10):
+    def simulated_annealing_algorithm(items, container_size, neighborhood_name, strategy_rulebased, initial_temperature=1000, end_temperature=25, cooling_rate=0.95, iterations_per_temp=10):
         problem = RectanglePacker(items, container_size)
 
-        start_solution, neighborhood = get_neighborhood_and_start_solution(problem, neighborhood_name, items, container_size, strategy_rulebased)
+        start_solution, neighborhood = merge_geometry_based_solutions(problem, neighborhood_name, items, container_size, strategy_rulebased)
 
         simulated_annealing_solver = SimulatedAnnealing(
             problem=problem,

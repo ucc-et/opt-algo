@@ -103,18 +103,25 @@ def detect_item_invalidity(x, y, width, height, item_x, item_y, item_width, item
 
 @njit
 def find_valid_assignment_numba(container_size, items_x, items_y, items_width, items_height, item_width, item_height, overlap_percentage):
-    """Fast brute-force search for a valid rectangle position"""
-    for y in range(container_size - item_width + 1):
-        for x in range(container_size - item_height + 1):
-            fits = True
-            for i in range(len(items_x)):  # Check all existing rectangles
-                if detect_item_invalidity(x, y, item_width, item_height, items_x[i], items_y[i], items_width[i], items_height[i], overlap_percentage):
-                    fits = False
-                    break  # If overlap, stop checking
-            if fits and (x+item_width <= container_size) and (y+item_height <= container_size):
-                return x, y  # Found a valid position
+    """Find position with 2D occupancy grid instead of brute force"""
 
-    return -1, -1  # No valid position found
+    occupancy_grid = np.zeros((container_size, container_size), dtype=np.uint8)
+
+    for i in range(len(items_x)):
+        x1, y1, x2, y2 = items_x[i], items_y[i], items_x[i] + items_width[i], items_y[i] + items_height[i]
+        occupancy_grid[x1:x2, y1:y2] = 1
+
+    for y in range(container_size - item_height + 1):
+        for x in range(container_size - item_width + 1):
+
+            area = occupancy_grid[x:x+item_width, y:y+item_height]
+            overlap_ratio = np.sum(area) / (item_width * item_height)
+
+            if overlap_ratio <= overlap_percentage:
+                return x, y
+
+    return -1, -1
+
 
 class RectanglePacker(OptimizationProblem):
 
