@@ -59,7 +59,9 @@ class RuleBasedStrategy(Neighborhood):
             return solution
 
         current_solution = RecPac_Solution()
-        items = [item for box in solution.boxes for item in box.items]
+        items = []
+        for box in solution.boxes:
+            items.extend(box.items)
 
         if len(items) > 1:
             items = classes.helpers.apply_rule(items, self.rule)

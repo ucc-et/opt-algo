@@ -73,7 +73,7 @@ class LocalSearch:
 class SimulatedAnnealing:
     def __init__(self, problem: OptimizationProblem, start_solution: RecPac_Solution,
                  initial_temperature: float, end_temperature: float, cooling_rate: float,
-                 iterations_per_temp: int, neighborhood_strategy: Neighborhood):
+                 iterations_per_temp: int, neighborhood_strategy: Neighborhood, max_time: float = 10.0):
         self.problem = problem
         self.start_solution = start_solution
         self.initial_temperature = initial_temperature
@@ -81,6 +81,7 @@ class SimulatedAnnealing:
         self.cooling_rate = cooling_rate
         self.iterations_per_temp = iterations_per_temp
         self.neighborhood_strategy = neighborhood_strategy
+        self.max_time = max_time
 
     def solve(self):
         start_time = time.time()
@@ -92,6 +93,9 @@ class SimulatedAnnealing:
 
         while temperature > self.end_temperature:
             for _ in range(self.iterations_per_temp):
+                elapsed_time = time.time()-start_time
+                if (elapsed_time >= self.max_time):
+                    return best_solution
                 neighbor = self.neighborhood_strategy.generate_neighbor(current_solution)
                 neighbor_value = neighbor.evaluate_solution()
 
