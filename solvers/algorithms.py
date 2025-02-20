@@ -101,7 +101,7 @@ class SimulatedAnnealing:
 
                 delta = neighbor_value - best_value
 
-                if delta < 0 or random.uniform(0, 1) < math.exp(-delta / temperature):
+                if delta <= 0 or random.uniform(0, 1) < math.exp(-delta / temperature):
                     current_solution = neighbor
                     if neighbor_value < best_value:
                         best_solution = neighbor
