@@ -107,10 +107,50 @@ class RectanglePackerVisualizer(GUI):
         self.local_search_max_iterations.grid(row=11, column=1)
         self.local_search_max_iterations.insert(0, "21")
         
+        self.start_temperature_label = tk.Label(frame_inputs, text="Starttemperatur")
+        self.start_temperature_label.grid(row=10, column=0)
+        self.start_temperature = tk.Entry(frame_inputs)
+        self.start_temperature.insert(0,"1000")
+        self.start_temperature.grid(row=10, column=1)
+        self.start_temperature_label.grid_remove()
+        self.start_temperature.grid_remove()
+        
+        self.end_temperature_label = tk.Label(frame_inputs, text="Endtemperatur")
+        self.end_temperature_label.grid(row=11, column=0)
+        self.end_temperature = tk.Entry(frame_inputs)
+        self.end_temperature.insert(0,"5")
+        self.end_temperature.grid(row=11, column=1)
+        self.end_temperature_label.grid_remove()
+        self.end_temperature.grid_remove()
+        
+        self.cool_rate_label = tk.Label(frame_inputs, text="Abkühlrate (in %)")
+        self.cool_rate_label.grid(row=12, column=0)
+        self.cool_rate = tk.Entry(frame_inputs)
+        self.cool_rate.insert(0,"5")
+        self.cool_rate.grid(row=12, column=1)
+        self.cool_rate_label.grid_remove()
+        self.cool_rate.grid_remove()
+        
+        self.cool_rate_constant_label = tk.Label(frame_inputs, text="Temperature konstant für x Iterationen: ")
+        self.cool_rate_constant_label.grid(row=13, column=0)
+        self.cool_rate_constant = tk.Entry(frame_inputs)
+        self.cool_rate_constant.insert(0, "10")
+        self.cool_rate_constant.grid(row=13, column=1)
+        self.cool_rate_constant.grid_remove()
+        self.cool_rate_constant_label.grid_remove()
+        
+        self.max_time_label = tk.Label(frame_inputs, text="Maximale Laufzeit (in Sekunden): ")
+        self.max_time_label.grid(row=14, column=0)
+        self.max_time = tk.Entry(frame_inputs)
+        self.max_time.insert(0,"10")
+        self.max_time.grid(row=14, column=1)
+        self.max_time_label.grid_remove()
+        self.max_time.grid_remove()
+        
         self.color_scheme_label = tk.Label(frame_inputs, text="Rechteckfarben: ")
-        self.color_scheme_label.grid(row=12, column=0, pady=5)
+        self.color_scheme_label.grid(row=15, column=0, pady=5)
         self.color_scheme_input = tk.Entry(frame_inputs)
-        self.color_scheme_input.grid(row=12, column=1)
+        self.color_scheme_input.grid(row=15, column=1)
         self.color_scheme_input.insert(0,self.color_choices)
 
         self.algo_selector.bind("<<ComboboxSelected>>", self.update_algorithm)
@@ -195,6 +235,16 @@ class RectanglePackerVisualizer(GUI):
             self.local_search_max_iterations_is_visible = False
             self.strategy_label.grid()
             self.greedy_strat.grid()
+            self.start_temperature.grid_remove()
+            self.start_temperature_label.grid_remove()
+            self.end_temperature.grid_remove()
+            self.end_temperature_label.grid_remove()
+            self.cool_rate_label.grid_remove()
+            self.cool_rate.grid_remove()
+            self.max_time.grid_remove()
+            self.max_time_label.grid_remove()
+            self.cool_rate_constant.grid_remove()
+            self.cool_rate_constant_label.grid_remove()
         elif self.algo_selector.get() == "Lokale Suche":
             self.greedy_strat.grid_remove()
             self.local_search_neighborhood_selector.grid()
@@ -203,6 +253,16 @@ class RectanglePackerVisualizer(GUI):
             self.local_search_max_iterations_label.grid()
             self.neighborhood_label.grid()
             self.local_search_max_iterations_is_visible = True
+            self.start_temperature.grid_remove()
+            self.start_temperature_label.grid_remove()
+            self.end_temperature.grid_remove()
+            self.end_temperature_label.grid_remove()
+            self.cool_rate_label.grid_remove()
+            self.cool_rate.grid_remove()
+            self.max_time.grid_remove()
+            self.cool_rate_constant.grid_remove()
+            self.cool_rate_constant_label.grid_remove()
+            self.max_time_label.grid_remove()
             if self.local_search_neighborhood_selector.get() == "Regelbasiert":
                 self.rulebased_strat.grid()
                 self.rulebased_strategy_label.grid()
@@ -219,6 +279,16 @@ class RectanglePackerVisualizer(GUI):
             self.local_search_max_iterations_is_visible = False
             self.greedy_strat.grid_remove()
             self.strategy_label.grid_remove()
+            self.start_temperature.grid_remove()
+            self.start_temperature_label.grid_remove()
+            self.end_temperature.grid_remove()
+            self.cool_rate_constant.grid_remove()
+            self.cool_rate_constant_label.grid_remove()
+            self.end_temperature_label.grid_remove()
+            self.cool_rate_label.grid_remove()
+            self.cool_rate.grid_remove()
+            self.max_time.grid_remove()
+            self.max_time_label.grid_remove()
         elif self.algo_selector.get() == "Simulated Annealing":
             self.local_search_neighborhood_selector.grid_remove()
             self.local_search_max_iterations.grid_remove()
@@ -229,6 +299,17 @@ class RectanglePackerVisualizer(GUI):
             self.local_search_max_iterations_is_visible = False
             self.greedy_strat.grid_remove()
             self.strategy_label.grid_remove()
+            
+            self.start_temperature.grid()
+            self.start_temperature_label.grid()
+            self.end_temperature.grid()
+            self.end_temperature_label.grid()
+            self.cool_rate_label.grid()
+            self.cool_rate.grid()
+            self.max_time.grid()
+            self.max_time_label.grid()
+            self.cool_rate_constant.grid()
+            self.cool_rate_constant_label.grid()
            
     def validate_inputs(self):
         errors = []
@@ -306,10 +387,15 @@ class RectanglePackerVisualizer(GUI):
             self.solution = self.backtracking(self.instances, self.box_size)
         elif algorithm == "Simulated Annealing":
             neighborhood = self.local_search_neighborhood_selector.get()
+            start_temp = int(self.start_temperature.get())
+            end_temp = int(self.end_temperature.get())
+            cool_down_rate = int(self.cool_rate.get())
+            max_time = int(self.max_time.get())
+            constant = int(self.cool_rate_constant.get())
             rulebased_strategy = ""
             if neighborhood == "Regelbasiert":
                 rulebased_strategy = self.rulebased_strat.get()
-            self.solution = self.simulated_annealing(self.instances, self.box_size, neighborhood, rulebased_strategy)    
+            self.solution = self.simulated_annealing(self.instances, self.box_size, neighborhood, rulebased_strategy, start_temp, end_temp, 1-cool_down_rate, constant, max_time)    
         self.draw()
 
     def get_rectangle_color(self, rect):

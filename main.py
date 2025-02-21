@@ -56,7 +56,7 @@ def main():
         solution = backtracking_solver.solve()
         return solution
 
-    def simulated_annealing_algorithm(items, container_size, neighborhood_name, strategy_rulebased, initial_temperature=1000, end_temperature=25, cooling_rate=0.95, iterations_per_temp=10):
+    def simulated_annealing_algorithm(items, container_size, neighborhood_name, strategy_rulebased, initial_temperature=1000, end_temperature=25, cooling_rate=0.95, iterations_per_temp=10, max_time=10):
         problem = RectanglePacker(items, container_size)
 
         start_solution, neighborhood = merge_geometry_based_solutions(problem, neighborhood_name, items, container_size, strategy_rulebased)
