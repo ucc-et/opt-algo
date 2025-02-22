@@ -78,43 +78,62 @@ class RecPac_Solution(Solution):
         return (w1 * num_boxes) + (w2 * (1 - utilization)) + (w3 * unused_space) + (w4 * total_overlap_area)
 
     def compute_overlap(self, rect1, rect2):
-        x_overlap = max(0, min(rect1.x + rect1.width, rect2.x + rect2.width) - max(rect1.x, rect2.x))
-        y_overlap = max(0, min(rect1.y + rect1.height, rect2.y + rect2.height) - max(rect1.y, rect2.y))
-        return x_overlap * y_overlap
+        return compute_overlap_numba(rect1.x, rect1.y, rect1.width, rect1.height,
+                                 rect2.x, rect2.y, rect2.width, rect2.height)
 
     def __repr__(self):
         return f"RecPac_Solution(boxes={self.boxes})"
 
-@njit
-def detect_item_invalidity(x, y, width, height, item_x, item_y, item_width, item_height, overlap_percentage):
-    if overlap_percentage == 0.0:
-        return not (x >= item_x + item_width or x + width <= item_x or y >= item_y + item_height or y + height <= item_y)
-    
-    # Calculate Overlap
-    x_overlap = max(0, min(x + width, item_x + item_width) - max(x, item_x))
-    y_overlap = max(0, min(y + height, item_y + item_height) - max(y, item_y))
-    overlap_area = x_overlap * y_overlap
-
-    max_area = max(width * height, item_width * item_height)
-    actual_overlap = overlap_area / max_area if max_area > 0 else 0.0
-
-    # If overlap under overlap_percentage, overlap is allowed
-    return actual_overlap >= overlap_percentage
+@njit 
+def compute_overlap_numba(x1, y1, w1, h1, x2, y2, w2, h2):
+    """Fast overlap computation using Numba JIT compilation"""
+    x_overlap = max(0, min(x1 + w1, x2 + w2) - max(x1, x2))
+    y_overlap = max(0, min(y1 + h1, y2 + h2) - max(y1, y2))
+    return x_overlap * y_overlap
 
 @njit
 def find_valid_assignment_numba(container_size, items_x, items_y, items_width, items_height, item_width, item_height, overlap_percentage):
-    """Fast brute-force search for a valid rectangle position"""
-    for y in range(container_size - item_width + 1):
-        for x in range(container_size - item_height + 1):
-            fits = True
-            for i in range(len(items_x)):  # Check all existing rectangles
-                if detect_item_invalidity(x, y, item_width, item_height, items_x[i], items_y[i], items_width[i], items_height[i], overlap_percentage):
-                    fits = False
-                    break  # If overlap, stop checking
-            if fits and (x+item_width <= container_size) and (y+item_height <= container_size):
-                return x, y  # Found a valid position
 
-    return -1, -1  # No valid position found
+    occupancy_grid = np.zeros((container_size, container_size), dtype=np.uint8)
+
+    for i in range(len(items_x)):
+        x1, y1 = items_x[i], items_y[i]
+        x2, y2 = x1 + items_width[i], y1 + items_height[i]
+        occupancy_grid[x1:x2, y1:y2] = 1
+
+    integral_image = np.zeros_like(occupancy_grid, dtype=np.int32)
+
+    for x in range(container_size):
+        for y in range(container_size):
+            integral_image[x, y] = occupancy_grid[x, y]
+            if x > 0:
+                integral_image[x, y] += integral_image[x-1, y]
+            if y > 0:
+                integral_image[x, y] += integral_image[x, y-1]
+            if x > 0 and y > 0:
+                integral_image[x, y] -= integral_image[x-1, y-1]
+
+    for y in range(container_size - item_height + 1):
+        for x in range(container_size - item_width + 1):
+            x2, y2 = x + item_width - 1, y + item_height - 1
+            total_area = item_width * item_height
+
+            overlap_area = integral_image[x2, y2]
+            if x > 0:
+                overlap_area -= integral_image[x-1, y2]
+            if y > 0:
+                overlap_area -= integral_image[x2, y-1]
+            if x > 0 and y > 0:
+                overlap_area += integral_image[x-1, y-1]
+
+            overlap_ratio = overlap_area / total_area
+
+            if overlap_ratio <= overlap_percentage:
+                return x, y
+
+    return -1, -1
+
+
 
 class RectanglePacker(OptimizationProblem):
 
@@ -132,6 +151,7 @@ class RectanglePacker(OptimizationProblem):
 
         for box in solution.boxes:
             x, y, rotated = self.find_valid_assignment(box, item)
+            
             if x is not None and y is not None:
                 item.x, item.y = x, y
                 if rotated:

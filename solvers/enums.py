@@ -10,3 +10,8 @@ class Rules(Enum):
     HEIGHT_FIRST = "Absteigend nach Höhe"
     WIDTH_FIRST = "Absteigend nach Breite"
     AREA_FIRST = "Absteigend nach Fläche"
+    
+class Neighborhoods(Enum):
+    GEOMETRY = "Geometriebasiert"
+    RULE = "Regelbasiert"
+    OVERLAP = "Überlappung teilweise zulassen"

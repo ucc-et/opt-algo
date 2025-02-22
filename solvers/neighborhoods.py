@@ -1,6 +1,6 @@
-import copy
 import random
-import itertools
+import copy
+import numpy as np
 
 from classes.base_classes import  OptimizationProblem, Solution, Neighborhood
 from classes.rectangle_packer_types import RecPac_Solution, Rectangle, Box
@@ -59,7 +59,9 @@ class RuleBasedStrategy(Neighborhood):
             return solution
 
         current_solution = RecPac_Solution()
-        items = [item for box in solution.boxes for item in box.items]
+        items = []
+        for box in solution.boxes:
+            items.extend(box.items)
 
         if len(items) > 1:
             items = classes.helpers.apply_rule(items, self.rule)
@@ -88,50 +90,71 @@ class OverlapStrategy(Neighborhood):
         self.problem = problem
 
     def generate_neighbor(self, solution: Solution):
-        new_solution = copy.deepcopy(solution)
+        new_solution = solution # deep copy slow apparently
 
         for box in new_solution.boxes:
-            items_to_relocate = [item for item in box.items if not self.check_overlap(box, item)]
+            spatial_data = self.build_spatial_array(box)
+
+            items_to_relocate = self.find_violating_rectangles(box, spatial_data)
+
             for item in items_to_relocate:
                 box.remove_rectangle(item)
 
-            for item in items_to_relocate:
-                placed = False
-                for target_box in itertools.chain([box], new_solution.boxes):  # Prioritize current box
-                    if placed:
-                        break
-                    x, y, rotated = self.problem.find_valid_assignment(target_box, item, self.overlap_percentage * 0.3)
-                    if x is not None:
-                        item.x, item.y = x, y
-                        if rotated:
-                            item.width, item.height = item.height, item.width
-                        target_box.add_rectangle(item)
-                        placed = True
-
-                if not placed:
-                    new_box = Box(new_solution.boxes[0].box_length)
-                    item.x, item.y = 0, 0
-                    new_box.add_rectangle(item)
-                    new_solution.add_box(new_box)
+            self.reassign_rectangles(new_solution, items_to_relocate)
 
         self.overlap_percentage = max(0.0, round(self.overlap_percentage - self.decay_rate, 6))
         return new_solution
 
-    def check_overlap(self, box: Box, rect: Rectangle):
-        max_rect_area = rect.width * rect.height
-        for existing_rect in box.items:
-            if existing_rect is rect:
-                continue
+    def build_spatial_array(self, box: Box):
+        if not box.items:
+            return np.empty((0, 5), dtype=np.float32)
 
-            x_overlap = max(0, min(existing_rect.x + existing_rect.width, rect.x + rect.width) - max(existing_rect.x, rect.x))
-            y_overlap = max(0, min(existing_rect.y + existing_rect.height, rect.y + rect.height) - max(existing_rect.y, rect.y))
+        return np.array([[rect.x, rect.y, rect.x + rect.width, rect.y + rect.height, rect.width * rect.height] for rect in box.items], dtype=np.float32)
 
-            overlap_area = x_overlap * y_overlap
-            if self.overlap_percentage == 0.0 and overlap_area > 0:
-                return False
+    def find_violating_rectangles(self, box, spatial_data):
+        violating_items = []
 
-            denominator = min(max_rect_area, existing_rect.width * existing_rect.height)
-            if overlap_area / denominator > self.overlap_percentage:
-                return False
+        for rect in box.items:
+            rect_arr = np.array([rect.x, rect.y, rect.x + rect.width, rect.y + rect.height, rect.width * rect.height], dtype=np.float32)
+            if not self.check_overlap_vectorized(spatial_data, rect_arr, self.overlap_percentage):
+                violating_items.append(rect)
+
+        return violating_items
+
+    def reassign_rectangles(self, new_solution, items_to_relocate):
+        for item in items_to_relocate:
+            placed = False
+            for box in new_solution.boxes:
+                x, y, rotated = self.problem.find_valid_assignment(box, item, self.overlap_percentage * 0.3)
+                if x is not None:
+                    item.x, item.y = x, y
+                    if rotated:
+                        item.width, item.height = item.height, item.width
+                    box.add_rectangle(item)
+                    placed = True
+                    break
+
+            if not placed:
+                new_box = Box(new_solution.boxes[0].box_length)
+                item.x, item.y = 0, 0
+                new_box.add_rectangle(item)
+                new_solution.add_box(new_box)
+
+    def check_overlap_vectorized(self, spatial_data, rect_arr, overlap_percentage):
+        if spatial_data.shape[0] == 0:
+            return True
+
+        rect_x1, rect_y1, rect_x2, rect_y2, rect_area = rect_arr
+
+        x_overlap = np.maximum(0, np.minimum(spatial_data[:, 2], rect_x2) - np.maximum(spatial_data[:, 0], rect_x1))
+        y_overlap = np.maximum(0, np.minimum(spatial_data[:, 3], rect_y2) - np.maximum(spatial_data[:, 1], rect_y1))
+
+        overlap_areas = x_overlap * y_overlap
+        max_areas = np.maximum(rect_area, spatial_data[:, 4])
+
+        overlap_ratios = overlap_areas / max_areas
+        if np.any(overlap_ratios > overlap_percentage):
+            return False
 
         return True
+

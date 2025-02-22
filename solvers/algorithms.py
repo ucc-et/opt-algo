@@ -1,3 +1,4 @@
+import cProfile
 import math
 import random
 import time
@@ -11,7 +12,6 @@ class Greedy:
     def __init__(self, problem: OptimizationProblem, solution_type: type, strategy="largest_area_first"):
         self.problem = problem
         self.solution_type = solution_type
-        
         self.problem.items = classes.helpers.apply_greedy_strategy(self.problem.items, strategy)
 
     def solve(self):
@@ -46,15 +46,22 @@ class LocalSearch:
         best_value = best_solution.evaluate_solution()
         iteration = 0
 
+        profiler = cProfile.Profile()
+        profiler.enable()  # Profiling starten
+
         while iteration < self.max_iterations:
             neighbor = self.neighborhood.generate_neighbor(current_solution)
             neighbor_value = neighbor.evaluate_solution()
+
             if neighbor_value <= best_value:
                 current_solution = neighbor
                 best_solution = neighbor
                 best_value = neighbor_value
 
             iteration += 1
+
+        profiler.disable()  # Profiling stoppen
+        profiler.print_stats(sort="tottime")  # Ergebnisse ausgeben
 
         end_time = time.time()
         elapsed_time = end_time - start_time
@@ -66,7 +73,7 @@ class LocalSearch:
 class SimulatedAnnealing:
     def __init__(self, problem: OptimizationProblem, start_solution: RecPac_Solution,
                  initial_temperature: float, end_temperature: float, cooling_rate: float,
-                 iterations_per_temp: int, neighborhood_strategy: Neighborhood):
+                 iterations_per_temp: int, neighborhood_strategy: Neighborhood, max_time: float = 10.0):
         self.problem = problem
         self.start_solution = start_solution
         self.initial_temperature = initial_temperature
@@ -74,6 +81,7 @@ class SimulatedAnnealing:
         self.cooling_rate = cooling_rate
         self.iterations_per_temp = iterations_per_temp
         self.neighborhood_strategy = neighborhood_strategy
+        self.max_time = max_time
 
     def solve(self):
         start_time = time.time()
@@ -85,12 +93,15 @@ class SimulatedAnnealing:
 
         while temperature > self.end_temperature:
             for _ in range(self.iterations_per_temp):
+                elapsed_time = time.time()-start_time
+                if (elapsed_time >= self.max_time):
+                    return best_solution
                 neighbor = self.neighborhood_strategy.generate_neighbor(current_solution)
                 neighbor_value = neighbor.evaluate_solution()
 
                 delta = neighbor_value - best_value
 
-                if delta < 0 or random.uniform(0, 1) < math.exp(-delta / temperature):
+                if delta <= 0 or random.uniform(0, 1) < math.exp(-delta / temperature):
                     current_solution = neighbor
                     if neighbor_value < best_value:
                         best_solution = neighbor
@@ -109,7 +120,7 @@ class Backtracking:
     def __init__(self, problem: OptimizationProblem, solution_type: type):
         self.problem = problem
         self.solution_type = solution_type
-        sys.setrecursionlimit(10**6)
+        sys.setrecursionlimit(10 ** 6)
 
     def solve(self):
         start_time = time.time()
