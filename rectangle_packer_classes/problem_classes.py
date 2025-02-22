@@ -5,6 +5,9 @@ from numba import njit
 import numpy as np
 
 class Rectangle(Item):
+    """
+    Represents a rectangle with position (x, y) and dimensions (width, height)
+    """
     def __init__(self, x: int, y: int, width: int, height: int):
         self.x = x
         self.y = y
@@ -16,6 +19,9 @@ class Rectangle(Item):
 
 
 class Box(Container):
+    """
+    Container class for storing rectangles and calculating covered area.
+    """
     def __init__(self, box_length: int):
         self.box_length = box_length
         self.items: Rectangle = []
@@ -24,37 +30,58 @@ class Box(Container):
     def __repr__(self):
         return f"Box(box_length={self.box_length}, rectangles={self.items}, last_covered_area={self.last_covered_area})"
 
-    def add_rectangle(self, item: Rectangle):
+    def add_item(self, item: Rectangle):
+        """Add a item to the box.
+
+        Args:
+            item (Rectangle): rectangle item, that will be added
+        """
         self.items.append(item)
 
-    def remove_rectangle(self, item: Rectangle):
+    def remove_item(self, item: Rectangle):
+        """Remove item from the box
+
+        Args:
+            item (Rectangle): the rectangle item, which will be removed from the box
+        """
         self.items.remove(item)
-
-    def calculate_covered_area(self):
-        total_box_area = self.box_length ** 2
-        covered_by_items = 0
-
-        for item in self.items:
-            covered_by_items += item.width * item.height
-
-        return (covered_by_items / total_box_area) * 100
 
 
 class RecPac_Solution(Solution):
+    """
+    Clss that represents a solution of the rectangle packing problem.
+    """
     def __init__(self):
         self.boxes: List[Box] = []
 
     def add_box(self, box: Box):
+        """
+        Adds a box to the solution.
+        """
         self.boxes.append(box)
 
-    def set_boxes(self, boxes: List[Box]):
-        self.boxes = boxes
-
     def check_if_box_empty(self, box: Box):
+        """
+        Checks if the box has any rectangles inside of it. If not, it will be removed from the solution
+
+        Args:
+            box (Box): the box which is checked
+        """
         if len(box.items) == 0:
             self.boxes.remove(box)
 
     def evaluate_solution(self, w1=1.0, w2=0.5, w3=0.2, w4=100):
+        """Evaluates the solution based on number of boxes, space utilization, unused space and overlapping items.
+
+        Args:
+            w1 (float, optional): weight for number of boxes. Defaults to 1.0.
+            w2 (float, optional): weight for utilization. Defaults to 0.5.
+            w3 (float, optional): weight for unused space. Defaults to 0.2.
+            w4 (int, optional): weight for total_overlap_area. Defaults to 100.
+
+        Returns:
+            float: evaluation score of the solution. The lower the number the better the solution is
+        """
         num_boxes = len(self.boxes)
 
         total_area_used, total_box_area, total_overlap_area = 0, 0, 0
@@ -66,6 +93,7 @@ class RecPac_Solution(Solution):
             used_area = sum(rect.width * rect.height for rect in box.items)
             total_area_used += used_area
 
+            # calculate overlap area between rectangles in the same box
             for i in range(len(box.items)):
                 for j in range(i+1, len(box.items)):
                     overlap_area = self.compute_overlap(box.items[i], box.items[j])
@@ -77,6 +105,14 @@ class RecPac_Solution(Solution):
         return (w1 * num_boxes) + (w2 * (1 - utilization)) + (w3 * unused_space) + (w4 * total_overlap_area)
 
     def compute_overlap(self, rect1, rect2):
+        """Calls a numba method, that will compute the overlap between two rectangles.
+
+        Args:
+            rect1, rect2 (Rectangle): Rectangles to check for overlaps
+
+        Returns:
+            int: overlapping area
+        """
         return compute_overlap_numba(rect1.x, rect1.y, rect1.width, rect1.height,
                                  rect2.x, rect2.y, rect2.width, rect2.height)
 
@@ -85,21 +121,40 @@ class RecPac_Solution(Solution):
 
 @njit 
 def compute_overlap_numba(x1, y1, w1, h1, x2, y2, w2, h2):
-    """Fast overlap computation using Numba JIT compilation"""
+    """
+    Fast overlap computation using Numba JIT compilation
+    
+    Args: 
+        x1, y1, w1, h1, x2, y2, w2, h2: position and dimension of rectangles, so they can be used by numba
+    """
     x_overlap = max(0, min(x1 + w1, x2 + w2) - max(x1, x2))
     y_overlap = max(0, min(y1 + h1, y2 + h2) - max(y1, y2))
     return x_overlap * y_overlap
 
 @njit
 def find_valid_assignment_numba(container_size, items_x, items_y, items_width, items_height, item_width, item_height, overlap_percentage):
+    """
+    Finds a valid position for a new rectangle using an occupancy grid approach and utilizing njit.
+
+    Args:
+        container_size (int): size of the container
+        items_x, items_y, items_width, items_height (np.array): Arrays of existing rectangle positions and sizes, where the position i, will provide all the info for rectangle i. 
+        item_width, item_height (int): dimensions of the rectangle, for which the assignment is searched
+        overlap_percentage (float): Allowed overlap percentage
+
+    Returns:
+        tuple: (x, y) position if valid, otherwise (-1, -1).
+    """
 
     occupancy_grid = np.zeros((container_size, container_size), dtype=np.uint8)
 
+    # fill occupancy grid with existing rectangles
     for i in range(len(items_x)):
         x1, y1 = items_x[i], items_y[i]
         x2, y2 = x1 + items_width[i], y1 + items_height[i]
         occupancy_grid[x1:x2, y1:y2] = 1
 
+    # compute integral image for fast overlap calculations
     integral_image = np.zeros_like(occupancy_grid, dtype=np.int32)
 
     for x in range(container_size):
@@ -112,6 +167,7 @@ def find_valid_assignment_numba(container_size, items_x, items_y, items_width, i
             if x > 0 and y > 0:
                 integral_image[x, y] -= integral_image[x-1, y-1]
 
+    # check for valid positions
     for y in range(container_size - item_height + 1):
         for x in range(container_size - item_width + 1):
             x2, y2 = x + item_width - 1, y + item_height - 1
@@ -135,6 +191,13 @@ def find_valid_assignment_numba(container_size, items_x, items_y, items_width, i
 
 
 class RectanglePacker(OptimizationProblem):
+    """
+    Optimization problem class for rectangle packing problem
+
+    Attributes:
+        items (List[Rectangle]): list of rectangles that will be packed
+        container_size (int): size of the box container
+    """
 
     def __init__(self, items: List[Rectangle], container_size: int):
         self.items = items
@@ -144,51 +207,82 @@ class RectanglePacker(OptimizationProblem):
         return f"RectanglePacker(items={self.items}, container_size={self.container_size}"
 
     def add_to_solution(self, solution: RecPac_Solution, item: Rectangle):
-        """Attempts to place a rectangle into an existing box. If no space is found, a new box is created."""
+        """
+        Attempts to place a rectangle into an existing box.
+        If no space is found, a new box is created.
+
+        Args:
+            solution (RecPac_Solution): solution that the item will be added to 
+            item (Rectangle): item that will be packed
+
+        Returns:
+            solution (RecPac_Solution): solution, that will either have the item packed in one of the exisitng boxes, or will have a new box added to it.
+        """
         if solution is None:
             return None
 
+        # iterate through boxes to find a assignment for the item
         for box in solution.boxes:
             x, y, rotated = self.find_valid_assignment(box, item)
             
             if x is not None and y is not None:
                 item.x, item.y = x, y
                 if rotated:
-                    item.width, item.height = item.height, item.width  # Apply rotation
-                box.add_rectangle(item)
-                return solution  # Successfully placed, return solution
+                    item.width, item.height = item.height, item.width  # Apply rotation, if it was rotated to place
+                box.add_item(item)
+                return solution
 
-        # If no box can fit the rectangle, create a new one
+        # No existing box was able to fit the rectangle, so a new one will be added
         new_box = Box(self.container_size)
         item.x, item.y = 0, 0
-        new_box.add_rectangle(item)
+        new_box.add_item(item)
         solution.add_box(new_box)
 
         return solution
 
     def find_valid_assignment(self, container: Container, item: Item, overlap_percentage: float = 0.0):
-        """Wrapper function that prepares data and calls the Numba-optimized function"""
+        """
+        Prepare data to pass it to numba method and find positions (with rotations if needed)
 
-        # Convert Box data to NumPy arrays for Numba
+        Args:
+            container (Container): Box to place the item in
+            item (Item): rectangle to be placed
+            overlap_percentage (float, optional): allowed percentage of overlaps between rectangles. Defaults to 0.0.
+
+        Returns:
+            tuple: (x, y, rotated) where x, y are the coordinates and rotated is a boolean, indicating rotation.
+        """
+
+        # Convert Box data to NumPy arrays for Numba processing
         items_x = np.array([r.x for r in container.items], dtype=np.int32)
         items_y = np.array([r.y for r in container.items], dtype=np.int32)
         items_width = np.array([r.width for r in container.items], dtype=np.int32)
         items_height = np.array([r.height for r in container.items], dtype=np.int32)
 
-        # Try normal orientation
+        # try placing the item without rotation
         x, y = find_valid_assignment_numba(self.container_size, items_x, items_y, items_width, items_height, item.width, item.height, overlap_percentage)
         if x != -1:
-            return x, y, False  # No rotation needed
+            return x, y, False # no rotation needed
 
-        # Try rotated orientation
-        if item.width != item.height:  # Only rotate if dimensions are different
+        # try placing the item with a rotation, but only if the dimensions are different
+        if item.width != item.height:
             x, y = find_valid_assignment_numba(self.container_size, items_x, items_y, items_width, items_height, item.height, item.width, overlap_percentage)
             if x != -1:
-                return x, y, True  # Rotation needed
+                return x, y, True # rotation needed
 
-        return None, None, False  # No valid position found
+        return None, None, False # no valid position found
     
     def generate_item_samples(self, rectangles, n=4):
+        """
+        splits the list of rectangles into n approximately equal sublists.
+
+        Args:
+            rectangles (list[Rectangle]): list of rectangles that will be split
+            n (int, optional): number of sublists to generate. Defaults to 4.
+
+        Returns:
+            list[list[Rectangle]]: List of n sublists of rectangles
+        """
         
         avg_size = len(rectangles) // n
         remainder = len(rectangles) % n
@@ -203,12 +297,22 @@ class RectanglePacker(OptimizationProblem):
         return sub_lists
     
     def generate_initial_solution(self, items, box_length):
+        """
+        Generates an initial (suboptimal) solution by placing all items in a single box
+
+        Args:
+            items (list[ectangles]): rectangles that will be placed into the suboptimal solution
+            box_length (int): size of the box container
+
+        Returns:
+            RecPac_Solution: solution with all items in their own box
+        """
         bad_solution = RecPac_Solution()
-        new_box = Box(box_length)
+        
         for item in items:
+            new_box = Box(box_length)
             item.x = 0
             item.y = 0
-            new_box.add_rectangle(item)
-
-        bad_solution.add_box(new_box)
+            new_box.add_item(item)
+            bad_solution.add_box(new_box)
         return bad_solution

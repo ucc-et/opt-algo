@@ -394,7 +394,7 @@ class RectanglePackerVisualizer(GUI):
             rulebased_strategy = ""
             if neighborhood == "Regelbasiert":
                 rulebased_strategy = self.rulebased_strat.get()
-            self.solution = self.simulated_annealing(self.instances, self.box_size, neighborhood, rulebased_strategy, start_temp, end_temp, 1-cool_down_rate, constant, max_time)    
+            self.solution = self.simulated_annealing(self.instances, self.box_size, neighborhood, rulebased_strategy, start_temp, end_temp, (100-cool_down_rate)/100, constant, max_time)    
         self.draw()
 
     def get_rectangle_color(self, rect):

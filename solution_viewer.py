@@ -33,7 +33,7 @@ class SolutionViewer(GUI):
             for box in solution["boxes"]:
                 current_box = Box(box_length)
                 for rectangle in box:
-                    current_box.add_rectangle(Rectangle(rectangle["x"], rectangle["y"], rectangle["w"], rectangle["h"]))
+                    current_box.add_item(Rectangle(rectangle["x"], rectangle["y"], rectangle["w"], rectangle["h"]))
                 current_solution.add_box(current_box)
             self.solutions.append(current_solution)
             self.solutionsalgorithms.append(solution["algorithm"])
