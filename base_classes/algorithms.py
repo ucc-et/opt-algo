@@ -270,8 +270,8 @@ class Backtracking:
 
         # if item was successfully added, continue with the next item
         if new_solution is not None:
+            self.interim_solutions.append(copy.deepcopy(new_solution))
             result = self._backtrack(new_solution, index + 1)
-            self.interim_solutions.append(copy.deepcopy(result))
             if result is not None:
                 return result # return the first valid complete solution found
 
