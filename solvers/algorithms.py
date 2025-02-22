@@ -6,7 +6,6 @@ import sys
 
 from classes.base_classes import OptimizationProblem, Solution, Neighborhood
 import classes.helpers
-from classes.rectangle_packer_types import RecPac_Solution
 
 class Greedy:
     def __init__(self, problem: OptimizationProblem, solution_type: type, strategy="largest_area_first"):
@@ -71,7 +70,7 @@ class LocalSearch:
 
 
 class SimulatedAnnealing:
-    def __init__(self, problem: OptimizationProblem, start_solution: RecPac_Solution,
+    def __init__(self, problem: OptimizationProblem, start_solution: Solution,
                  initial_temperature: float, end_temperature: float, cooling_rate: float,
                  iterations_per_temp: int, neighborhood_strategy: Neighborhood, max_time: float = 10.0):
         self.problem = problem
