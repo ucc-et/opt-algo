@@ -3,8 +3,8 @@ import tkinter as tk
 from tkinter import filedialog
 import random
 
-from classes import Box, RecPac_Solution, Rectangle
-from view import GUI
+from rectangle_packer_classes.problem_classes import Box, RecPac_Solution, Rectangle
+from base_classes.ui_classes import GUI
 
 class SolutionViewer(GUI):
     def __init__(self, root, solutions):
