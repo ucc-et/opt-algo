@@ -17,29 +17,52 @@ class SolutionViewer(GUI):
         self.current_index = 0
         self.zoom_factor = 1.0
         self.zoom_steps = 0
-        self.max_zoom_steps = 4
+        self.max_zoom_steps = 7
         
         self.parse_solutions()
         self.setup_ui()
         self.draw()
     
     def parse_solutions(self):
-        
+        """
+        Parses the loaded solutions from the JSON file.
+        Handles the new structure from the updated TestEnvironment.
+        """
         solutionsRaw = self.solutionsRaw["solutions"]
         box_length = int(self.solutionsRaw["box_length"])
         
         for solution in solutionsRaw:
+            # Get metadata, with default values if missing
+            algorithm = solution.get("algorithm", "Unknown Algorithm")
+            strategy = solution.get("strategy", "No Strategy")
+            neighborhood = solution.get("neighborhood", "No Neighborhood")
+            
+            # Access boxes directly, no longer inside "solution"
+            boxes = solution.get("boxes", [])
+            
+            # Create RecPac_Solution object for visualization
             current_solution = RecPac_Solution()
-            for box in solution["boxes"]:
+            for box in boxes:
                 current_box = Box(box_length)
                 for rectangle in box:
-                    current_box.add_item(Rectangle(rectangle["x"], rectangle["y"], rectangle["w"], rectangle["h"], rectangle["c"]))
+                    current_box.add_item(Rectangle(rectangle["x"], rectangle["y"], rectangle["w"], rectangle["h"], rectangle["color"]))
                 current_solution.add_box(current_box)
+            
+            # Store parsed solution and metadata
             self.solutions.append(current_solution)
-            self.solutionsalgorithms.append(solution["algorithm"])
+            self.solutionsalgorithms.append({
+                "algorithm": algorithm,
+                "strategy": strategy,
+                "neighborhood": neighborhood
+            })
+
+
     
     def setup_ui(self):
-        self.root.title("Optimierungsalgorithmen GUI")
+        """
+        Sets up the UI components for the Solution Viewer.
+        """
+        self.root.title("Solution Viewer")
 
         frame_inputs = tk.Frame(self.root)
         frame_inputs.pack(pady=10)
@@ -59,8 +82,15 @@ class SolutionViewer(GUI):
         btn_iterate_right = tk.Button(frame_buttons, text=">", command=self.increase_solution_index)
         btn_iterate_right.grid(row=1, column=3, padx=5)
         
-        self.label_solution_type = tk.Label(self.root, text=f"Solution of {self.solutionsalgorithms[self.current_index]} algorithm")
-        self.label_solution_type.pack()
+        # Labels for solution metadata
+        self.label_algorithm = tk.Label(self.root, text=f"Algorithm: {self.solutionsalgorithms[self.current_index]['algorithm']}")
+        self.label_algorithm.pack()
+        
+        self.label_strategy = tk.Label(self.root, text=f"Strategy: {self.solutionsalgorithms[self.current_index]['strategy']}")
+        self.label_strategy.pack()
+        
+        self.label_neighborhood = tk.Label(self.root, text=f"Neighborhood: {self.solutionsalgorithms[self.current_index]['neighborhood']}")
+        self.label_neighborhood.pack()
         
         self.label_solution_number = tk.Label(self.root, text=f"Solution: {self.current_index+1}/{len(self.solutions)}")
         self.label_solution_number.pack()
@@ -77,20 +107,35 @@ class SolutionViewer(GUI):
         self.canvas.configure(yscrollcommand=v_scrollbar.set)
         
         self.canvas.bind_all("<MouseWheel>", self.on_mousewheel)
+
         
     def lower_solution_index(self):
-        if(self.current_index > 0):
+        """
+        Moves to the previous solution and updates labels.
+        """
+        if self.current_index > 0:
             self.current_index -= 1
-            self.label_solution_type.config(text=f"Solution of {self.solutionsalgorithms[self.current_index]} algorithm")
-            self.label_solution_number.config(text=f"Solution: {self.current_index+1}/{len(self.solutions)}")
+            self.update_labels()
             self.redraw_canvas()
-    
+
     def increase_solution_index(self):
-        if(self.current_index < len(self.solutions)-1):
+        """
+        Moves to the next solution and updates labels.
+        """
+        if self.current_index < len(self.solutions) - 1:
             self.current_index += 1
-            self.label_solution_type.config(text=f"Solution of {self.solutionsalgorithms[self.current_index]} algorithm")
-            self.label_solution_number.config(text=f"Solution: {self.current_index+1}/{len(self.solutions)}")
+            self.update_labels()
             self.redraw_canvas()
+
+    def update_labels(self):
+        """
+        Updates the labels to reflect the current solution's metadata.
+        """
+        self.label_algorithm.config(text=f"Algorithm: {self.solutionsalgorithms[self.current_index]['algorithm']}")
+        self.label_strategy.config(text=f"Strategy: {self.solutionsalgorithms[self.current_index]['strategy']}")
+        self.label_neighborhood.config(text=f"Neighborhood: {self.solutionsalgorithms[self.current_index]['neighborhood']}")
+        self.label_solution_number.config(text=f"Solution: {self.current_index+1}/{len(self.solutions)}")
+
         
     def get_rectangle_color(self, rect):
         if len(self.rectangle_colors.keys()) == 0 or rect not in self.rectangle_colors.keys():
@@ -175,7 +220,7 @@ class SolutionViewer(GUI):
     def load_solutions():
         file_path = filedialog.askopenfilename(filetypes=[("JSON files", "*.json")])
         if file_path:
-            with open(file_path, "r") as file:
+            with open(file_path, "r", encoding="utf-8") as file:
                 return json.load(file)
         return {}
     

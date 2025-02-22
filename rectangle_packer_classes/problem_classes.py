@@ -26,10 +26,9 @@ class Box(Container):
     def __init__(self, box_length: int):
         self.box_length = box_length
         self.items: Rectangle = []
-        self.last_covered_area = None
 
     def __repr__(self):
-        return f"Box(box_length={self.box_length}, rectangles={self.items}, last_covered_area={self.last_covered_area})"
+        return f"Box(box_length={self.box_length}, rectangles={self.items})"
 
     def add_item(self, item: Rectangle):
         """Add a item to the box.

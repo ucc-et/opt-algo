@@ -1,9 +1,12 @@
 import random
 from typing import List
 
+import numpy as np
+from numba import njit
+
 from base_classes.types import OptimizationProblem
 from .neighborhoods import GeometryBasedStrategy, RuleBasedStrategy, OverlapStrategy
-from rectangle_packer_classes.problem_classes import Rectangle, RecPac_Solution
+from rectangle_packer_classes.problem_classes import Box, Rectangle, RecPac_Solution
 from enum import Enum
 
 #===================================
@@ -33,8 +36,85 @@ class Neighborhoods(Enum):
     """
     GEOMETRY = "Geometriebasiert"
     RULE = "Regelbasiert"
-    OVERLAP = "Überlappung teilweise zulassen"
+    OVERLAP = "Überlappungen teilweise zulassen"
 
+@njit
+def copy_numpy_array(array):
+    """
+    Quickly copies a NumPy array using Numba's JIT compilation.
+    
+    Args:
+        array (np.ndarray): Input array to copy.
+    
+    Returns:
+        np.ndarray: A deep copy of the input array.
+    """
+    copy = np.empty_like(array)
+    for i in range(array.shape[0]):
+        for j in range(array.shape[1]):
+            copy[i, j] = array[i, j]
+    return copy
+
+def color_to_int(color):
+    """
+    Converts a color name to a unique integer.
+    Ensures consistency in color preservation.
+    """
+    color_map = {
+        "red": 1,
+        "green": 2,
+        "blue": 3,
+        "yellow": 4,
+        "purple": 5,
+        "orange": 6,
+        "cyan": 7
+    }
+    return color_map.get(color, 0) 
+
+def int_to_color(color_int):
+    """
+    Converts an integer back to its corresponding color name.
+    """
+    int_map = {
+        1: "red",
+        2: "green",
+        3: "blue",
+        4: "yellow",
+        5: "purple",
+        6: "orange",
+        7: "cyan"
+    }
+    return int_map.get(color_int, "black")  # Default to black if not found
+
+def quick_copy(solution: RecPac_Solution):
+    """
+    Quickly creates a deep copy of the Solution object using NumPy and Numba.
+    
+    Args:
+        solution (Solution): The solution object to be copied.
+    
+    Returns:
+        Solution: A deep copy of the input solution.
+    """
+    # Step 1: Extract data into NumPy arrays
+    boxes_data = []
+    for box in solution.boxes:
+        items_data = np.array([[rect.x, rect.y, rect.width, rect.height, color_to_int(rect.color)] for rect in box.items], dtype=np.int32)
+        boxes_data.append(items_data)
+
+    # Step 2: Copy data using Numba for speed
+    copied_boxes_data = [copy_numpy_array(data) for data in boxes_data]
+    
+    # Step 3: Reconstruct Solution object
+    new_solution = solution.__class__()  # Dynamically create a new Solution object
+    for box_data in copied_boxes_data:
+        new_box = Box(solution.boxes[0].box_length)  # Assume uniform box length
+        for rect_data in box_data:
+            x, y, w, h, c = rect_data
+            new_box.add_item(Rectangle(x, y, w, h, int_to_color(c)))
+        new_solution.add_box(new_box)
+    
+    return new_solution
 
 def merge_geometry_based_solutions(problem, neighborhood_name, items, container_size, rulebased_strategy, greedy_algorithm_runner):
     """

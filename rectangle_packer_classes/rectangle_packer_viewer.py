@@ -565,7 +565,7 @@ class RectanglePackerVisualizer(GUI):
         file_path = filedialog.askopenfilename(filetypes=[("JSON files", "*.json")])
         if file_path:
             try:
-                with open(file_path, "r") as file:
+                with open(file_path, "r", encoding="utf-8") as file:
                     data = json.load(file)
                     
                     self.instances = [Rectangle(rect[0], rect[1], rect[2], rect[3], rect[4]) for rect in data.get("rectangles", [])]
@@ -602,7 +602,7 @@ class RectanglePackerVisualizer(GUI):
         )
         if file_path:
             try:
-                with open(file_path, "w") as file:
+                with open(file_path, "w", encoding="utf-8") as file:
                     data = {
                         "rectangles": [(instance.x, instance.y, instance.width, instance.height, instance.color) for instance in self.instances],
                         "box_length": self.box_size,

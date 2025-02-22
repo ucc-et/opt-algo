@@ -3,6 +3,7 @@ import copy
 import numpy as np
 
 from base_classes.types import  OptimizationProblem, Solution, Neighborhood
+import rectangle_packer_classes.helpers
 from rectangle_packer_classes.problem_classes import RecPac_Solution, Box
 import rectangle_packer_classes
 
@@ -32,7 +33,7 @@ class GeometryBasedStrategy(Neighborhood):
             return solution
         
         # deep copy the solution to create a neighbor
-        new_solution = copy.deepcopy(solution)
+        new_solution = rectangle_packer_classes.helpers.quick_copy(solution)
 
         # choose last box to attempt moving an item from there
         box_from = new_solution.boxes[-1]
@@ -87,7 +88,7 @@ class RuleBasedStrategy(Neighborhood):
         problem.items = rectangle_packer_classes.helpers.apply_rule(problem.items, rule)
         self.problem = problem
 
-    def generate_neighbor(self, solution: Solution, interim_solutions: list):
+    def generate_neighbor(self, solution: Solution, interim_solutions: list, test_environment: bool = False):
         """Generates a neighboring solution by reordering rectangles based on a rule and swapping two adjacent rectangles
 
         Args:
@@ -146,7 +147,7 @@ class OverlapStrategy(Neighborhood):
         self.decay_rate = decay_rate
         self.problem = problem
 
-    def generate_neighbor(self, solution: Solution, interim_solutions: list):
+    def generate_neighbor(self, solution: Solution, interim_solutions: list, test_environment: bool = False):
         """generates a neighboring solution by reducing the overlap of rectangles, based on teh current overlap percentage
 
         Args:
@@ -168,7 +169,8 @@ class OverlapStrategy(Neighborhood):
                 box.remove_item(item)
             self.reassign_rectangles(new_solution, items_to_relocate)
             new_solution.check_if_box_empty(box)
-            interim_solutions.append(copy.deepcopy(new_solution))
+            if not test_environment:
+                interim_solutions.append(rectangle_packer_classes.helpers.quick_copy(new_solution))
 
         # reduce allowed overlap percentage
         self.overlap_percentage = max(0.0, round(self.overlap_percentage - self.decay_rate, 6))

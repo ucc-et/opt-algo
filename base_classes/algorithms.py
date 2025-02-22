@@ -5,6 +5,8 @@ import random
 import time
 import sys
 
+from rectangle_packer_classes.helpers import quick_copy
+
 from .types import OptimizationProblem, Solution, Neighborhood
 
 # """"""""FOR DEBUGGING""""""""
@@ -27,10 +29,11 @@ class Greedy:
         problem (OptimizationProblem): optimization problem instance that will be solved
         solution_type (type): type of the solution that will be generated for the optimization problem
     """
-    def __init__(self, problem: OptimizationProblem, solution_type: type, apply_greedy_strategy, strategy):
+    def __init__(self, problem: OptimizationProblem, solution_type: type, apply_greedy_strategy, strategy, in_test_env: bool):
         self.problem = problem
         self.solution_type = solution_type
         self.problem.items = apply_greedy_strategy(self.problem.items, strategy)
+        self.runs_ins_test_environment = in_test_env
 
     def solve(self):
         """
@@ -51,7 +54,8 @@ class Greedy:
             if new_solution is not None:
                 # update current solution if the item was successfully added
                 current_solution = new_solution
-                interim_solutions.append(copy.deepcopy(current_solution))
+                if not self.runs_ins_test_environment:
+                    interim_solutions.append(quick_copy(current_solution))
 
         end_time = time.time()
         elapsed_time = end_time - start_time
@@ -71,11 +75,12 @@ class LocalSearch:
         neighborhood (Neighborhood): Neighborhood structure to generate neighboring solutions.
     """
     def __init__(self, problem: OptimizationProblem, start_solution: Solution, max_iterations: int,
-                 neighborhood: Neighborhood):
+                 neighborhood: Neighborhood, in_test_env: bool):
         self.problem = problem
         self.start_solution = start_solution
         self.max_iterations = max_iterations
         self.neighborhood = neighborhood
+        self.runs_ins_test_environment = in_test_env
 
     def solve(self):
         """
@@ -89,7 +94,7 @@ class LocalSearch:
         """
         start_time = time.time()
         
-        interim_solutions = [copy.deepcopy(self.start_solution)]
+        interim_solutions = [quick_copy(self.start_solution)] if not self.runs_ins_test_environment else []
 
         # intiialize the current and best solutions
         current_solution = self.start_solution
@@ -108,7 +113,8 @@ class LocalSearch:
                 current_solution = neighbor
                 best_solution = neighbor
                 best_value = neighbor_value
-                interim_solutions.append(copy.deepcopy(current_solution))
+                if not self.runs_ins_test_environment:
+                    interim_solutions.append(quick_copy(current_solution))
 
             # move to the next iteration
             iteration += 1
@@ -136,7 +142,7 @@ class SimulatedAnnealing:
     """
     def __init__(self, problem: OptimizationProblem, start_solution: Solution,
                  initial_temperature: float, end_temperature: float, cooling_rate: float,
-                 iterations_per_temp: int, neighborhood_strategy: Neighborhood, max_time: float = 10.0):
+                 iterations_per_temp: int, neighborhood_strategy: Neighborhood, max_time: float = 10.0, in_test_env: bool = False):
         self.problem = problem
         self.start_solution = start_solution
         self.initial_temperature = initial_temperature
@@ -144,6 +150,7 @@ class SimulatedAnnealing:
         self.cooling_rate = cooling_rate
         self.iterations_per_temp = iterations_per_temp
         self.neighborhood_strategy = neighborhood_strategy
+        self.runs_ins_test_environment = in_test_env
         self.max_time = max_time
 
     def solve(self):
@@ -177,7 +184,7 @@ class SimulatedAnnealing:
                     return best_solution
                 
                 # generate a neighboring solution
-                neighbor = self.neighborhood_strategy.generate_neighbor(current_solution)
+                neighbor = self.neighborhood_strategy.generate_neighbor(current_solution, interim_solutions)
                 neighbor_value = neighbor.evaluate_solution()
 
                 # calculate change in objective value
@@ -186,7 +193,8 @@ class SimulatedAnnealing:
                 # accept neighbor if it improves the solution or its with a certain probability
                 if delta <= 0 or random.uniform(0, 1) < math.exp(-delta / temperature):
                     current_solution = neighbor
-                    interim_solutions.append(copy.deepcopy(neighbor))
+                    if not self.runs_ins_test_environment:
+                        interim_solutions.append(quick_copy(neighbor))
                     # update the best solution if the neighbor is better
                     if neighbor_value < best_value:
                         best_solution = neighbor
@@ -210,10 +218,11 @@ class Backtracking:
         problem (OptimizationProblem): The optimization problem instance.
         solution_type (type): Type of the solution used in the problem.
     """
-    def __init__(self, problem: OptimizationProblem, solution_type: type):
+    def __init__(self, problem: OptimizationProblem, solution_type: type, in_test_env: bool):
         self.problem = problem
         self.solution_type = solution_type
         self.interim_solutions = []
+        self.runs_ins_test_environment = in_test_env
         sys.setrecursionlimit(10 ** 6)
 
     def solve(self):
@@ -270,7 +279,8 @@ class Backtracking:
 
         # if item was successfully added, continue with the next item
         if new_solution is not None:
-            self.interim_solutions.append(copy.deepcopy(new_solution))
+            if not self.runs_ins_test_environment:
+                self.interim_solutions.append(quick_copy(new_solution))
             result = self._backtrack(new_solution, index + 1)
             if result is not None:
                 return result # return the first valid complete solution found
