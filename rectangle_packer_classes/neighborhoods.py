@@ -2,11 +2,9 @@ import random
 import copy
 import numpy as np
 
-from classes.base_classes import  OptimizationProblem, Solution, Neighborhood
-from classes.rectangle_packer_types import RecPac_Solution, Rectangle, Box
-import classes.helpers
-
-from .enums import Rules
+from base_classes.types import  OptimizationProblem, Solution, Neighborhood
+from rectangle_packer_classes.problem_classes import RecPac_Solution, Box
+import rectangle_packer_classes
 
 class GeometryBasedStrategy(Neighborhood):
     def __init__(self, problem: OptimizationProblem, solution_type: type):
@@ -50,7 +48,7 @@ class GeometryBasedStrategy(Neighborhood):
 
 
 class RuleBasedStrategy(Neighborhood):
-    def __init__(self, problem: OptimizationProblem, rule: str = Rules.HEIGHT_FIRST):
+    def __init__(self, problem: OptimizationProblem, rule: str):
         self.problem = problem
         self.rule = rule
 
@@ -64,7 +62,7 @@ class RuleBasedStrategy(Neighborhood):
             items.extend(box.items)
 
         if len(items) > 1:
-            items = classes.helpers.apply_rule(items, self.rule)
+            items = rectangle_packer_classes.helpers.apply_rule(items, self.rule)
 
             small_rectangles = items[:len(items) // 2]
             selected = random.choice(small_rectangles)

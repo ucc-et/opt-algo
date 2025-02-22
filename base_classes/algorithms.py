@@ -4,14 +4,13 @@ import random
 import time
 import sys
 
-from classes.base_classes import OptimizationProblem, Solution, Neighborhood
-import classes.helpers
+from .types import OptimizationProblem, Solution, Neighborhood
 
 class Greedy:
-    def __init__(self, problem: OptimizationProblem, solution_type: type, strategy="largest_area_first"):
+    def __init__(self, problem: OptimizationProblem, solution_type: type, apply_greedy_strategy, strategy):
         self.problem = problem
         self.solution_type = solution_type
-        self.problem.items = classes.helpers.apply_greedy_strategy(self.problem.items, strategy)
+        self.problem.items = apply_greedy_strategy(self.problem.items, strategy)
 
     def solve(self):
         start_time = time.time()

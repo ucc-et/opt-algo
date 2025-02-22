@@ -1,10 +1,9 @@
 import json
 import random
-from classes.helpers import generate_instances
-from solvers.enums import GreedyStrategy, Rules
-from .base_classes import GUI, Tooltip
+from rectangle_packer_classes.problem_classes import Rectangle
+from rectangle_packer_classes.helpers import generate_instances, GreedyStrategy, Rules
+from base_classes.ui_classes import GUI, Tooltip
 from typing import List
-from classes import Rectangle
 from PIL import Image, ImageTk
 from tkinter import ttk, filedialog
 import tkinter as tk

@@ -5,12 +5,10 @@ import random
 import time
 import json
 
-from classes.base_classes import OptimizationProblem
-from solvers.algorithms import Greedy, LocalSearch
-from classes.helpers import apply_greedy_strategy, generate_instances
-from solvers.enums import GreedyStrategy, Neighborhoods
-from solvers.neighborhoods import GeometryBasedStrategy, RuleBasedStrategy, OverlapStrategy
-from classes import Box, RecPac_Solution, RectanglePacker
+from base_classes.algorithms import Greedy, LocalSearch
+from rectangle_packer_classes.helpers import apply_greedy_strategy, generate_instances, GreedyStrategy, Neighborhoods, merge_geometry_based_solutions, get_neighborhood_and_start_solution
+from rectangle_packer_classes.neighborhoods import GeometryBasedStrategy, RuleBasedStrategy, OverlapStrategy
+from rectangle_packer_classes.problem_classes import Box, RecPac_Solution, RectanglePacker
 
 class TestEnvironment:
     """
@@ -57,13 +55,18 @@ class TestEnvironment:
             instance_set = apply_greedy_strategy(instance_set, self.greedy_strategy)
             
             problem = RectanglePacker(instance_set, self.box_length)
-            solver = Greedy(problem, RecPac_Solution, self.greedy_strategy)
+            solver = Greedy(problem, RecPac_Solution, apply_greedy_strategy, self.greedy_strategy)
             solution = solver.solve()
             
             self.times_greedy.append(time.time() - start_time)
             self.greedy_solutions.append(solution)
             
         print("\nGreedy Algorithm Completed.")
+    
+    def greedy_runner(self, items, container_size, strategy_name):
+        problem = RectanglePacker(items, container_size)
+        greedy_solver = Greedy(problem, RecPac_Solution, apply_greedy_strategy, strategy_name)
+        return greedy_solver.solve()
     
     def run_local_search(self):
         """
@@ -77,11 +80,9 @@ class TestEnvironment:
             problem = RectanglePacker(instance_set_copy, self.box_length)
             
             if self.neighborhood == Neighborhoods.GEOMETRY.value:
-                start_solution, neighborhood = self.merge_geometry_based_solutions(problem, self.neighborhood, instance_set_copy, self.box_length, "")
+                start_solution, neighborhood = merge_geometry_based_solutions(problem, self.neighborhood, instance_set_copy, self.box_length, "", self.greedy_runner)
             else:
-                start_solution, neighborhood = self.get_start_solution_and_neighborhood(
-                    problem, self.neighborhood, instance_set_copy, self.box_length, ""
-                )
+                start_solution, neighborhood = get_neighborhood_and_start_solution(problem, self.neighborhood, instance_set_copy, self.box_length, "", self.greedy_runner)
             
             solver = LocalSearch(problem, start_solution, self.max_iterations, neighborhood)
             start_time = time.time()
@@ -91,15 +92,6 @@ class TestEnvironment:
             self.local_search_solutions.append(solution)
             
         print("\nLocal Search Completed.")
-    
-    def merge_geometry_based_solutions(self, problem, neighborhood_name, items, container_size, rulebased_strategy):
-        start_solution = RecPac_Solution()
-        sub_lists, neighborhood = self.get_start_solution_and_neighborhood(problem, neighborhood_name, items, container_size, rulebased_strategy)
-        for sub_list in sub_lists:
-            temp_solt = self.greedy_algorithm(sub_list, container_size, GreedyStrategy.LARGEST_AREA_FIRST.value)
-            for box in temp_solt.boxes:
-                start_solution.add_box(box)
-        return start_solution, neighborhood
     
     def get_start_solution_and_neighborhood(self, problem, neighborhood_name, items, container_size, rulebased_strategy):
         """

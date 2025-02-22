@@ -1,8 +1,7 @@
 
 from typing import List
-from .base_classes import Item, Solution, Container, OptimizationProblem
+from base_classes.types import Item, Solution, Container, OptimizationProblem
 from numba import njit
-import random
 import numpy as np
 
 class Rectangle(Item):
