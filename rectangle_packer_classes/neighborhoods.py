@@ -19,7 +19,7 @@ class GeometryBasedStrategy(Neighborhood):
         self.problem = problem
         self.solution_type = solution_type
 
-    def generate_neighbor(self, solution: Solution, interim_solutions: list):
+    def generate_neighbor(self, solution: Solution, interim_solutions: list, runs_in_test_env: bool = False):
         """Generates a neighboring solution by moving rectangles inside a box or from one box to another.
 
         Args:

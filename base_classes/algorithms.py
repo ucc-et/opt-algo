@@ -105,7 +105,7 @@ class LocalSearch:
         # perform local search for specified number of iterations
         while iteration <= self.max_iterations:
             # generate neighbor solution
-            neighbor = self.neighborhood.generate_neighbor(current_solution, interim_solutions)
+            neighbor = self.neighborhood.generate_neighbor(current_solution, interim_solutions, self.runs_ins_test_environment)
             neighbor_value = neighbor.evaluate_solution()
 
             # accept the neighbor if it is better or equal to current solution (side steps allowed )
@@ -184,7 +184,7 @@ class SimulatedAnnealing:
                     return best_solution
                 
                 # generate a neighboring solution
-                neighbor = self.neighborhood_strategy.generate_neighbor(current_solution, interim_solutions)
+                neighbor = self.neighborhood_strategy.generate_neighbor(current_solution, interim_solutions, self.runs_ins_test_environment)
                 neighbor_value = neighbor.evaluate_solution()
 
                 # calculate change in objective value

@@ -21,7 +21,7 @@ def main():
             RecPac_Solution: Object that represents a solution for the rectangle packer.
         """
         problem = RectanglePacker(items, container_size)
-        greedy_solver = Greedy(problem, RecPac_Solution, apply_greedy_strategy, strategy_name)
+        greedy_solver = Greedy(problem, RecPac_Solution, apply_greedy_strategy, strategy_name, False)
         end_solution, interim_solutions = greedy_solver.solve()
         return end_solution, interim_solutions
 
@@ -46,7 +46,7 @@ def main():
             start_solution, neighborhood = merge_geometry_based_solutions(problem, neighborhood_name, items, container_size, strategy_rulebased, greedy_runner)
         else:
             start_solution, neighborhood = get_neighborhood_and_start_solution(problem, neighborhood_name, items, container_size, strategy_rulebased, greedy_runner)
-        local_search_solver = LocalSearch(problem, start_solution, max_iterations, neighborhood)
+        local_search_solver = LocalSearch(problem, start_solution, max_iterations, neighborhood, False)
         solution, interim_solutions = local_search_solver.solve()
         return solution, interim_solutions
 
@@ -62,7 +62,7 @@ def main():
             RecPac_Solution: Object that represents a solution for the rectangle packer.
         """
         problem = RectanglePacker(items, container_size)
-        backtracking_solver = Backtracking(problem ,RecPac_Solution)
+        backtracking_solver = Backtracking(problem ,RecPac_Solution, False)
         solution, interim_solutions = backtracking_solver.solve()
         return solution, interim_solutions
 
@@ -95,7 +95,8 @@ def main():
             end_temperature=end_temperature,
             cooling_rate=cooling_rate,
             iterations_per_temp=iterations_per_temp,
-            neighborhood_strategy=neighborhood
+            neighborhood_strategy=neighborhood,
+            in_test_env=False
         )
         solution, interim_solutions = simulated_annealing_solver.solve()
         return solution, interim_solutions
