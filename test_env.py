@@ -121,7 +121,7 @@ class TestEnvironment:
         Generates rectangle instances for the test.
         """
         for _ in range(instance_count):
-            self.instances.append(generate_instances(rectangle_count, min_width, max_width, min_height, max_height))
+            self.instances.append(generate_instances(rectangle_count, min_width, max_width, min_height, max_height, ["blue", "yellow"]))
 
     def save_solutions(self):
         """

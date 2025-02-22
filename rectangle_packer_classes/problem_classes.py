@@ -8,14 +8,15 @@ class Rectangle(Item):
     """
     Represents a rectangle with position (x, y) and dimensions (width, height)
     """
-    def __init__(self, x: int, y: int, width: int, height: int):
+    def __init__(self, x: int, y: int, width: int, height: int, color: str):
         self.x = x
         self.y = y
         self.width = width
         self.height = height
+        self.color = color
 
     def __repr__(self):
-        return f"Rectangle(x={self.x}, y={self.y}, width={self.width}, height={self.height})"
+        return f"Rectangle(x={self.x}, y={self.y}, width={self.width}, height={self.height}, color={self.color})"
 
 
 class Box(Container):
@@ -115,6 +116,40 @@ class RecPac_Solution(Solution):
         """
         return compute_overlap_numba(rect1.x, rect1.y, rect1.width, rect1.height,
                                  rect2.x, rect2.y, rect2.width, rect2.height)
+    
+    def are_solutions_equal(self, compare_solution):
+        """
+        Compares two solutions to check if they are the same.
+        
+        Args:
+            solution1 (Solution): First solution to compare.
+            solution2 (Solution): Second solution to compare.
+        
+        Returns:
+            bool: True if both solutions are the same, False otherwise.
+        """
+        # Compare number of boxes
+        if len(self.boxes) != len(compare_solution.boxes):
+            return False
+        
+        # Compare each box
+        for box1, box2 in zip(self.boxes, compare_solution.boxes):
+            # Compare number of rectangles in each box
+            if len(box1.items) != len(box2.items):
+                return False
+            
+            # Sort rectangles by position and dimensions for order-independent comparison
+            sorted_rects1 = sorted(box1.items, key=lambda r: (r.x, r.y, r.width, r.height))
+            sorted_rects2 = sorted(box2.items, key=lambda r: (r.x, r.y, r.width, r.height))
+            
+            # Compare each rectangle
+            for rect1, rect2 in zip(sorted_rects1, sorted_rects2):
+                if (rect1.x != rect2.x or 
+                    rect1.y != rect2.y or 
+                    rect1.width != rect2.width or 
+                    rect1.height != rect2.height):
+                    return False
+        return True
 
     def __repr__(self):
         return f"RecPac_Solution(boxes={self.boxes})"

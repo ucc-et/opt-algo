@@ -22,7 +22,8 @@ def main():
         """
         problem = RectanglePacker(items, container_size)
         greedy_solver = Greedy(problem, RecPac_Solution, apply_greedy_strategy, strategy_name)
-        return greedy_solver.solve()
+        end_solution, interim_solutions = greedy_solver.solve()
+        return end_solution, interim_solutions
 
     def local_search_runner(items, container_size, neighborhood_name, strategy_rulebased, max_iterations=21):
         """
@@ -46,8 +47,8 @@ def main():
         else:
             start_solution, neighborhood = get_neighborhood_and_start_solution(problem, neighborhood_name, items, container_size, strategy_rulebased, greedy_runner)
         local_search_solver = LocalSearch(problem, start_solution, max_iterations, neighborhood)
-        solution = local_search_solver.solve()
-        return solution
+        solution, interim_solutions = local_search_solver.solve()
+        return solution, interim_solutions
 
     def backtracking_runner(items, container_size):
         """
@@ -62,8 +63,8 @@ def main():
         """
         problem = RectanglePacker(items, container_size)
         backtracking_solver = Backtracking(problem ,RecPac_Solution)
-        solution = backtracking_solver.solve()
-        return solution
+        solution, interim_solutions = backtracking_solver.solve()
+        return solution, interim_solutions
 
     def simulated_annealing_runner(items, container_size, neighborhood_name, strategy_rulebased, initial_temperature=1000, end_temperature=25, cooling_rate=0.95, iterations_per_temp=10, max_time=10):
         """
@@ -96,8 +97,8 @@ def main():
             iterations_per_temp=iterations_per_temp,
             neighborhood_strategy=neighborhood
         )
-
-        return simulated_annealing_solver.solve()
+        solution, interim_solutions = simulated_annealing_solver.solve()
+        return solution, interim_solutions
 
     
     # init tkinter root window and the visualizer application

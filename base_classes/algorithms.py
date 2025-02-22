@@ -1,4 +1,5 @@
 
+import copy
 import math
 import random
 import time
@@ -41,6 +42,8 @@ class Greedy:
 
         current_solution = self.solution_type()
         
+        interim_solutions = []
+        
         # iteratively add each item to the solution in greedy order (order already applied)
         for item in self.problem.items:
             # attempt to add the item to the current solution state
@@ -48,12 +51,13 @@ class Greedy:
             if new_solution is not None:
                 # update current solution if the item was successfully added
                 current_solution = new_solution
+                interim_solutions.append(copy.deepcopy(current_solution))
 
         end_time = time.time()
         elapsed_time = end_time - start_time
         print(f"Laufzeit Greedy: {elapsed_time:.6f} Sekunden")
 
-        return current_solution
+        return current_solution, interim_solutions
 
 
 class LocalSearch:
@@ -84,6 +88,8 @@ class LocalSearch:
             Solution: The best solution found during the search process.
         """
         start_time = time.time()
+        
+        interim_solutions = [copy.deepcopy(self.start_solution)]
 
         # intiialize the current and best solutions
         current_solution = self.start_solution
@@ -94,14 +100,15 @@ class LocalSearch:
         # perform local search for specified number of iterations
         while iteration <= self.max_iterations:
             # generate neighbor solution
-            neighbor = self.neighborhood.generate_neighbor(current_solution)
+            neighbor = self.neighborhood.generate_neighbor(current_solution, interim_solutions)
             neighbor_value = neighbor.evaluate_solution()
 
             # accept the neighbor if it is better or equal to current solution (side steps allowed )
-            if neighbor_value <= best_value:
+            if neighbor_value <= best_value and not current_solution.are_solutions_equal(neighbor):
                 current_solution = neighbor
                 best_solution = neighbor
                 best_value = neighbor_value
+                interim_solutions.append(copy.deepcopy(current_solution))
 
             # move to the next iteration
             iteration += 1
@@ -110,7 +117,7 @@ class LocalSearch:
         elapsed_time = end_time - start_time
         print(f"Laufzeit LocalSearch: {elapsed_time:.6f} Sekunden")
 
-        return best_solution
+        return best_solution, interim_solutions
 
 
 class SimulatedAnnealing:
@@ -151,6 +158,8 @@ class SimulatedAnnealing:
             Solution: The best solution found during the search process.
         """
         start_time = time.time()
+        
+        interim_solutions = []
 
         # Initiliaze the current and best solutions
         current_solution = self.start_solution
@@ -177,6 +186,7 @@ class SimulatedAnnealing:
                 # accept neighbor if it improves the solution or its with a certain probability
                 if delta <= 0 or random.uniform(0, 1) < math.exp(-delta / temperature):
                     current_solution = neighbor
+                    interim_solutions.append(copy.deepcopy(neighbor))
                     # update the best solution if the neighbor is better
                     if neighbor_value < best_value:
                         best_solution = neighbor
@@ -189,7 +199,7 @@ class SimulatedAnnealing:
         elapsed_time = end_time - start_time
         print(f"Laufzeit Simulated Annealing: {elapsed_time:.6f} Sekunden")
 
-        return best_solution
+        return best_solution, interim_solutions
 
 
 class Backtracking:
@@ -203,6 +213,7 @@ class Backtracking:
     def __init__(self, problem: OptimizationProblem, solution_type: type):
         self.problem = problem
         self.solution_type = solution_type
+        self.interim_solutions = []
         sys.setrecursionlimit(10 ** 6)
 
     def solve(self):
@@ -217,6 +228,7 @@ class Backtracking:
             Solution: The first complete and valid solution found.
         """
         start_time = time.time()
+        self.interim_solutions = []
 
         # intitialize an empty solution
         current_solution = self.solution_type()
@@ -224,11 +236,13 @@ class Backtracking:
         # start the recursive backtracking process
         result = self._backtrack(current_solution, 0)
 
+        copy_interim = self.interim_solutions
+
         end_time = time.time()
         elapsed_time = end_time - start_time
         print(f"Laufzeit Backtracking: {elapsed_time:.6f} Sekunden")
 
-        return result
+        return result, copy_interim
 
     def _backtrack(self, current_solution: Solution, index: int):
         """
@@ -257,6 +271,7 @@ class Backtracking:
         # if item was successfully added, continue with the next item
         if new_solution is not None:
             result = self._backtrack(new_solution, index + 1)
+            self.interim_solutions.append(copy.deepcopy(result))
             if result is not None:
                 return result # return the first valid complete solution found
 

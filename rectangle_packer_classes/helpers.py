@@ -56,7 +56,7 @@ def merge_geometry_based_solutions(problem, neighborhood_name, items, container_
     
     # apply the greedy algorith  to each rectangle sublist and merge all solutions at the end
     for sub_list in sub_lists:
-        temp_sol = greedy_algorithm_runner(sub_list, container_size, GreedyStrategy.LARGEST_AREA_FIRST.value)
+        temp_sol, _ = greedy_algorithm_runner(sub_list, container_size, GreedyStrategy.LARGEST_AREA_FIRST.value)
         for box in temp_sol.boxes:
             start_solution.add_box(box)
     return start_solution, neighborhood
@@ -78,9 +78,9 @@ def get_neighborhood_and_start_solution(problem: OptimizationProblem, neighborho
     
     # intial solutions for each neighborhood strategy
     start_solution_map = {
-        "Geometriebasiert": problem.generate_item_samples(items),
-        "Regelbasiert": greedy_algorithm_runner(items, container_size, GreedyStrategy.LARGEST_AREA_FIRST.value),
-        "Überlappungen teilweise zulassen": problem.generate_initial_solution(items, container_size),
+        "Geometriebasiert": lambda: problem.generate_item_samples(items),
+        "Regelbasiert": lambda: greedy_algorithm_runner(items, container_size, GreedyStrategy.LARGEST_AREA_FIRST.value)[0],
+        "Überlappungen teilweise zulassen": lambda: problem.generate_initial_solution(items, container_size),
     }
     
     # neighborhood mapping
@@ -89,9 +89,9 @@ def get_neighborhood_and_start_solution(problem: OptimizationProblem, neighborho
         "Regelbasiert": RuleBasedStrategy(problem, rulebased_strategy),
         "Überlappungen teilweise zulassen": OverlapStrategy(problem)
     }
-    return start_solution_map[neighborhood_name], neighborhood_map[neighborhood_name]
+    return start_solution_map[neighborhood_name](), neighborhood_map[neighborhood_name]
 
-def generate_instances(n, min_width, max_width, min_height, max_height) -> List[Rectangle]:
+def generate_instances(n, min_width, max_width, min_height, max_height, possible_colors) -> List[Rectangle]:
     """
         Generates a list of rectangle instances with random dimensions.
         
@@ -109,7 +109,8 @@ def generate_instances(n, min_width, max_width, min_height, max_height) -> List[
     for _ in range(n):
         random_width = random.randint(min_width, max_width)
         random_height = random.randint(min_height, max_height)
-        rect = Rectangle(None, None, random_width, random_height)
+        color = random.choice(possible_colors)
+        rect = Rectangle(None, None, random_width, random_height, color)
         instances.append(rect)
 
     return instances

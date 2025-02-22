@@ -18,7 +18,7 @@ class GeometryBasedStrategy(Neighborhood):
         self.problem = problem
         self.solution_type = solution_type
 
-    def generate_neighbor(self, solution: Solution):
+    def generate_neighbor(self, solution: Solution, interim_solutions: list):
         """Generates a neighboring solution by moving rectangles inside a box or from one box to another.
 
         Args:
@@ -87,7 +87,7 @@ class RuleBasedStrategy(Neighborhood):
         problem.items = rectangle_packer_classes.helpers.apply_rule(problem.items, rule)
         self.problem = problem
 
-    def generate_neighbor(self, solution: Solution):
+    def generate_neighbor(self, solution: Solution, interim_solutions: list):
         """Generates a neighboring solution by reordering rectangles based on a rule and swapping two adjacent rectangles
 
         Args:
@@ -146,7 +146,7 @@ class OverlapStrategy(Neighborhood):
         self.decay_rate = decay_rate
         self.problem = problem
 
-    def generate_neighbor(self, solution: Solution):
+    def generate_neighbor(self, solution: Solution, interim_solutions: list):
         """generates a neighboring solution by reducing the overlap of rectangles, based on teh current overlap percentage
 
         Args:
@@ -167,6 +167,8 @@ class OverlapStrategy(Neighborhood):
             for item in items_to_relocate:
                 box.remove_item(item)
             self.reassign_rectangles(new_solution, items_to_relocate)
+            new_solution.check_if_box_empty(box)
+            interim_solutions.append(copy.deepcopy(new_solution))
 
         # reduce allowed overlap percentage
         self.overlap_percentage = max(0.0, round(self.overlap_percentage - self.decay_rate, 6))
