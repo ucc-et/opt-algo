@@ -1,43 +1,55 @@
 import json
-import random
-from rectangle_packer_classes.problem_classes import Rectangle
-from rectangle_packer_classes.helpers import generate_instances, GreedyStrategy, Rules
-from base_classes.ui_classes import GUI, Tooltip
 from typing import List
 from PIL import Image, ImageTk
 from tkinter import ttk, filedialog
 import tkinter as tk
 
+from rectangle_packer_classes.problem_classes import Rectangle
+from rectangle_packer_classes.helpers import Neighborhoods, generate_instances, GreedyStrategy, Rules
+from base_classes.ui_classes import GUI, Tooltip
+
+
 class RectanglePackerVisualizer(GUI):
+    """A GUI for visualizing optimization algorithms for rectangle packing.
+    Allows configuration and execution of various algorithms with step-wise visualization
+    """
     def __init__(self, root, greedy_algorithm, local_search, backtracking, simulated_annealing):
         self.root = root
         self.greedy_algorithm = greedy_algorithm
         self.local_search = local_search
         self.backtracking = backtracking
         self.simulated_annealing = simulated_annealing
+        
+        # state management
         self.can_export_rectangles = "disabled"
         self.can_zoom = "disabled"
         self.color_choices = "red, green, blue, yellow, purple, orange, cyan"
         self.interim_solutions = []
         self.interim_index = 0
         self.interim_step_size = 1
-        
         self.instances: List[Rectangle] = []
         self.box_size: int = 0
-        
         self.rectangle_colors = {}
-        
         self.zoom_factor = 1.0
         self.zoom_steps = 0
         self.max_zoom_steps = 4
-        
         self.solution = None
         
+        # init ui
         self.setup_ui()
     
     def setup_ui(self):
+        """Sets up the GUI elements for the visualizer. 
+        initializes input fields, buttons, progress bar and canvas
+        """
         self.root.title("Optimierungsalgorithmen GUI")
         
+        self.load_icons()
+        self.setup_inputs()
+        self.setup_navigation()
+        self.setup_canvas()
+    
+    def load_icons(self):
         self.zoom_in_icon = Image.open("assets/zoom-in.png").resize((30, 30))
         self.zoom_in_icon = ImageTk.PhotoImage(self.zoom_in_icon)
         self.zoom_out_icon = Image.open("assets/zoom-out.png").resize((30, 30))
@@ -46,6 +58,8 @@ class RectanglePackerVisualizer(GUI):
         self.import_icon = ImageTk.PhotoImage(self.import_icon)
         self.export_icon = Image.open("assets/export.png").resize((30, 30))
         self.export_icon = ImageTk.PhotoImage(self.export_icon)
+    
+    def setup_inputs(self):
 
         frame_inputs = tk.Frame(self.root)
         frame_inputs.pack(pady=10)
@@ -162,6 +176,8 @@ class RectanglePackerVisualizer(GUI):
         self.error_label = tk.Label(self.root, text="", fg="red")
         self.error_label.pack()
 
+    def setup_navigation(self):
+
         frame_buttons = tk.Frame(self.root)
         frame_buttons.pack(pady=10)
 
@@ -222,6 +238,8 @@ class RectanglePackerVisualizer(GUI):
         
         self.update_progress_bar()
 
+    def setup_canvas(self):
+
         canvas_frame = tk.Frame(self.root)
         canvas_frame.pack(fill="both", expand=True)
 
@@ -234,7 +252,11 @@ class RectanglePackerVisualizer(GUI):
         self.canvas.configure(yscrollcommand=v_scrollbar.set)
         
         self.canvas.bind_all("<MouseWheel>", self.on_mousewheel)
-        
+    
+    # =======================================
+    #              Navigation 
+    # =======================================
+    
     def go_to_first(self):
         self.interim_index = 0
         self.solution = self.interim_solutions[self.interim_index]
@@ -242,44 +264,7 @@ class RectanglePackerVisualizer(GUI):
         self.redraw_canvas()
         self.update_position_label()
         self.update_progress_bar()
-        
-    def solution_to_canonical_tuple(self, sol):
-        """
-        Converts a solution into a nested tuple representation.
-        This makes the solution immutable and hashable.
-
-        Args:
-            solution (RecPac_Solution): The solution to be converted.
-
-        Returns:
-            tuple: A nested tuple representation of the solution.
-        """
-        normalized_boxes = []
-        for box in sol.boxes:
-            normalized_rects = sorted(
-                [(rect.x, rect.y, rect.width, rect.height, rect.color) for rect in box.items]
-            )
-            normalized_boxes.append(tuple(normalized_rects))
-    
-        return tuple(normalized_boxes)
-        
-    def remove_duplicates(self):
-        if len(self.interim_solutions) > 1:
-            seen_hashes = set()
-            unique_solutions = []
-
-            for solution in self.interim_solutions:
-                # Convert to canonical form and hash it
-                canonical_tuple = self.solution_to_canonical_tuple(solution)
-                solution_hash = hash(canonical_tuple)
-                
-                # Only add if this configuration hasn't been seen before
-                if solution_hash not in seen_hashes:
-                    seen_hashes.add(solution_hash)
-                    unique_solutions.append(solution)
-            self.interim_solutions = unique_solutions
-            self.interim_index = len(self.interim_solutions)-1
-        
+               
     def go_to_last(self):
         if len(self.interim_solutions) > 0 :
             self.interim_index = len(self.interim_solutions)-1
@@ -306,7 +291,32 @@ class RectanglePackerVisualizer(GUI):
             self.interim_step_size = 1
             self.step_size_entry.delete(0, tk.END)
             self.step_size_entry.insert(0, "1")
+    
+    def on_mousewheel(self, event):
+        self.canvas.yview_scroll(-1 * (event.delta // 120), "units")
         
+    def zoom_in(self):
+        if(self.zoom_steps < 10):
+            self.btn_zoom_in.config(state="normal")
+            self.zoom_factor *= 1.2
+            self.zoom_steps += 1
+            self.redraw_canvas()
+        else:
+            self.btn_zoom_in.config(state="disabled")
+        
+    def zoom_out(self):
+        if(self.zoom_steps > -1):
+            self.btn_zoom_out.config(state="normal")
+            self.zoom_factor /= 1.2
+            self.zoom_steps -= 1
+            self.redraw_canvas()
+        else:
+            self.btn_zoom_out.config(state="disabled")
+    
+    def update_scrollregion(self):
+        self.canvas.update_idletasks()
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))   
+    
     def go_left_solution(self):
         new_index = max(0, self.interim_index - self.interim_step_size)
     
@@ -329,83 +339,20 @@ class RectanglePackerVisualizer(GUI):
             self.redraw_canvas()
             self.update_progress_bar()
             self.update_position_label()
-            
-    def update_position_label(self):
-        total_steps = len(self.interim_solutions)
-        current_step = self.interim_index + 1 if total_steps > 0 else 0
-        
-        # Update the label with current step and total count
-        self.position_label.config(text=f"Schritt {current_step} von {total_steps}")
-            
-    def update_progress_bar(self):
-        if len(self.interim_solutions) > 0:
-            progress_percentage = (self.interim_index + 1) / len(self.interim_solutions) * 100
-            self.progress['value'] = progress_percentage
-        else:
-            self.progress['value'] = 0
-        
-    def on_mousewheel(self, event):
-        self.canvas.yview_scroll(-1 * (event.delta // 120), "units")
-        
-    def zoom_in(self):
-        if(self.zoom_steps < 10):
-            self.btn_zoom_in.config(state="normal")
-            self.zoom_factor *= 1.2
-            self.zoom_steps += 1
-            self.redraw_canvas()
-        else:
-            self.btn_zoom_in.config(state="disabled")
-        
-    def zoom_out(self):
-        if(self.zoom_steps > -1):
-            self.btn_zoom_out.config(state="normal")
-            self.zoom_factor /= 1.2
-            self.zoom_steps -= 1
-            self.redraw_canvas()
-        else:
-            self.btn_zoom_out.config(state="disabled")
-        
-    def redraw_canvas(self):
-        self.canvas.delete("all")
-        self.draw()
+                            
+    # =======================================
+    #     Solution Handling and execution
+    # =======================================
          
     def update_algorithm(self, *args):
         if self.algo_selector.get() == "Greedy":
-            self.local_search_neighborhood_selector.grid_remove()
-            self.local_search_max_iterations.grid_remove()
-            self.local_search_max_iterations_label.grid_remove()
-            self.neighborhood_label.grid_remove()
-            self.local_search_max_iterations_is_visible = False
-            self.strategy_label.grid()
-            self.greedy_strat.grid()
-            self.start_temperature.grid_remove()
-            self.start_temperature_label.grid_remove()
-            self.end_temperature.grid_remove()
-            self.end_temperature_label.grid_remove()
-            self.cool_rate_label.grid_remove()
-            self.cool_rate.grid_remove()
-            self.max_time.grid_remove()
-            self.max_time_label.grid_remove()
-            self.cool_rate_constant.grid_remove()
-            self.cool_rate_constant_label.grid_remove()
+            self.show_greedy_widgets()
+            self.hide_local_search_widgets()
+            self.hide_simulated_annealing_widgets()
         elif self.algo_selector.get() == "Lokale Suche":
-            self.greedy_strat.grid_remove()
-            self.local_search_neighborhood_selector.grid()
-            self.strategy_label.grid_remove()
-            self.local_search_max_iterations.grid()
-            self.local_search_max_iterations_label.grid()
-            self.neighborhood_label.grid()
-            self.local_search_max_iterations_is_visible = True
-            self.start_temperature.grid_remove()
-            self.start_temperature_label.grid_remove()
-            self.end_temperature.grid_remove()
-            self.end_temperature_label.grid_remove()
-            self.cool_rate_label.grid_remove()
-            self.cool_rate.grid_remove()
-            self.max_time.grid_remove()
-            self.cool_rate_constant.grid_remove()
-            self.cool_rate_constant_label.grid_remove()
-            self.max_time_label.grid_remove()
+            self.show_local_search_widgets()
+            self.hide_greedy_widgets()
+            self.hide_simulated_annealing_widgets()
             if self.local_search_neighborhood_selector.get() == "Regelbasiert":
                 self.rulebased_strat.grid()
                 self.rulebased_strategy_label.grid()
@@ -413,46 +360,13 @@ class RectanglePackerVisualizer(GUI):
                 self.rulebased_strat.grid_remove()
                 self.rulebased_strategy_label.grid_remove()
         elif self.algo_selector.get() == "Backtracking":
-            self.local_search_neighborhood_selector.grid_remove()
-            self.local_search_max_iterations.grid_remove()
-            self.local_search_max_iterations_label.grid_remove()
-            self.rulebased_strat.grid_remove()
-            self.rulebased_strategy_label.grid_remove()
-            self.neighborhood_label.grid_remove()
-            self.local_search_max_iterations_is_visible = False
-            self.greedy_strat.grid_remove()
-            self.strategy_label.grid_remove()
-            self.start_temperature.grid_remove()
-            self.start_temperature_label.grid_remove()
-            self.end_temperature.grid_remove()
-            self.cool_rate_constant.grid_remove()
-            self.cool_rate_constant_label.grid_remove()
-            self.end_temperature_label.grid_remove()
-            self.cool_rate_label.grid_remove()
-            self.cool_rate.grid_remove()
-            self.max_time.grid_remove()
-            self.max_time_label.grid_remove()
+            self.hide_local_search_widgets()
+            self.hide_greedy_widgets()
+            self.hide_simulated_annealing_widgets()
         elif self.algo_selector.get() == "Simulated Annealing":
-            self.local_search_neighborhood_selector.grid_remove()
-            self.local_search_max_iterations.grid_remove()
-            self.local_search_max_iterations_label.grid_remove()
-            self.rulebased_strat.grid_remove()
-            self.rulebased_strategy_label.grid_remove()
-            self.neighborhood_label.grid_remove()
-            self.local_search_max_iterations_is_visible = False
-            self.greedy_strat.grid_remove()
-            self.strategy_label.grid_remove()
-            
-            self.start_temperature.grid()
-            self.start_temperature_label.grid()
-            self.end_temperature.grid()
-            self.end_temperature_label.grid()
-            self.cool_rate_label.grid()
-            self.cool_rate.grid()
-            self.max_time.grid()
-            self.max_time_label.grid()
-            self.cool_rate_constant.grid()
-            self.cool_rate_constant_label.grid()
+            self.hide_greedy_widgets()
+            self.show_simulated_annealing_widgets()
+            self.hide_local_search_widgets()
            
     def validate_inputs(self):
         errors = []
@@ -514,6 +428,7 @@ class RectanglePackerVisualizer(GUI):
         self.zoom_factor = 1.2
         self.zoom_steps = 0
         self.rectangle_colors = {}
+        
         if algorithm == "Greedy":
             self.solution, self.interim_solutions = self.greedy_algorithm(
                 self.instances, 
@@ -522,9 +437,7 @@ class RectanglePackerVisualizer(GUI):
             )
         elif algorithm == "Lokale Suche":
             neighborhood = self.local_search_neighborhood_selector.get()
-            rulebased_strategy = ""
-            if neighborhood == "Regelbasiert":
-                rulebased_strategy = self.rulebased_strat.get()
+            rulebased_strategy = self.rulebased_strat.get() if neighborhood == Neighborhoods.REGELBASIERT.value else ""
             self.solution, self.interim_solutions = self.local_search(
                 self.instances, 
                 self.box_size, 
@@ -535,21 +448,27 @@ class RectanglePackerVisualizer(GUI):
         elif algorithm == "Backtracking":
             self.solution, self.interim_solutions = self.backtracking(self.instances, self.box_size)
         elif algorithm == "Simulated Annealing":
-            neighborhood = self.local_search_neighborhood_selector.get()
-            start_temp = int(self.start_temperature.get())
-            end_temp = int(self.end_temperature.get())
-            cool_down_rate = int(self.cool_rate.get())
-            max_time = int(self.max_time.get())
-            constant = int(self.cool_rate_constant.get())
-            rulebased_strategy = ""
-            if neighborhood == "Regelbasiert":
-                rulebased_strategy = self.rulebased_strat.get()
-            self.solution, self.interim_solutions = self.simulated_annealing(self.instances, self.box_size, neighborhood, rulebased_strategy, start_temp, end_temp, (100-cool_down_rate)/100, constant, max_time)    
+            self.run_simulated_annealing()
+        
         self.interim_index = len(self.interim_solutions)-1
         self.remove_duplicates()
         self.update_progress_bar()
         self.update_position_label()
         self.draw()
+
+    def run_simulated_annealing(self):
+        neighborhood = self.local_search_neighborhood_selector.get()
+        start_temp = int(self.start_temperature.get())
+        end_temp = int(self.end_temperature.get())
+        cool_down_rate = int(self.cool_rate.get())
+        max_time = int(self.max_time.get())
+        constant = int(self.cool_rate_constant.get())
+        rulebased_strategy = self.rulebased_strat.get() if neighborhood == Neighborhoods.REGELBASIERT.value else ""
+        self.solution, self.interim_solutions = self.simulated_annealing(self.instances, self.box_size, neighborhood, rulebased_strategy, start_temp, end_temp, (100-cool_down_rate)/100, constant, max_time)    
+
+    # =======================================
+    #         Visualization Methods
+    # =======================================
 
     def draw(self):
         self.canvas.delete("all")
@@ -567,6 +486,7 @@ class RectanglePackerVisualizer(GUI):
         for box_id, box in enumerate(self.solution.boxes):
             scaled_box_length = int(self.box_size * self.zoom_factor)
 
+            # apply zooming dimensions without distorting ratios
             if x_offset + scaled_box_length + box_padding > canvas_width:
                 x_offset = 0
                 y_offset += row_height + box_padding
@@ -598,18 +518,130 @@ class RectanglePackerVisualizer(GUI):
         self.btn_zoom_in.config(state="normal")
         self.btn_zoom_out.config(state="normal")
         self.update_scrollregion()
+       
+    def redraw_canvas(self):
+        self.canvas.delete("all")
+        self.draw()
+    
+    def update_position_label(self):
+        total_steps = len(self.interim_solutions)
+        current_step = self.interim_index + 1 if total_steps > 0 else 0
         
-    def update_scrollregion(self):
-        self.canvas.update_idletasks()
-        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+        # Update the label with current step and total count
+        self.position_label.config(text=f"Schritt {current_step} von {total_steps}")
+    
+    def update_progress_bar(self):
+        if len(self.interim_solutions) > 0:
+            progress_percentage = (self.interim_index + 1) / len(self.interim_solutions) * 100
+            self.progress['value'] = progress_percentage
+        else:
+            self.progress['value'] = 0
+    
+    def show_greedy_widgets(self):
+        self.strategy_label.grid()
+        self.greedy_strat.grid()
+    
+    def show_local_search_widgets(self):
+        self.local_search_neighborhood_selector.grid()
+        self.local_search_max_iterations.grid()
+        self.local_search_max_iterations_label.grid()
+        self.neighborhood_label.grid()
+        self.local_search_max_iterations_is_visible = True
+    
+    def show_simulated_annealing_widgets(self):
+        self.start_temperature.grid()
+        self.start_temperature_label.grid()
+        self.end_temperature.grid()
+        self.end_temperature_label.grid()
+        self.cool_rate_label.grid()
+        self.cool_rate.grid()
+        self.max_time.grid()
+        self.max_time_label.grid()
+        self.cool_rate_constant.grid()
+        self.cool_rate_constant_label.grid()
+    
+    def hide_greedy_widgets(self):
+        self.greedy_strat.grid_remove()
+        self.strategy_label.grid_remove()
+    
+    def hide_local_search_widgets(self):
+        self.local_search_neighborhood_selector.grid_remove()
+        self.local_search_max_iterations.grid_remove()
+        self.local_search_max_iterations_label.grid_remove()
+        self.neighborhood_label.grid_remove()
+        self.local_search_max_iterations_is_visible = False
+        self.rulebased_strat.grid_remove()
+        self.rulebased_strategy_label.grid_remove()
+    
+    def hide_simulated_annealing_widgets(self):
+        self.start_temperature.grid_remove()
+        self.start_temperature_label.grid_remove()
+        self.end_temperature.grid_remove()
+        self.end_temperature_label.grid_remove()
+        self.cool_rate_label.grid_remove()
+        self.cool_rate.grid_remove()
+        self.max_time.grid_remove()
+        self.max_time_label.grid_remove()
+        self.cool_rate_constant.grid_remove()
+        self.cool_rate_constant_label.grid_remove()
+    # =======================================
+    #     Utility and helper methods
+    # =======================================
+            
+    def solution_to_tuple(self, sol):
+        """
+        Converts a solution into a nested tuple representation.
+
+        Args:
+            solution (RecPac_Solution): The solution to be converted.
+
+        Returns:
+            tuple: A nested tuple representation of the solution which is hashable.
+        """
+        normalized_boxes = []
+        for box in sol.boxes:
+            normalized_rects = sorted(
+                [(rect.x, rect.y, rect.width, rect.height, rect.color) for rect in box.items]
+            )
+            normalized_boxes.append(tuple(normalized_rects))
+    
+        return tuple(normalized_boxes)
         
+    def remove_duplicates(self):
+        """
+        Removes duplicated solutions fromt he interim_solutions, 
+        to have individual steps in the viz.
+        """
+        if len(self.interim_solutions) > 1:
+            seen_hashes = set()
+            unique_solutions = []
+
+            for solution in self.interim_solutions:
+                # Convert to tuples and hash
+                canonical_tuple = self.solution_to_tuple(solution)
+                solution_hash = hash(canonical_tuple)
+                
+                # Only add if this configuration hasn't been seen before
+                if solution_hash not in seen_hashes:
+                    seen_hashes.add(solution_hash)
+                    unique_solutions.append(solution)
+            self.interim_solutions = unique_solutions
+            self.interim_index = len(self.interim_solutions)-1
+    
+            
     def import_rectangles(self):
+        """
+        Method that allows the user to import a list of rectangles, which has been exported before.
+        """
+        # open file dialog
         file_path = filedialog.askopenfilename(filetypes=[("JSON files", "*.json")])
         if file_path:
             try:
                 with open(file_path, "r", encoding="utf-8") as file:
+                    # read file data
                     data = json.load(file)
                     
+                    # save data into the input boxes and configuration
                     self.instances = [Rectangle(rect[0], rect[1], rect[2], rect[3], rect[4]) for rect in data.get("rectangles", [])]
                     self.box_size = data.get("box_length", 0)
                     
@@ -636,6 +668,9 @@ class RectanglePackerVisualizer(GUI):
                 self.error_label.config(text=f"Fehler beim Importieren: {e}", fg="red")
     
     def export_rectangles(self):
+        """
+        Method that allows the user to export the last generated list of rectangles, for later import
+        """
         default_filename = "rectangles.json"
         file_path = filedialog.asksaveasfilename(
             initialfile=default_filename,
