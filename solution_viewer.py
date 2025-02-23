@@ -82,10 +82,8 @@ class SolutionViewer(GUI):
         btn_zoom_out.grid(row=0, column=3, padx=5)
         
         self.step_size_label = tk.Label(frame_buttons, text="Schrittgröße: ")
-        self.step_size_label.grid(row=1, column=2, padx=5)
         self.step_size_entry = tk.Entry(frame_buttons, width=5)
         self.step_size_entry.insert(0, "1")  # Default step size
-        self.step_size_entry.grid(row=1, column=3, padx=5)
         self.step_size_entry.bind("<KeyRelease>", self.update_step_size)
         
         btn_iterate_start = tk.Button(frame_buttons, text="<<", command=self.jump_to_start)
@@ -126,6 +124,7 @@ class SolutionViewer(GUI):
         self.canvas.configure(yscrollcommand=v_scrollbar.set)
         
         self.canvas.bind("<MouseWheel>", self.on_mousewheel)
+        self.step_size_entry.focus_set()
 
     def jump_to_start(self):
         self.current_index = 0
@@ -150,12 +149,22 @@ class SolutionViewer(GUI):
 
 
     def update_step_size(self, event=None):
-        if self.step_size_entry.get() == "":
-            return
-        step_size = int(self.step_size_entry.get())
-        if step_size < 1:
-            return
-        self.step_size = step_size
+        try:
+            if self.step_size_entry.get() == "":
+                return
+            # Get the step size from the input field
+            step_size = int(self.step_size_entry.get())
+            
+            # Ensure step size is at least 1
+            if step_size < 1:
+                raise ValueError
+            
+            self.step_size = step_size
+        except ValueError:
+            # Reset to default step size if invalid input
+            self.step_size = 1
+            self.step_size_entry.delete(0, tk.END)
+            self.step_size_entry.insert(0, "1")
             
             
 
