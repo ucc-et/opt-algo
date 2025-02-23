@@ -1,7 +1,8 @@
 from typing import List
 from base_classes.types import Item, Solution, Container, OptimizationProblem
-import rectangle_packer_classes.helpers
 import numpy as np
+
+from rectangle_packer_classes.utils import compute_overlap_numba, find_valid_assignment_numba
 
 class Rectangle(Item):
     """
@@ -112,7 +113,7 @@ class RecPac_Solution(Solution):
         Returns:
             int: overlapping area
         """
-        return rectangle_packer_classes.helpers.compute_overlap_numba(rect1.x, rect1.y, rect1.width, rect1.height,
+        return compute_overlap_numba(rect1.x, rect1.y, rect1.width, rect1.height,
                                  rect2.x, rect2.y, rect2.width, rect2.height)
     
     def are_solutions_equal(self, compare_solution):
@@ -222,13 +223,13 @@ class RectanglePacker(OptimizationProblem):
         items_height = np.array([r.height for r in container.items], dtype=np.int32)
 
         # try placing the item without rotation
-        x, y = rectangle_packer_classes.helpers.find_valid_assignment_numba(self.container_size, items_x, items_y, items_width, items_height, item.width, item.height, overlap_percentage)
+        x, y = find_valid_assignment_numba(self.container_size, items_x, items_y, items_width, items_height, item.width, item.height, overlap_percentage)
         if x != -1:
             return x, y, False # no rotation needed
 
         # try placing the item with a rotation, but only if the dimensions are different
         if item.width != item.height:
-            x, y = rectangle_packer_classes.helpers.find_valid_assignment_numba(self.container_size, items_x, items_y, items_width, items_height, item.height, item.width, overlap_percentage)
+            x, y = find_valid_assignment_numba(self.container_size, items_x, items_y, items_width, items_height, item.height, item.width, overlap_percentage)
             if x != -1:
                 return x, y, True # rotation needed
 

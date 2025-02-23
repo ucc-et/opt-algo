@@ -2,8 +2,7 @@ import json
 import tkinter as tk
 from tkinter import filedialog
 import random
-
-from rectangle_packer_classes.problem_classes import Box, RecPac_Solution, Rectangle
+import rectangle_packer_classes.problem_classes
 from base_classes.ui_classes import GUI
 
 class SolutionViewer(GUI):
@@ -46,11 +45,11 @@ class SolutionViewer(GUI):
             boxes = solution.get("boxes", [])
             
             # Create RecPac_Solution object for visualization
-            current_solution = RecPac_Solution()
+            current_solution = rectangle_packer_classes.problem_classes.RecPac_Solution()
             for box in boxes:
-                current_box = Box(box_length)
+                current_box = rectangle_packer_classes.problem_classes.Box(box_length)
                 for rectangle in box:
-                    current_box.add_item(Rectangle(rectangle["x"], rectangle["y"], rectangle["w"], rectangle["h"], rectangle["color"]))
+                    current_box.add_item(rectangle_packer_classes.problem_classes.Rectangle(rectangle["x"], rectangle["y"], rectangle["w"], rectangle["h"], rectangle["color"]))
                 current_solution.add_box(current_box)
             
             # Store parsed solution and metadata
@@ -174,7 +173,7 @@ class SolutionViewer(GUI):
             )
 
             for rect in box.items:
-                x, y, w, h, color = rect.x, rect.y, rect.width, rect.height
+                x, y, w, h, color = rect.x, rect.y, rect.width, rect.height, rect.color
                 scaled_x = int(x * self.zoom_factor) + x_offset
                 scaled_y = int(y * self.zoom_factor) + y_offset
                 scaled_w = int(w * self.zoom_factor)
