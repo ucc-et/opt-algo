@@ -500,7 +500,7 @@ class RectanglePackerVisualizer(GUI):
             )
         elif algorithm == "Lokale Suche":
             neighborhood = self.local_search_neighborhood_selector.get()
-            rulebased_strategy = self.rulebased_strat.get() if neighborhood == Neighborhoods.REGELBASIERT.value else ""
+            rulebased_strategy = self.rulebased_strat.get() if neighborhood == Neighborhoods.RULE.value else ""
             self.solution, self.interim_solutions = self.local_search(
                 self.instances, 
                 self.box_size, 
@@ -520,13 +520,13 @@ class RectanglePackerVisualizer(GUI):
         self.draw()
 
     def run_simulated_annealing(self):
-        neighborhood = self.local_search_neighborhood_selector.get()
+        neighborhood = Neighborhoods.GEOMETRY.value
         start_temp = int(self.start_temperature.get())
         end_temp = int(self.end_temperature.get())
         cool_down_rate = int(self.cool_rate.get())
         max_time = int(self.max_time.get())
         constant = int(self.cool_rate_constant.get())
-        rulebased_strategy = self.rulebased_strat.get() if neighborhood == Neighborhoods.REGELBASIERT.value else ""
+        rulebased_strategy = self.rulebased_strat.get() if neighborhood == Neighborhoods.RULE.value else ""
         self.solution, self.interim_solutions = self.simulated_annealing(self.instances, self.box_size, neighborhood, rulebased_strategy, start_temp, end_temp, (100-cool_down_rate)/100, constant, max_time)    
 
     # =======================================

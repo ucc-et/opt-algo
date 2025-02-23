@@ -166,7 +166,7 @@ class SimulatedAnnealing:
         """
         start_time = time.time()
         
-        interim_solutions = []
+        interim_solutions = [self.start_solution]
 
         # Initiliaze the current and best solutions
         current_solution = self.start_solution
@@ -181,7 +181,10 @@ class SimulatedAnnealing:
                 elapsed_time = time.time()-start_time
                 # terminate if maximum allowed time is exceeded
                 if (elapsed_time >= self.max_time):
-                    return best_solution
+                    end_time = time.time()
+                    elapsed_time = end_time - start_time
+                    print(f"Laufzeit Simulated Annealing: {elapsed_time:.6f} Sekunden")
+                    return best_solution, interim_solutions
                 
                 # generate a neighboring solution
                 neighbor = self.neighborhood_strategy.generate_neighbor(current_solution, interim_solutions, self.runs_ins_test_environment)
@@ -206,7 +209,6 @@ class SimulatedAnnealing:
         end_time = time.time()
         elapsed_time = end_time - start_time
         print(f"Laufzeit Simulated Annealing: {elapsed_time:.6f} Sekunden")
-
         return best_solution, interim_solutions
 
 

@@ -96,7 +96,8 @@ def main():
             cooling_rate=cooling_rate,
             iterations_per_temp=iterations_per_temp,
             neighborhood_strategy=neighborhood,
-            in_test_env=False
+            in_test_env=False,
+            max_time=max_time
         )
         solution, interim_solutions = simulated_annealing_solver.solve()
         return solution, interim_solutions
