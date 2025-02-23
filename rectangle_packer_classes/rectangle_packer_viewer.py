@@ -1,10 +1,9 @@
 import json
 import random
-from classes.helpers import generate_instances
-from solvers.enums import GreedyStrategy, Rules
-from .base_classes import GUI, Tooltip
+from rectangle_packer_classes.problem_classes import Rectangle
+from rectangle_packer_classes.helpers import generate_instances, GreedyStrategy, Rules
+from base_classes.ui_classes import GUI, Tooltip
 from typing import List
-from classes import Rectangle
 from PIL import Image, ImageTk
 from tkinter import ttk, filedialog
 import tkinter as tk
@@ -19,6 +18,9 @@ class RectanglePackerVisualizer(GUI):
         self.can_export_rectangles = "disabled"
         self.can_zoom = "disabled"
         self.color_choices = "red, green, blue, yellow, purple, orange, cyan"
+        self.interim_solutions = []
+        self.interim_index = 0
+        self.interim_step_size = 1
         
         self.instances: List[Rectangle] = []
         self.box_size: int = 0
@@ -187,6 +189,38 @@ class RectanglePackerVisualizer(GUI):
 
         self.label_status = tk.Label(self.root, text="Status: Bereit")
         self.label_status.pack()
+        
+        frame_navigation = tk.Frame(self.root)
+        frame_navigation.pack(pady=10)
+        
+        self.step_size_label = tk.Label(frame_navigation, text="Schrittgröße:")
+        self.step_size_label.grid(row=0, column=0, padx=5)
+        self.step_size_entry = tk.Entry(frame_navigation, width=5)
+        self.step_size_entry.insert(0, "1")  # Default step size
+        self.step_size_entry.grid(row=0, column=1, padx=5)
+        self.step_size_entry.bind("<FocusOut>", self.update_step_size)
+        
+        # Position Label for interim solutions (e.g., "Step 3 of 10")
+        self.position_label = tk.Label(frame_navigation, text="Schritt 0 von 0")
+        self.position_label.grid(row=0, column=2, padx=10)
+        
+        self.btn_first = tk.Button(frame_navigation, text="<<", command=self.go_to_first)
+        self.btn_first.grid(row=1, column=0, padx=5)
+        
+        self.btn_left_sol = tk.Button(frame_navigation, text="<", command=self.go_left_solution)
+        self.btn_left_sol.grid(row=1, column=1, padx=5)
+        
+        self.progress = ttk.Progressbar(frame_navigation, orient="horizontal", length=300, mode="determinate")
+        self.progress.grid(row=1, column=2, padx=5)
+        
+        
+        self.btn_right_sol = tk.Button(frame_navigation, text=">", command=self.go_right_solution)
+        self.btn_right_sol.grid(row=1, column=3, padx=5)
+        
+        self.btn_last = tk.Button(frame_navigation, text=">>", command=self.go_to_last)
+        self.btn_last.grid(row=1, column=4, padx=5)
+        
+        self.update_progress_bar()
 
         canvas_frame = tk.Frame(self.root)
         canvas_frame.pack(fill="both", expand=True)
@@ -200,6 +234,76 @@ class RectanglePackerVisualizer(GUI):
         self.canvas.configure(yscrollcommand=v_scrollbar.set)
         
         self.canvas.bind_all("<MouseWheel>", self.on_mousewheel)
+        
+    def go_to_first(self):
+        self.interim_index = 0
+        self.solution = self.interim_solutions[self.interim_index]
+        
+        self.redraw_canvas()
+        self.update_position_label()
+        self.update_progress_bar()
+        
+    def go_to_last(self):
+        if len(self.interim_solutions) > 0 :
+            self.interim_index = len(self.interim_solutions)-1
+            self.solution = self.interim_solutions[self.interim_index]
+            
+            self.redraw_canvas()
+            self.update_position_label()
+            self.update_progress_bar()
+        
+    def update_step_size(self, event=None):
+        try:
+            # Get the step size from the input field
+            step_size = int(self.step_size_entry.get())
+            
+            # Ensure step size is at least 1
+            if step_size < 1:
+                raise ValueError
+            
+            self.interim_step_size = step_size
+        except ValueError:
+            # Reset to default step size if invalid input
+            self.interim_step_size = 1
+            self.step_size_entry.delete(0, tk.END)
+            self.step_size_entry.insert(0, "1")
+        
+    def go_left_solution(self):
+        new_index = max(0, self.interim_index - self.interim_step_size)
+    
+        # Only update if the index changes
+        if new_index != self.interim_index:
+            self.interim_index = new_index
+            self.solution = self.interim_solutions[self.interim_index]
+            self.redraw_canvas()
+            self.update_progress_bar()
+            self.update_position_label()
+    
+    def go_right_solution(self):
+        # Calculate new index with step size
+        new_index = min(len(self.interim_solutions) - 1, self.interim_index + self.interim_step_size)
+        
+        # Only update if the index changes
+        if new_index != self.interim_index:
+            self.interim_index = new_index
+            self.solution = self.interim_solutions[self.interim_index]
+            self.redraw_canvas()
+            self.update_progress_bar()
+            self.update_position_label()
+            
+    def update_position_label(self):
+        total_steps = len(self.interim_solutions)
+        current_step = self.interim_index + 1 if total_steps > 0 else 0
+        
+        # Update the label with current step and total count
+        self.position_label.config(text=f"Schritt {current_step} von {total_steps}")
+            
+    def update_progress_bar(self):
+        if len(self.interim_solutions) > 0:
+            progress_percentage = (self.interim_index + 1) / len(self.interim_solutions) * 100
+            self.progress['value'] = progress_percentage
+        else:
+            self.progress['value'] = 0
         
     def on_mousewheel(self, event):
         self.canvas.yview_scroll(-1 * (event.delta // 120), "units")
@@ -355,18 +459,24 @@ class RectanglePackerVisualizer(GUI):
             min_h = int(self.entry_min_height.get())
             max_h = int(self.entry_max_height.get())
             self.box_size = int(self.entry_box_length.get())
-
-            self.instances = generate_instances(n, min_w, max_w, min_h, max_h)
+            split_color = self.color_choices.split(",")
+            choices = []
+            for color in split_color:
+                choices.append(color.strip())
+            self.instances = generate_instances(n, min_w, max_w, min_h, max_h, choices)
             self.btn_export.config(state="normal")
             self.label_status.config(text=f"{n} Rechtecke generiert!")
         
     def run_algorithm(self):
         algorithm = self.algo_selector.get()
+        self.interim_solutions = []
+        self.interim_index = 0
+        self.update_progress_bar()
         self.zoom_factor = 1.2
         self.zoom_steps = 0
         self.rectangle_colors = {}
         if algorithm == "Greedy":
-            self.solution = self.greedy_algorithm(
+            self.solution, self.interim_solutions = self.greedy_algorithm(
                 self.instances, 
                 self.box_size, 
                 self.greedy_strat.get()
@@ -376,7 +486,7 @@ class RectanglePackerVisualizer(GUI):
             rulebased_strategy = ""
             if neighborhood == "Regelbasiert":
                 rulebased_strategy = self.rulebased_strat.get()
-            self.solution = self.local_search(
+            self.solution, self.interim_solutions = self.local_search(
                 self.instances, 
                 self.box_size, 
                 neighborhood,
@@ -384,7 +494,7 @@ class RectanglePackerVisualizer(GUI):
                 int(self.local_search_max_iterations.get())
             )
         elif algorithm == "Backtracking":
-            self.solution = self.backtracking(self.instances, self.box_size)
+            self.solution, self.interim_solutions = self.backtracking(self.instances, self.box_size)
         elif algorithm == "Simulated Annealing":
             neighborhood = self.local_search_neighborhood_selector.get()
             start_temp = int(self.start_temperature.get())
@@ -395,20 +505,9 @@ class RectanglePackerVisualizer(GUI):
             rulebased_strategy = ""
             if neighborhood == "Regelbasiert":
                 rulebased_strategy = self.rulebased_strat.get()
-            self.solution = self.simulated_annealing(self.instances, self.box_size, neighborhood, rulebased_strategy, start_temp, end_temp, 1-cool_down_rate, constant, max_time)    
+            self.solution, self.interim_solutions = self.simulated_annealing(self.instances, self.box_size, neighborhood, rulebased_strategy, start_temp, end_temp, (100-cool_down_rate)/100, constant, max_time)    
+        self.update_position_label()
         self.draw()
-
-    def get_rectangle_color(self, rect):
-        if len(self.rectangle_colors.keys()) == 0 or rect not in self.rectangle_colors.keys():
-            split_color = self.color_choices.split(",")
-            choices = []
-            for color in split_color:
-                choices.append(color.strip())
-            color = random.choice(choices)
-            self.rectangle_colors[rect] = color
-        else:
-            color = self.rectangle_colors[rect]
-        return color
 
     def draw(self):
         self.canvas.delete("all")
@@ -440,7 +539,7 @@ class RectanglePackerVisualizer(GUI):
             )
 
             for rect in box.items:
-                x, y, w, h = rect.x, rect.y, rect.width, rect.height
+                x, y, w, h, c = rect.x, rect.y, rect.width, rect.height, rect.color
                 scaled_x = int(x * self.zoom_factor) + x_offset
                 scaled_y = int(y * self.zoom_factor) + y_offset
                 scaled_w = int(w * self.zoom_factor)
@@ -449,7 +548,7 @@ class RectanglePackerVisualizer(GUI):
                 self.canvas.create_rectangle(
                     scaled_x, scaled_y,
                     scaled_x + scaled_w, scaled_y + scaled_h,
-                    fill=self.get_rectangle_color(rect),
+                    fill=c,
                     outline="black"
                 )
 
@@ -466,10 +565,10 @@ class RectanglePackerVisualizer(GUI):
         file_path = filedialog.askopenfilename(filetypes=[("JSON files", "*.json")])
         if file_path:
             try:
-                with open(file_path, "r") as file:
+                with open(file_path, "r", encoding="utf-8") as file:
                     data = json.load(file)
                     
-                    self.instances = [Rectangle(rect[0], rect[1], rect[2], rect[3]) for rect in data.get("rectangles", [])]
+                    self.instances = [Rectangle(rect[0], rect[1], rect[2], rect[3], rect[4]) for rect in data.get("rectangles", [])]
                     self.box_size = data.get("box_length", 0)
                     
                     self.entry_num_rectangles.delete(0, tk.END)
@@ -503,9 +602,9 @@ class RectanglePackerVisualizer(GUI):
         )
         if file_path:
             try:
-                with open(file_path, "w") as file:
+                with open(file_path, "w", encoding="utf-8") as file:
                     data = {
-                        "rectangles": [(instance.x, instance.y, instance.width, instance.height) for instance in self.instances],
+                        "rectangles": [(instance.x, instance.y, instance.width, instance.height, instance.color) for instance in self.instances],
                         "box_length": self.box_size,
                         "num_rectangles": len(self.instances),
                         "min_width": self.entry_min_width.get(),
