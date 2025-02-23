@@ -23,7 +23,7 @@ class RectanglePackerVisualizer(GUI):
         # state management
         self.can_export_rectangles = "disabled"
         self.can_zoom = "disabled"
-        self.color_choices = "red, green, blue, yellow, purple, orange, cyan"
+        self.available_colors = ["red", "green", "blue", "yellow", "purple", "orange", "cyan"]
         self.interim_solutions = []
         self.interim_index = 0
         self.interim_step_size = 1
@@ -43,6 +43,8 @@ class RectanglePackerVisualizer(GUI):
         initializes input fields, buttons, progress bar and canvas
         """
         self.root.title("Optimierungsalgorithmen GUI")
+        
+        self.style_dropdown()
         
         self.load_icons()
         self.setup_inputs()
@@ -87,6 +89,26 @@ class RectanglePackerVisualizer(GUI):
         tk.Label(frame_inputs, text="Boxlänge L:").grid(row=5, column=0)
         self.entry_box_length = tk.Entry(frame_inputs)
         self.entry_box_length.grid(row=5, column=1, pady=5)
+        
+        # ===========================
+        # Multi-Select Dropdown for Colors
+        # ===========================
+        self.selected_colors = tk.StringVar(value=self.available_colors)
+
+        self.color_scheme_label = tk.Label(frame_inputs, text="Rechteckfarben:")
+        self.color_scheme_label.grid(row=15, column=0, pady=5)
+
+        self.color_multiselect = tk.Listbox(frame_inputs, listvariable=self.selected_colors, selectmode="multiple", height=5, exportselection=False)
+        self.color_multiselect.grid(row=15, column=1, pady=5)
+        for i in range(len(self.available_colors)):
+            self.color_multiselect.select_set(i)  # Select all by default
+            
+        self.style_listbox(self.color_multiselect)
+
+        # Add a scrollbar for color selection
+        scrollbar = tk.Scrollbar(frame_inputs, orient="vertical", command=self.color_multiselect.yview)
+        scrollbar.grid(row=15, column=2, sticky="ns")
+        self.color_multiselect.config(yscrollcommand=scrollbar.set)
 
         self.algo_select_label = tk.Label(frame_inputs, text="Algorithmus wählen: ").grid(row=7, column=0, padx=5)
         self.algo_selector = ttk.Combobox(frame_inputs, values=["Greedy", "Lokale Suche", "Backtracking", "Simulated Annealing"], state="readonly")
@@ -162,12 +184,6 @@ class RectanglePackerVisualizer(GUI):
         self.max_time.grid(row=14, column=1)
         self.max_time_label.grid_remove()
         self.max_time.grid_remove()
-        
-        self.color_scheme_label = tk.Label(frame_inputs, text="Rechteckfarben: ")
-        self.color_scheme_label.grid(row=15, column=0, pady=5)
-        self.color_scheme_input = tk.Entry(frame_inputs)
-        self.color_scheme_input.grid(row=15, column=1)
-        self.color_scheme_input.insert(0,self.color_choices)
 
         self.algo_selector.bind("<<ComboboxSelected>>", self.update_algorithm)
         self.local_search_neighborhood_selector.bind("<<ComboboxSelected>>", self.update_algorithm)
@@ -237,6 +253,50 @@ class RectanglePackerVisualizer(GUI):
         self.btn_last.grid(row=1, column=4, padx=5)
         
         self.update_progress_bar()
+
+    def style_listbox(self, listbox):
+        """Styles the Listbox used in the Multi-Select Dropdown."""
+        
+        listbox.config(
+            bg="#757574",          # White background
+            fg="black",          # Black text color
+            selectbackground="white",  # Light gray background when selected
+            selectforeground="black",    # Keep text black when selected
+            highlightthickness=0,  # Remove border highlight
+            relief="flat",         # Flat border style for a modern look
+            activestyle="none"     # Remove underlined text for active item
+        )
+
+
+    def style_dropdown(self):
+        """
+        Customize appearance of multi select dropdown, cause tkinter native way is not so pretty
+        """
+        style = ttk.Style()
+        
+        style.theme_use("clam")
+        style.configure(
+            "TCombobox",
+            fieldbackground="white",
+            selectforeground="black",
+            background="white",
+            foreground="black",
+            selectbackground="#D3D3D3",
+            padding=5
+        )
+        
+        style.map("TCombobox",
+                fieldbackground=[('readonly', 'white')],
+                background=[('readonly', 'white')],
+                selectbackground=[('focus', '#D3D3D3')],
+                selectforeground=[('focus', 'black')],
+                )
+
+        style.map('TCombobox',
+                background=[('active', '#F0F0F0')],
+                highlightbackground=[('focus', '#F0F0F0')],
+                highlightcolor=[('focus', '#F0F0F0')]
+                )
 
     def setup_canvas(self):
 
@@ -412,11 +472,14 @@ class RectanglePackerVisualizer(GUI):
             min_h = int(self.entry_min_height.get())
             max_h = int(self.entry_max_height.get())
             self.box_size = int(self.entry_box_length.get())
-            split_color = self.color_choices.split(",")
-            choices = []
-            for color in split_color:
-                choices.append(color.strip())
-            self.instances = generate_instances(n, min_w, max_w, min_h, max_h, choices)
+            
+            selected_indices = self.color_multiselect.curselection()
+            selected_colors = [self.available_colors[i] for i in selected_indices]
+            
+            if not selected_colors:
+                selected_colors = self.available_colors
+            
+            self.instances = generate_instances(n, min_w, max_w, min_h, max_h, selected_colors)
             self.btn_export.config(state="normal")
             self.label_status.config(text=f"{n} Rechtecke generiert!")
         
@@ -472,10 +535,6 @@ class RectanglePackerVisualizer(GUI):
 
     def draw(self):
         self.canvas.delete("all")
-
-        color_input_list = self.color_scheme_input.get()
-        if not (color_input_list == self.color_choices or  color_input_list == ""):
-            self.color_choices = color_input_list
         
         box_padding = 10 * self.zoom_factor
         x_offset = 0

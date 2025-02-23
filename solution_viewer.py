@@ -7,13 +7,17 @@ from rectangle_packer_classes.problem_classes import Box, RecPac_Solution, Recta
 from base_classes.ui_classes import GUI
 
 class SolutionViewer(GUI):
+    """
+    GUI class to visualize solutions of the rectangle packing test environment.
+
+    """
     def __init__(self, root, solutions):
         self.root = root
         self.solutionsRaw = solutions
         self.solutions = []
         self.solutionsalgorithms = []
         self.rectangle_colors = {}
-        self.current_type = "greedy"
+        
         self.current_index = 0
         self.zoom_factor = 1.0
         self.zoom_steps = 0
@@ -31,13 +35,14 @@ class SolutionViewer(GUI):
         solutionsRaw = self.solutionsRaw["solutions"]
         box_length = int(self.solutionsRaw["box_length"])
         
+        # each solution prase
         for solution in solutionsRaw:
-            # Get metadata, with default values if missing
+            # Get metadata, with defaults
             algorithm = solution.get("algorithm", "Unknown Algorithm")
             strategy = solution.get("strategy", "No Strategy")
             neighborhood = solution.get("neighborhood", "No Neighborhood")
             
-            # Access boxes directly, no longer inside "solution"
+            # Access boxes directly
             boxes = solution.get("boxes", [])
             
             # Create RecPac_Solution object for visualization
@@ -55,8 +60,6 @@ class SolutionViewer(GUI):
                 "strategy": strategy,
                 "neighborhood": neighborhood
             })
-
-
     
     def setup_ui(self):
         """
@@ -64,12 +67,14 @@ class SolutionViewer(GUI):
         """
         self.root.title("Solution Viewer")
 
+        # Input and nav
         frame_inputs = tk.Frame(self.root)
         frame_inputs.pack(pady=10)
 
         frame_buttons = tk.Frame(self.root)
         frame_buttons.pack(pady=10)
 
+        # Zoom control
         btn_zoom_in = tk.Button(frame_buttons, text="Zoom In", command=self.zoom_in)
         btn_zoom_in.grid(row=0, column=2, padx=5)
         
@@ -95,6 +100,7 @@ class SolutionViewer(GUI):
         self.label_solution_number = tk.Label(self.root, text=f"Solution: {self.current_index+1}/{len(self.solutions)}")
         self.label_solution_number.pack()
 
+        # Canvas for solution display
         canvas_frame = tk.Frame(self.root)
         canvas_frame.pack(fill="both", expand=True)
 
@@ -136,21 +142,9 @@ class SolutionViewer(GUI):
         self.label_neighborhood.config(text=f"Neighborhood: {self.solutionsalgorithms[self.current_index]['neighborhood']}")
         self.label_solution_number.config(text=f"Solution: {self.current_index+1}/{len(self.solutions)}")
 
-        
-    def get_rectangle_color(self, rect):
-        if len(self.rectangle_colors.keys()) == 0 or rect not in self.rectangle_colors.keys():
-            color = random.choice(["red", "green", "blue", "yellow", "purple", "orange", "cyan"])
-            self.rectangle_colors[rect] = color
-        else:
-            color = self.rectangle_colors[rect]
-        return color
-
     def update_scrollregion(self):
         self.canvas.update_idletasks()
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
-        
-    def run_algorithm(self):
-        pass
         
     def draw(self):
         self.canvas.delete("all")
@@ -180,7 +174,7 @@ class SolutionViewer(GUI):
             )
 
             for rect in box.items:
-                x, y, w, h = rect.x, rect.y, rect.width, rect.height
+                x, y, w, h, color = rect.x, rect.y, rect.width, rect.height
                 scaled_x = int(x * self.zoom_factor) + x_offset
                 scaled_y = int(y * self.zoom_factor) + y_offset
                 scaled_w = int(w * self.zoom_factor)
@@ -189,7 +183,7 @@ class SolutionViewer(GUI):
                 self.canvas.create_rectangle(
                     scaled_x, scaled_y,
                     scaled_x + scaled_w, scaled_y + scaled_h,
-                    fill=self.get_rectangle_color(rect),
+                    fill=color,
                     outline="black"
                 )
 
