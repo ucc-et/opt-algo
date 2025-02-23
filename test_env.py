@@ -292,13 +292,19 @@ class TestEnvironment:
 
 if __name__ == "__main__":
     test_env = TestEnvironment()
-    test_env.box_length = 100
+    test_env.box_length = 250
     
     # Quick for handover:
     #test_env.generate_instances(1, 1000, 2, 3, 7, 9)
     
     # Meaningful with protocol A:
-    #test_env.generate_instances(1, 500, 20, 25, 65, 50)
+    #test_env.generate_instances(25, 500, 20, 25, 65, 50) # ran for 23.77 Minutes
+    
+    # Meaningful with protocol B:
+    #test_env.generate_instances(50, 200, 20, 25, 65, 50) # ran for 12.28 Minutes
+    
+    # Meaningful with protocol C:
+    test_env.generate_instances(50, 1000, 25, 32, 58, 52) # ran for 224.62 Minutes
     
     test_env.max_iterations = 21
     test_env.run()
