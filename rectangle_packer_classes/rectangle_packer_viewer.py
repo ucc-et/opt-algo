@@ -198,7 +198,7 @@ class RectanglePackerVisualizer(GUI):
         self.step_size_entry = tk.Entry(frame_navigation, width=5)
         self.step_size_entry.insert(0, "1")  # Default step size
         self.step_size_entry.grid(row=0, column=1, padx=5)
-        self.step_size_entry.bind("<FocusOut>", self.update_step_size)
+        self.step_size_entry.bind("<KeyRelease>", self.update_step_size)
         
         # Position Label for interim solutions (e.g., "Step 3 of 10")
         self.position_label = tk.Label(frame_navigation, text="Schritt 0 von 0")
@@ -254,6 +254,8 @@ class RectanglePackerVisualizer(GUI):
         
     def update_step_size(self, event=None):
         try:
+            if self.step_size_entry.get() == "":
+                return
             # Get the step size from the input field
             step_size = int(self.step_size_entry.get())
             
@@ -506,6 +508,8 @@ class RectanglePackerVisualizer(GUI):
             if neighborhood == "Regelbasiert":
                 rulebased_strategy = self.rulebased_strat.get()
             self.solution, self.interim_solutions = self.simulated_annealing(self.instances, self.box_size, neighborhood, rulebased_strategy, start_temp, end_temp, (100-cool_down_rate)/100, constant, max_time)    
+        self.interim_index = len(self.interim_solutions)-1
+        self.update_progress_bar()
         self.update_position_label()
         self.draw()
 
