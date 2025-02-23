@@ -243,6 +243,43 @@ class RectanglePackerVisualizer(GUI):
         self.update_position_label()
         self.update_progress_bar()
         
+    def solution_to_canonical_tuple(self, sol):
+        """
+        Converts a solution into a nested tuple representation.
+        This makes the solution immutable and hashable.
+
+        Args:
+            solution (RecPac_Solution): The solution to be converted.
+
+        Returns:
+            tuple: A nested tuple representation of the solution.
+        """
+        normalized_boxes = []
+        for box in sol.boxes:
+            normalized_rects = sorted(
+                [(rect.x, rect.y, rect.width, rect.height, rect.color) for rect in box.items]
+            )
+            normalized_boxes.append(tuple(normalized_rects))
+    
+        return tuple(normalized_boxes)
+        
+    def remove_duplicates(self):
+        if len(self.interim_solutions) > 1:
+            seen_hashes = set()
+            unique_solutions = []
+
+            for solution in self.interim_solutions:
+                # Convert to canonical form and hash it
+                canonical_tuple = self.solution_to_canonical_tuple(solution)
+                solution_hash = hash(canonical_tuple)
+                
+                # Only add if this configuration hasn't been seen before
+                if solution_hash not in seen_hashes:
+                    seen_hashes.add(solution_hash)
+                    unique_solutions.append(solution)
+            self.interim_solutions = unique_solutions
+            self.interim_index = len(self.interim_solutions)-1
+        
     def go_to_last(self):
         if len(self.interim_solutions) > 0 :
             self.interim_index = len(self.interim_solutions)-1
@@ -509,6 +546,7 @@ class RectanglePackerVisualizer(GUI):
                 rulebased_strategy = self.rulebased_strat.get()
             self.solution, self.interim_solutions = self.simulated_annealing(self.instances, self.box_size, neighborhood, rulebased_strategy, start_temp, end_temp, (100-cool_down_rate)/100, constant, max_time)    
         self.interim_index = len(self.interim_solutions)-1
+        self.remove_duplicates()
         self.update_progress_bar()
         self.update_position_label()
         self.draw()

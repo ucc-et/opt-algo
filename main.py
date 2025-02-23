@@ -2,7 +2,7 @@ import tkinter as tk
 
 from base_classes.algorithms import Greedy, LocalSearch, Backtracking, SimulatedAnnealing
 from rectangle_packer_classes.helpers import get_neighborhood_and_start_solution, merge_geometry_based_solutions, GreedyStrategy, Neighborhoods, apply_greedy_strategy
-from rectangle_packer_classes.problem_classes import RectanglePacker, RecPac_Solution, Box
+from rectangle_packer_classes.problem_classes import RectanglePacker, RecPac_Solution
 from rectangle_packer_classes.rectangle_packer_viewer import RectanglePackerVisualizer
 
 
@@ -66,7 +66,7 @@ def main():
         solution, interim_solutions = backtracking_solver.solve()
         return solution, interim_solutions
 
-    def simulated_annealing_runner(items, container_size, neighborhood_name, strategy_rulebased, initial_temperature=1000, end_temperature=25, cooling_rate=0.95, iterations_per_temp=10, max_time=10):
+    def simulated_annealing_runner(items, container_size, neighborhood_name=Neighborhoods.GEOMETRY.value, strategy_rulebased="", initial_temperature=1000, end_temperature=25, cooling_rate=0.95, iterations_per_temp=10, max_time=10):
         """
         Runs Simulated Annealing algorithm for rectangle packing.
         

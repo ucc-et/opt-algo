@@ -1,9 +1,6 @@
-
-import cProfile
-import time
 from typing import List
 from base_classes.types import Item, Solution, Container, OptimizationProblem
-from numba import njit
+import rectangle_packer_classes.helpers
 import numpy as np
 
 class Rectangle(Item):
@@ -115,7 +112,7 @@ class RecPac_Solution(Solution):
         Returns:
             int: overlapping area
         """
-        return compute_overlap_numba(rect1.x, rect1.y, rect1.width, rect1.height,
+        return rectangle_packer_classes.helpers.compute_overlap_numba(rect1.x, rect1.y, rect1.width, rect1.height,
                                  rect2.x, rect2.y, rect2.width, rect2.height)
     
     def are_solutions_equal(self, compare_solution):
@@ -154,77 +151,6 @@ class RecPac_Solution(Solution):
 
     def __repr__(self):
         return f"RecPac_Solution(boxes={self.boxes})"
-
-@njit 
-def compute_overlap_numba(x1, y1, w1, h1, x2, y2, w2, h2):
-    """
-    Fast overlap computation using Numba JIT compilation
-    
-    Args: 
-        x1, y1, w1, h1, x2, y2, w2, h2: position and dimension of rectangles, so they can be used by numba
-    """
-    x_overlap = max(0, min(x1 + w1, x2 + w2) - max(x1, x2))
-    y_overlap = max(0, min(y1 + h1, y2 + h2) - max(y1, y2))
-    return x_overlap * y_overlap
-
-@njit
-def find_valid_assignment_numba(container_size, items_x, items_y, items_width, items_height, item_width, item_height, overlap_percentage):
-    """
-    Finds a valid position for a new rectangle using an occupancy grid approach and utilizing njit.
-
-    Args:
-        container_size (int): size of the container
-        items_x, items_y, items_width, items_height (np.array): Arrays of existing rectangle positions and sizes, where the position i, will provide all the info for rectangle i. 
-        item_width, item_height (int): dimensions of the rectangle, for which the assignment is searched
-        overlap_percentage (float): Allowed overlap percentage
-
-    Returns:
-        tuple: (x, y) position if valid, otherwise (-1, -1).
-    """
-
-    occupancy_grid = np.zeros((container_size, container_size), dtype=np.uint8)
-
-    # fill occupancy grid with existing rectangles
-    for i in range(len(items_x)):
-        x1, y1 = items_x[i], items_y[i]
-        x2, y2 = x1 + items_width[i], y1 + items_height[i]
-        occupancy_grid[x1:x2, y1:y2] = 1
-
-    # compute integral image for fast overlap calculations
-    integral_image = np.zeros_like(occupancy_grid, dtype=np.int32)
-
-    for x in range(container_size):
-        for y in range(container_size):
-            integral_image[x, y] = occupancy_grid[x, y]
-            if x > 0:
-                integral_image[x, y] += integral_image[x-1, y]
-            if y > 0:
-                integral_image[x, y] += integral_image[x, y-1]
-            if x > 0 and y > 0:
-                integral_image[x, y] -= integral_image[x-1, y-1]
-
-    # check for valid positions
-    for y in range(container_size - item_height + 1):
-        for x in range(container_size - item_width + 1):
-            x2, y2 = x + item_width - 1, y + item_height - 1
-            total_area = item_width * item_height
-
-            overlap_area = integral_image[x2, y2]
-            if x > 0:
-                overlap_area -= integral_image[x-1, y2]
-            if y > 0:
-                overlap_area -= integral_image[x2, y-1]
-            if x > 0 and y > 0:
-                overlap_area += integral_image[x-1, y-1]
-
-            overlap_ratio = overlap_area / total_area
-
-            if overlap_ratio <= overlap_percentage:
-                return x, y
-
-    return -1, -1
-
-
 
 class RectanglePacker(OptimizationProblem):
     """
@@ -296,13 +222,13 @@ class RectanglePacker(OptimizationProblem):
         items_height = np.array([r.height for r in container.items], dtype=np.int32)
 
         # try placing the item without rotation
-        x, y = find_valid_assignment_numba(self.container_size, items_x, items_y, items_width, items_height, item.width, item.height, overlap_percentage)
+        x, y = rectangle_packer_classes.helpers.find_valid_assignment_numba(self.container_size, items_x, items_y, items_width, items_height, item.width, item.height, overlap_percentage)
         if x != -1:
             return x, y, False # no rotation needed
 
         # try placing the item with a rotation, but only if the dimensions are different
         if item.width != item.height:
-            x, y = find_valid_assignment_numba(self.container_size, items_x, items_y, items_width, items_height, item.height, item.width, overlap_percentage)
+            x, y = rectangle_packer_classes.helpers.find_valid_assignment_numba(self.container_size, items_x, items_y, items_width, items_height, item.height, item.width, overlap_percentage)
             if x != -1:
                 return x, y, True # rotation needed
 
