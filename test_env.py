@@ -59,7 +59,7 @@ class TestEnvironment:
         for strategy in GreedyStrategy:
             for i, instance_set in enumerate(self.instances):
                 start_time = time.time()
-                instance_set_copy = quick_copy(instance_set)
+                instance_set_copy = copy.deepcopy(instance_set)
                 instance_set_copy = apply_greedy_strategy(instance_set_copy, strategy.value)
                 
                 problem = RectanglePacker(instance_set_copy, self.box_length)
@@ -90,7 +90,7 @@ class TestEnvironment:
         print("\nStarting Local Search...")
         for neighborhood in Neighborhoods:
             for i, instance_set in enumerate(self.instances):
-                instance_set_copy = quick_copy(instance_set)
+                instance_set_copy = copy.deepcopy(instance_set)
                 problem = RectanglePacker(instance_set_copy, self.box_length)
                 
                 if neighborhood.value == Neighborhoods.GEOMETRY.value:
@@ -114,7 +114,7 @@ class TestEnvironment:
         Runs the backtracking algorithm on all instances.
         """
         print("\nStarting Backtracking...")
-        for i, instance_set in enumerate(quick_copy(self.instances)):
+        for i, instance_set in enumerate(copy.deepcopy(self.instances)):
             problem = RectanglePacker(instance_set, self.box_length)
             solver = Backtracking(problem, RecPac_Solution, True)
             start_time = time.time()
@@ -131,7 +131,7 @@ class TestEnvironment:
         Runs the simulated annealing algorithm on all instances.
         """
         print("\nStarting Simulated Annealing...")
-        for i, instance_set in enumerate(quick_copy(self.instances)):
+        for i, instance_set in enumerate(copy.deepcopy(self.instances)):
             problem = RectanglePacker(instance_set, self.box_length)
             start_solution, neighborhood = merge_geometry_based_solutions(problem, Neighborhoods.GEOMETRY.value, instance_set, self.box_length, "", self.greedy_runner)
             
@@ -295,7 +295,7 @@ if __name__ == "__main__":
     test_env.box_length = 100
     
     # Quick for handover:
-    test_env.generate_instances(5, 1000, 2, 3, 7, 9)
+    test_env.generate_instances(5, 10, 2, 3, 7, 9)
     
     # Meaningful with protocol:
     # test_env.generate_instances(10, 150, 10, 15, 18, 23)
