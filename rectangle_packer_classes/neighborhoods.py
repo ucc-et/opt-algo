@@ -106,7 +106,7 @@ class RuleBasedStrategy(Neighborhood):
         current_solution = RecPac_Solution()
         items = [] # current permutation
         for box in solution.boxes:
-            items.extend(box.items)
+            items.extend([rectangle_packer_classes.helpers.quick_copy_item(item) for item in box.items])
 
         # only rearrange items if there are at least two rectangles
         if len(items) > 1:

@@ -5,6 +5,7 @@ import numpy as np
 from numba import njit
 
 from base_classes.types import OptimizationProblem
+from rectangle_packer_classes.problem_classes import Rectangle
 from rectangle_packer_classes.utils import color_to_int, copy_numpy_array, int_to_color
 from .neighborhoods import GeometryBasedStrategy, RuleBasedStrategy, OverlapStrategy
 from enum import Enum
@@ -69,6 +70,23 @@ def quick_copy(solution):
         new_solution.add_box(new_box)
     
     return new_solution
+
+@njit
+def copy_numpy_single_arr(arr):
+    """Create a copy of a NumPy array using Numba for speed."""
+    return arr.copy()
+
+def quick_copy_item(item):
+    rect_data = np.array([item.x, item.y, item.width, item.height, color_to_int(item.color)], dtype=np.int32)
+    
+    # Copy the data using Numba for speed
+    copied_rect_data = copy_numpy_single_arr(rect_data)
+    
+    # Extract attributes from the copied data
+    x, y, w, h, c = copied_rect_data
+    
+    # Create and return a new Rectangle object
+    return Rectangle(x, y, w, h, int_to_color(c))
 
 def merge_geometry_based_solutions(problem, neighborhood_name, items, container_size, rulebased_strategy, greedy_algorithm_runner):
     """

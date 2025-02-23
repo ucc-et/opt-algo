@@ -295,10 +295,10 @@ if __name__ == "__main__":
     test_env.box_length = 100
     
     # Quick for handover:
-    #test_env.generate_instances(5, 10, 2, 3, 7, 9)
+    #test_env.generate_instances(1, 1000, 2, 3, 7, 9)
     
     # Meaningful with protocol A:
-    test_env.generate_instances(25, 500, 20, 25, 65, 50)
+    #test_env.generate_instances(1, 500, 20, 25, 65, 50)
     
     test_env.max_iterations = 21
     test_env.run()
