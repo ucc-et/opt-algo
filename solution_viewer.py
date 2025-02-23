@@ -17,6 +17,7 @@ class SolutionViewer(GUI):
         self.solutionsalgorithms = []
         self.rectangle_colors = {}
         
+        self.step_size = 1
         self.current_index = 0
         self.zoom_factor = 1.0
         self.zoom_steps = 0
@@ -80,11 +81,24 @@ class SolutionViewer(GUI):
         btn_zoom_out = tk.Button(frame_buttons, text="Zoom Out", command=self.zoom_out)
         btn_zoom_out.grid(row=0, column=3, padx=5)
         
+        self.step_size_label = tk.Label(frame_buttons, text="Schrittgröße: ")
+        self.step_size_label.grid(row=1, column=2, padx=5)
+        self.step_size_entry = tk.Entry(frame_buttons, width=5)
+        self.step_size_entry.insert(0, "1")  # Default step size
+        self.step_size_entry.grid(row=1, column=3, padx=5)
+        self.step_size_entry.bind("<KeyRelease>", self.update_step_size)
+        
+        btn_iterate_start = tk.Button(frame_buttons, text="<<", command=self.jump_to_start)
+        btn_iterate_start.grid(row=2, column=1, padx=5)
+        
         btn_iterate_left = tk.Button(frame_buttons, text="<", command=self.lower_solution_index)
-        btn_iterate_left.grid(row=1, column=2, padx=5)
+        btn_iterate_left.grid(row=2, column=2, padx=5)
         
         btn_iterate_right = tk.Button(frame_buttons, text=">", command=self.increase_solution_index)
-        btn_iterate_right.grid(row=1, column=3, padx=5)
+        btn_iterate_right.grid(row=2, column=3, padx=5)
+        
+        btn_iterate_end = tk.Button(frame_buttons, text=">>", command=self.jump_to_end)
+        btn_iterate_end.grid(row=2, column=4, padx=5)
         
         # Labels for solution metadata
         self.label_algorithm = tk.Label(self.root, text=f"Algorithm: {self.solutionsalgorithms[self.current_index]['algorithm']}")
@@ -111,24 +125,47 @@ class SolutionViewer(GUI):
 
         self.canvas.configure(yscrollcommand=v_scrollbar.set)
         
-        self.canvas.bind_all("<MouseWheel>", self.on_mousewheel)
+        self.canvas.bind("<MouseWheel>", self.on_mousewheel)
+
+    def jump_to_start(self):
+        self.current_index = 0
+        self.update_labels()
+        self.redraw_canvas()
+        
+    def jump_to_end(self):
+        self.current_index = len(self.solutions)-1
+        self.update_labels()
+        self.redraw_canvas()
 
         
     def lower_solution_index(self):
         """
         Moves to the previous solution and updates labels.
         """
-        if self.current_index > 0:
-            self.current_index -= 1
+        new_index = max(0, self.current_index - self.step_size)
+        if new_index != self.current_index:
+            self.current_index = new_index
             self.update_labels()
             self.redraw_canvas()
+
+
+    def update_step_size(self, event=None):
+        if self.step_size_entry.get() == "":
+            return
+        step_size = int(self.step_size_entry.get())
+        if step_size < 1:
+            return
+        self.step_size = step_size
+            
+            
 
     def increase_solution_index(self):
         """
         Moves to the next solution and updates labels.
         """
-        if self.current_index < len(self.solutions) - 1:
-            self.current_index += 1
+        new_index = min(len(self.solutions) - 1, self.current_index + self.step_size)
+        if new_index != self.current_index:
+            self.current_index = new_index
             self.update_labels()
             self.redraw_canvas()
 
