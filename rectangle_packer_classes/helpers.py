@@ -41,13 +41,13 @@ class Neighborhoods(Enum):
 @njit
 def copy_numpy_array(array):
     """
-    Quickly copies a NumPy array using Numba's JIT compilation.
+    Quickly copies a NumPy array using numba.
     
     Args:
         array (np.ndarray): Input array to copy.
     
     Returns:
-        np.ndarray: A deep copy of the input array.
+        np.ndarray: A deep copy of the input array which is generated faster than copy.deepcopy.
     """
     copy = np.empty_like(array)
     for i in range(array.shape[0]):
@@ -58,7 +58,7 @@ def copy_numpy_array(array):
 def color_to_int(color):
     """
     Converts a color name to a unique integer.
-    Ensures consistency in color preservation.
+    Ensures consistency in color preservation and allows to copy the rectangle data with numba.
     """
     color_map = {
         "red": 1,
@@ -96,19 +96,19 @@ def quick_copy(solution: RecPac_Solution):
     Returns:
         Solution: A deep copy of the input solution.
     """
-    # Step 1: Extract data into NumPy arrays
+    # extract data into numpy arrays
     boxes_data = []
     for box in solution.boxes:
         items_data = np.array([[rect.x, rect.y, rect.width, rect.height, color_to_int(rect.color)] for rect in box.items], dtype=np.int32)
         boxes_data.append(items_data)
-
-    # Step 2: Copy data using Numba for speed
+        
+    # copy data using numba for speed
     copied_boxes_data = [copy_numpy_array(data) for data in boxes_data]
     
-    # Step 3: Reconstruct Solution object
-    new_solution = solution.__class__()  # Dynamically create a new Solution object
+    # rebuild solution object
+    new_solution = solution.__class__()
     for box_data in copied_boxes_data:
-        new_box = Box(solution.boxes[0].box_length)  # Assume uniform box length
+        new_box = Box(solution.boxes[0].box_length)
         for rect_data in box_data:
             x, y, w, h, c = rect_data
             new_box.add_item(Rectangle(x, y, w, h, int_to_color(c)))
@@ -234,3 +234,5 @@ def apply_rule(items, rule_name):
         return sorted(items, key=lambda item: item.height*item.width, reverse=True)
     elif rule_name == Rules.WIDTH_FIRST.value:
         return sorted(items, key=lambda item: item.width, reverse=True)
+    else:
+        print("NOTHING")

@@ -35,22 +35,20 @@ class TestEnvironment:
         """
         print("\nRunning All Tests...")
         
-        # Run Greedy with all strategies
+        # Run greedy with all strategies
         self.run_greedy()
         
-        # Run Local Search with all neighborhoods
+        # Run local search with all neighborhoods
         self.run_local_search()
         
-        # Run Backtracking
+        # Run backtracking
         self.run_backtracking()
         
-        # Run Simulated Annealing
+        # Run simulated annealing
         self.run_simulated_annealing()
         
         # Save all solutions and create protocol
-        self.save_solutions()
         self.create_protocol()
-        
         self.extract_solutions_for_viewer()
 
     def run_greedy(self):
@@ -61,7 +59,7 @@ class TestEnvironment:
         for strategy in GreedyStrategy:
             for i, instance_set in enumerate(self.instances):
                 start_time = time.time()
-                instance_set_copy = copy.deepcopy(instance_set)
+                instance_set_copy = quick_copy(instance_set)
                 instance_set_copy = apply_greedy_strategy(instance_set_copy, strategy.value)
                 
                 problem = RectanglePacker(instance_set_copy, self.box_length)
@@ -78,7 +76,7 @@ class TestEnvironment:
 
     def greedy_runner(self, items, container_size, strategy_name):
         """
-        Utility function to run the Greedy algorithm with the given strategy.
+        Greedy runner method that will be utilized by others for start solutions.
         """
         problem = RectanglePacker(items, container_size)
         greedy_solver = Greedy(problem, RecPac_Solution, apply_greedy_strategy, strategy_name, True)
@@ -92,7 +90,7 @@ class TestEnvironment:
         print("\nStarting Local Search...")
         for neighborhood in Neighborhoods:
             for i, instance_set in enumerate(self.instances):
-                instance_set_copy = copy.deepcopy(instance_set)
+                instance_set_copy = quick_copy(instance_set)
                 problem = RectanglePacker(instance_set_copy, self.box_length)
                 
                 if neighborhood.value == Neighborhoods.GEOMETRY.value:
@@ -116,7 +114,7 @@ class TestEnvironment:
         Runs the backtracking algorithm on all instances.
         """
         print("\nStarting Backtracking...")
-        for i, instance_set in enumerate(copy.deepcopy(self.instances)):
+        for i, instance_set in enumerate(quick_copy(self.instances)):
             problem = RectanglePacker(instance_set, self.box_length)
             solver = Backtracking(problem, RecPac_Solution, True)
             start_time = time.time()
@@ -133,7 +131,7 @@ class TestEnvironment:
         Runs the simulated annealing algorithm on all instances.
         """
         print("\nStarting Simulated Annealing...")
-        for i, instance_set in enumerate(self.instances):
+        for i, instance_set in enumerate(quick_copy(self.instances)):
             problem = RectanglePacker(instance_set, self.box_length)
             start_solution, neighborhood = merge_geometry_based_solutions(problem, Neighborhoods.GEOMETRY.value, instance_set, self.box_length, "", self.greedy_runner)
             
@@ -177,69 +175,6 @@ class TestEnvironment:
 
         return (covered_by_items / total_box_area) * 100
 
-    def save_solutions(self):
-        """
-        Saves all solutions to a JSON file for further analysis.
-        Organized by algorithm and strategy/neighborhood.
-        """
-        if not os.path.exists("solutions"):
-            os.makedirs("solutions")
-        
-        # Struktur für die JSON-Ausgabe
-        solution_data = {
-            "test_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "box_length": self.box_length,
-            "instances": len(self.instances),
-            "rectangles_per_instance": len(self.instances[0]),
-            "solutions": []
-        }
-        
-        def prepare_solution_data(solutions, algorithm_name):
-            for solution_dict in solutions:
-                solution = solution_dict["solution"]
-                if isinstance(solution, tuple):
-                    solution = solution[0]  # Falls es ein Tuple ist, den ersten Wert nehmen
-                
-                # Metadaten zu Algorithmus und Strategie/Nachbarschaft
-                solution_metadata = {
-                    "algorithm": algorithm_name,
-                    "strategy": solution_dict.get("strategy"),
-                    "neighborhood": solution_dict.get("neighborhood"),
-                    "boxes": [],
-                }
-                
-                # Lösung analysieren
-                for box in solution.boxes:
-                    box_data = []
-                    for rect in box.items:
-                        box_data.append({
-                            "x": int(rect.x),
-                            "y": int(rect.y),
-                            "w": int(rect.width),
-                            "h": int(rect.height)
-                        })
-                    solution_metadata["boxes"].append(box_data)
-                
-                # Statistiken berechnen
-                solution_metadata["num_boxes"] = len(solution.boxes)
-                solution_metadata["utilization"] = [self.calculate_covered_area(box) for box in solution.boxes]
-                solution_metadata["overlap_percentage"] = 0  # Hier ggf. Berechnung hinzufügen
-                
-                solution_data["solutions"].append(solution_metadata)
-        
-        # Lösungen für alle Algorithmen speichern
-        prepare_solution_data(self.greedy_solutions, "Greedy")
-        prepare_solution_data(self.local_search_solutions, "Local Search")
-        prepare_solution_data(self.backtracking_solutions, "Backtracking")
-        prepare_solution_data(self.sim_annealing_solutions, "Simulated Annealing")
-        
-        # Speichern in JSON-Datei
-        file_name = f"solutions/solutions_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        with open(file_name, "w", encoding="utf-8") as f:
-            json.dump(solution_data, f, indent=4, ensure_ascii=False)
-        
-        print(f"Solutions saved at: {file_name}")
-
     def create_protocol(self):
         """
         Creates a detailed JSON protocol for all test results.
@@ -248,7 +183,7 @@ class TestEnvironment:
         if not os.path.exists("protocols"):
             os.makedirs("protocols")
         
-        # Struktur für die JSON-Ausgabe
+        # json protocol output structure
         protocol_data = {
             "test_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "box_length": self.box_length,
@@ -261,12 +196,12 @@ class TestEnvironment:
             for i, solution_dict in enumerate(solutions):
                 solution = solution_dict["solution"]
                 if isinstance(solution, tuple):
-                    solution = solution[0]  # Falls es ein Tuple ist, den ersten Wert nehmen
+                    solution = solution[0]  # if its a tuple take first value
                 
-                # Flächenauslastung berechnen
+                # calculate area utilization
                 utilization = [self.calculate_covered_area(box) for box in solution.boxes]
 
-                # Strukturierte Speicherung der Daten
+                # save data
                 protocol_data["algorithms"].append({
                     "algorithm": algorithm_name,
                     "instance": i + 1,
@@ -277,13 +212,13 @@ class TestEnvironment:
                     "neighborhood": solution_dict.get("neighborhood")
                 })
         
-        # Lösungen für alle Algorithmen protokollieren
+        # make a protocol for all solutions for each algorithm
         add_protocol_data(self.greedy_solutions, self.times_greedy, "Greedy")
         add_protocol_data(self.local_search_solutions, self.times_local_search, "Local Search")
         add_protocol_data(self.backtracking_solutions, self.times_backtracking, "Backtracking")
         add_protocol_data(self.sim_annealing_solutions, self.times_sim_annealing, "Simulated Annealing")
         
-        # Speichern in JSON-Datei
+        # save in json file
         file_name = f"protocols/protocol_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
         with open(file_name, "w", encoding="utf-8") as f:
             json.dump(protocol_data, f, indent=4, ensure_ascii=False)
@@ -308,7 +243,6 @@ class TestEnvironment:
             Generates a consistent color for each rectangle.
             """
             color_choices = ["red", "green", "blue", "yellow", "purple", "orange", "cyan"]
-            # Color is chosen based on rectangle dimensions to ensure consistency
             return color_choices[(rect.width * rect.height) % len(color_choices)]
         
         def add_viewer_data(solutions, algorithm_name):
@@ -340,22 +274,6 @@ class TestEnvironment:
                         })
                     solution_metadata["boxes"].append(box_data)
                 
-                # Extract interim solutions for step-by-step viewing
-                for interim_solution in interim_solutions:
-                    interim_boxes = []
-                    for box in interim_solution.boxes:
-                        box_data = []
-                        for rect in box.items:
-                            box_data.append({
-                                "x": rect.x,
-                                "y": rect.y,
-                                "w": rect.width,
-                                "h": rect.height,
-                                "color": generate_color(rect)
-                            })
-                        interim_boxes.append(box_data)
-                    solution_metadata["interim_solutions"].append(interim_boxes)
-                
                 viewer_data["solutions"].append(solution_metadata)
         
         # Extract data for all algorithms
@@ -376,10 +294,10 @@ if __name__ == "__main__":
     test_env = TestEnvironment()
     test_env.box_length = 100
     
-    # Schnell und für die Abnahme:
+    # Quick for handover:
     test_env.generate_instances(5, 1000, 2, 3, 7, 9)
     
-    # Aussagekräftig für Protokoll:
+    # Meaningful with protocol:
     # test_env.generate_instances(10, 150, 10, 15, 18, 23)
     
     test_env.max_iterations = 21

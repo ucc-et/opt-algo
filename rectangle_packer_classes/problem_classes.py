@@ -1,4 +1,6 @@
 
+import cProfile
+import time
 from typing import List
 from base_classes.types import Item, Solution, Container, OptimizationProblem
 from numba import njit
