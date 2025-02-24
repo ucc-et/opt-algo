@@ -95,14 +95,14 @@ $$\text{Score}=(w_1 \times \text{numBoxes})+(w_2\times (1-\text{utilization}))+(
 ## Speed up methods
 
 Due to the speed bottleneck of python we utilized different methods to speed things up as much as we can.
-* NumPy: we use NumPy for different reasons. Numpy is a strong numerical computing library, which is very helpful due to its efficiency, speed and versatility when dealing with large data sets. Although we need to parse our rectangle data into numpy arrays and do the computations on those, it is still faster than doing the calculations with python loops. 
-    * Overlap calculations: Due to the allowed overlap feature we need to calculate the overlaps between rectangles. This we do with a numpy representation of the rectangles in a box. The overlap width and height are calculated like the following: $$\text{overlap\_width}=\max(0, \min(x_1+w_1, x_2+w_2)-\max(x_1, x_2))$$
+* **NumPy**: we use NumPy for different reasons. Numpy is a strong numerical computing library, which is very helpful due to its efficiency, speed and versatility when dealing with large data sets. Although we need to parse our rectangle data into numpy arrays and do the computations on those, it is still faster than doing the calculations with python loops. 
+    * **Overlap calculations**: Due to the allowed overlap feature we need to calculate the overlaps between rectangles. This we do with a numpy representation of the rectangles in a box. The overlap width and height are calculated like the following: $$\text{overlap\_width}=\max(0, \min(x_1+w_1, x_2+w_2)-\max(x_1, x_2))$$
     $$\text{overlap\_height}=\max(0, \min(y_1+h_1, y_2+h_2)-\max(y_1, y_2))$$
 
     * Fast copying: Due to the fact, we save interim solutions, we need to create copies of objects, to make them independent and not changed later on. Because of that we first wanted to utilize copy.deepcopy(), which is extremely slow. To overcome this issue we wrote our own methods utilizing NumPy and also the numba compiler to copy the needed objects faster. 
 
-* NJit: using Numbas njit decorator allowed us to overcome the performance bottlenecks of python by compiling the functino to machine code by using LLVM. This leads to immense performance gains.
-    * find_valid_placement: The most important thing we use Numba for is the search for valid_placements. We use a occupancy grid to represent a box and its occupied spaces. That we use to build a integral image for faster calculations. The integral image allows us to to calculate the sum of cells in a rectangular area in constant time to check if the space is occupied.
+* **NJit**: using Numbas njit decorator allowed us to overcome the performance bottlenecks of python by compiling the functino to machine code by using LLVM. This leads to immense performance gains.
+    * **find_valid_placement**: The most important thing we use Numba for is the search for valid_placements. We use a occupancy grid to represent a box and its occupied spaces. That we use to build a integral image for faster calculations. The integral image allows us to to calculate the sum of cells in a rectangular area in constant time to check if the space is occupied.
     $$I(x,y)=O(x,y)+I(x-1,y)+I(x,y-1)-I(x-1, y-1)$$
     * $I(x,y)$ is the value at point $(x, y)$ in the integral image.
     * $O(x,y)$ is the value at point $(x, y)$ in the occupancy grid.
@@ -110,3 +110,11 @@ Due to the speed bottleneck of python we utilized different methods to speed thi
     * $A$ is the overlap area
     * $(x_1, y_1)$ is the bottom left corner of the rectangle
     * $(x_2, y_2)$ is the top-right corner of the rectangle
+
+## What could be improved
+
+* **Add more optimization problems**: Due to this project being a type of framework for solving, it would be nice to add more optimization problems to demonstrate the effectiveness of the algorithms. 
+* **Adding more algorithms**: There are other algorithms that have not yet been used in this project which might be a great addition to this project like population based approaches.
+* **Optimizing double calculation**: currently most of the calculations happen locally, meaning if for example we check overlaps we calculate the occupancy grid and integral image everytime. Although this still allows us to be way faster then manually checking with for loops only, it would make sense to store the integral iamge for each box. Due to the deadline of this project, this was not adjusted so far, but will be in the future.
+* **Better code organization to overcome circular imports**: due to circular imports across files we had to adjust the importing of other methods. This lead to a inconsistency regarding import syntax which shall be improved.
+* **Better usability in the user-interface**: the UI implemented with tkinter is definitely allowing us to use the software and configure what we can. But we would love to deep dive into different UI frameworks to see what else we could do to improve the usability of this project. Especially because this project is not only a assignment, but also a educational representation of the algorithms and the optimization problems. So maybe finding a different framework or working with a combination of python and html/jss frontend views could be beneficial for the sake of this project.
