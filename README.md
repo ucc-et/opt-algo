@@ -77,6 +77,21 @@ This project has a total of 4 algorithms implemented:
 
 * Simulated Annealing: Given a start temperature, end temperature, cooling tempo, dwell rate and max time we generate new neighbors according to the geometry neighborhood. With a probabilistic decision we determine if we accept the generated solution or not even if its worse.
 
+## Evaluation of solutions in rectangle packing
+
+The evaluate function is designed to assess the quality of a rectangle packing solution by considering multiple aspects: the number of boxes used, space utilization, unused space, and overlapping areas. The goal is to minimize the evaluation score, with lower scores representing better solutions. 
+
+### Components of the evaluation function
+
+1. Number of boxes ($w_1$)
+2. Space utilization ($w_2$)
+3. Unused space ($w_3$)
+4. Overlapping items ($w_4$)
+
+This results in a following calculation of a evaluation: 
+$$\text{Score}=(w_1 \times \text{numBoxes})+(w_2\times (1-\text{utilization}))+(w_3 \times \text{unusedSpace})+(w_4\times \text{totalOverlapArea})$$
+
+
 ## Speed up methods
 
 Due to the speed bottleneck of python we utilized different methods to speed things up as much as we can.
