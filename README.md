@@ -118,3 +118,9 @@ Due to the speed bottleneck of python we utilized different methods to speed thi
 * **Optimizing double calculation**: currently most of the calculations happen locally, meaning if for example we check overlaps we calculate the occupancy grid and integral image everytime. Although this still allows us to be way faster then manually checking with for loops only, it would make sense to store the integral iamge for each box. Due to the deadline of this project, this was not adjusted so far, but will be in the future.
 * **Better code organization to overcome circular imports**: due to circular imports across files we had to adjust the importing of other methods. This lead to a inconsistency regarding import syntax which shall be improved.
 * **Better usability in the user-interface**: the UI implemented with tkinter is definitely allowing us to use the software and configure what we can. But we would love to deep dive into different UI frameworks to see what else we could do to improve the usability of this project. Especially because this project is not only a assignment, but also a educational representation of the algorithms and the optimization problems. So maybe finding a different framework or working with a combination of python and html/jss frontend views could be beneficial for the sake of this project.
+
+# Used assets
+* Export Icon: Created by Chanut on Flaticon
+* Import Icon: Created by Ferdinand on Flaticon
+* Zoom-In Icon: Created by Stasy on Flaticon
+* Zoom-Out Icon: Created by nahumam on Flaticon
