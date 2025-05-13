@@ -127,3 +127,27 @@ python test_env.py
 
 # 4. Review solution outputs
 python solution_viewer.py
+```
+---
+
+## 🔧 What could be improved
+This project is a good foundation to build up on. These are some ideas we had, this might go to in the future:
+- more optimization problems: use this repo as a launchpad for scheduling, routing, or knapsack variants.
+- more algorithms: generic algorithms for genetic algos or maybe cp
+- smarter memory usage: cache and reuse calculations like integral images
+- cleaner architecture: resolve circular import issues, enfore stricter modularity
+- ui upgrades: this was the first time we used tkinter excessively, so maybe we can think of some improvements with PyQt or web-based visualization.
+
+---
+
+## 🗂️ used assets and references
+- Export Icon: Chanut - Flaticon
+- Import Icon: Ferdinand - Flaticon
+- Zoom-In Icon: Stasy - Flaticon
+- Zoom-Out Icon: nahumam - Flaticon
+
+## Final thoughts
+
+ This project is a blend of theory and practical algorithm design. It's been a rewarding way to apply what we've learned in optimiziation, performance tuning, and user-centric design. We are eager to see where this goes next, as soon as we have time of course.
+
+ Pull requests, ideas or new problem types are more than welcome!
