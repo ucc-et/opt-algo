@@ -6,6 +6,8 @@ Welcome to the **Optimization Framework** — a modular, extendable, and perform
 
 At its core, this project was more than just a course assignment — it was a chance to build a **general-purpose optimization engine** that combines powerful techniques with real-world visualization and testing capabilities. Whether you’re exploring classic Greedy logic or experimenting with Simulated Annealing, this framework lays the groundwork for scalable and reusable algorithmic exploration.
 
+It was also a lot of fun to implement this, which is why the documentation is so thorough at this point.
+
 Currently, the framework supports the **Rectangle Packing Problem**, complete with:
 - 🔁 Multiple optimization strategies (Greedy, Local Search, Backtracking, Simulated Annealing)
 - 🎨 A user interface for configuration and visualization
