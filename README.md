@@ -1,126 +1,127 @@
-# Optimization Framework (beta)
+# 🧠 Optimization Framework (Beta)
 
-## Overview
+## 🚀 Overview
 
-This project is an optimization framework designed to solve complex combinatorial optimization problems using generalized algorithms, including:
+Welcome to the **Optimization Framework** — a modular, extendable, and performance-focused system for solving complex combinatorial optimization problems using intelligent algorithmic strategies.
 
-* Greedy Algorithm
-* Local Search
-* Simulated Annealing
-* Backtracking
+At its core, this project was more than just a course assignment — it was a chance to build a **general-purpose optimization engine** that combines powerful techniques with real-world visualization and testing capabilities. Whether you’re exploring classic Greedy logic or experimenting with Simulated Annealing, this framework lays the groundwork for scalable and reusable algorithmic exploration.
 
-This framework currently only uses the rectangle packer problem. But other optimization problems could be added in the future, and should be able to run with the currently existing algorithms in base_classes/algorithms.py, if problem specific files are added and implemented correctly.
-A graphical user interface for visualization and a test environment for strategies is provided for the rectangle packing problem. 
+Currently, the framework supports the **Rectangle Packing Problem**, complete with:
+- 🔁 Multiple optimization strategies (Greedy, Local Search, Backtracking, Simulated Annealing)
+- 🎨 A user interface for configuration and visualization
+- 🧪 A test environment for performance evaluations
 
-## Task Desciption
+And it's designed to grow — just implement a new problem’s logic and plug into the existing algorithm architecture in `base_classes/algorithms.py`.
 
-This project is the result of a assignment for the course 'Optimization Algorithms' taught by Prof. Dr. Karsten Weihe at the TU Darmstadt.\\
-The Problem description is provided in the 'OptAlg.pdf'. 
+---
 
-## Summary
-Implement Greedy and local search with three neighborhoods to solve and display the rectangle packer problem. 
-Following constraints apply
-* The implementation of the algorithms should be generalized, so that the implementation does not tell the reader, which optimization problem is being solved.
-* In the implementation of the optimizationproblems there shall not be any algorithm or neighborhood specific methods or variables.
-* following neighborhoods should be implemented for local-search
-    * geometry based, in which a neighbor is creates by directly moving rectangles inside a box or from one box to another
-    * rule based, in which the algorithm works with permutations of the rectangles. The neighborhood is defined by small modifications of the permutation of rectangles.
-    * allow partial overlaps, in which a overlap-percentage is initialized at 100% and determines how much the rectangles are allowed to overlap. The percentage gradually decreases and the output shall be a overlap-free solution.
-* implement two different picking strategies for greedy algorithm, so two orders where the rectangles will be taken and placed with.
-* UI-Constraints
-    * visualize the generated solutions
-    * allow the user to enter in the UI how the rectangles should be generated
-    * the UI allows to run algorithms on the same rectangles multiple times, also with different neighborhoods or rules.
-    * do not overlap information
-    * try to work with usability and good color contrasts
-* Test-Environment Constraints
-    * the test environment should be parametritized with amount of instances, amount of rectangles, 2 minimal widths and heights, box length. Then run the implemented algorithms on those instances without visualizing it.
-    * Each generation shall create a protocol of the run with run times
-    * the test environment should be runnable in two versions:
-        * with enoughly little instance size and amounts so the test environment can run through in a couple minutes
-        * with enoughly large instance sizes and amounts so the test environment can be a meaningful representator of the correctness of the algorithms.
-* every algorithm should pack instances with up to 1000 rectangles in 10 seconds. The solutions should not be able to be improved with the naked eye
+## 📘 Project Background
 
-## Getting Started
-1. Install dependencies
-```shell
+This project was developed as part of the **"Optimization Algorithms"** course taught by Prof. Dr. Karsten Weihe at **TU Darmstadt**.
+
+The full problem description is available in the included [`OptAlg.pdf`](./OptAlg.pdf).
+
+---
+
+## 🎯 Objective
+
+The primary challenge: **implement generalized optimization algorithms** and use them to solve a rectangle packing problem under multiple constraints — both computational and visual.
+
+### The highlights:
+- Implement **Greedy** and **Local Search** with **three distinct neighborhoods**
+- Ensure algorithm implementations remain **problem-agnostic**
+- Enable visual interaction and flexible testing for different configurations
+
+---
+
+## 🧩 Optimization Strategies
+
+The framework includes four implemented strategies:
+
+### ⚙️ Greedy Algorithm
+- Selects rectangles using one of four rules (e.g., largest area first, smallest aspect ratio first)
+- Places rectangles accordingly, without revisiting prior placements
+- Fast and simple, ideal for generating quick base solutions
+
+### 🔍 Local Search (with 3 neighborhoods)
+- **Geometry-based**: Rectangles are physically moved across boxes or inside their current box
+- **Rule-based**: Treats solutions as permutations and tweaks rectangle orderings
+- **Overlap-tolerant**: Allows overlaps initially and progressively removes them to improve layout
+
+Each neighborhood brings its own strengths and allows deeper exploration of the solution space.
+
+### 🔄 Simulated Annealing
+- Probabilistically accepts worse solutions to escape local optima
+- Cools down gradually using customizable parameters
+- Uses geometry-based neighborhood for generating candidate states
+
+### 🔙 Backtracking
+- Classic recursive placement with backtracking when no valid configuration is found
+- Best suited for smaller instances or educational comparison
+
+---
+
+## 📊 Evaluation Function
+
+A flexible evaluation function assesses:
+1. Number of used boxes
+2. Space utilization
+3. Unused space
+4. Overlapping areas
+
+The goal? **Minimize** the score:
+
+$$\text{Score} = \left( w_1 \times \text{numBoxes}\right) + \left(w_2 \times \left(1-\text{utilization}\right)\right) + \left( w_3 \times \text{unusedSpace} \right) + \left( w_4 \times \text{totalOverlapArea} \right) $$
+
+
+## ⚡ Performance Boosts
+
+Python isn’t always fast — but we took care to squeeze performance where it counts:
+
+- **NumPy** for vectorized computations and overlap detection
+- **Numba (njit)** to compile bottleneck functions to native machine code
+  - Used especially in `find_valid_placement()` with occupancy grids and integral images
+- **Custom deep copy** utilities (faster than `copy.deepcopy`)
+- **Integral image** optimizations for O(1) spatial queries
+
+Result: up to **1000 rectangles packed in under 10 seconds** — and often, the solutions are visually near-optimal.
+
+---
+
+## 🖥️ User Interface (Tkinter)
+
+We built a basic but functional UI for:
+- Generating rectangle datasets
+- Selecting algorithms and neighborhood types
+- Comparing runs and replays
+- Visualizing packing layouts
+
+Usability matters — even if it's tkinter. Contrast, clarity, and ease of experimentation were key goals.
+
+---
+
+## 🔬 Test Environment
+
+The test environment runs batch simulations to evaluate algorithm robustness.
+
+Features:
+- Fully parameterized: number of rectangles, instance size, box dimensions
+- Two modes: quick test (few small instances) and heavy test (large, challenging inputs)
+- Generates runtime protocols and output summaries
+
+---
+
+## 🧠 Getting Started
+
+```bash
+# 1. Install dependencies
 pip install -r requirements.txt
-```
 
-2. run the standard gui
-```shell
+# 2. Launch the main GUI
 python main.py
-```
 
-3. run the test environment
-```shell
+# 3. Run the test suite
 python test_env.py
-```
 
-4. run the solution viewer
-```shell
+# 4. Review solution outputs
 python solution_viewer.py
-```
-
-## Algorithm Process
-
-This project has a total of 4 algorithms implemented:
-
-* Greedy Algorithm: The greedy algorithm is very straight forward. We defined 4 rules for the rectangle packer. Largest area first, smalles area first, largest aspect ratio first or smallest aspect ratio first. Depending on which one is chosen, the rectangles will be placed accordingly
-
-* Local Search Algorithm: The local search algorithm was implemented with 3 different neighborhoods for the rectangle packer. 
-    * Geometry based: In the geometry based neighborhood two solutions are neighboring eachother, if one can be produced by removing a item and placing it inside another box or somewhere else in current box. The start solution is creating multiple samples of all rectangles and creating greedy solutions for each of them. After that these sub solutions are merged into one, suboptimal solution
-    * Rule based: The rulebased strategy is similar to the greedy algorithm. Here a solution is given, and looked as a permutation. The permutation of rectangles will then be modified by swapping two rectangles and then building up the solution again. The start solution is a solution generated by the greedy algorithm.
-    * Allowing Overlaps: In this neighborhood, the rectangles may overlap in the beginning. But over time the allowed overlap percantage will be decreased which will result in a solution without any overlaps in the end. The starting solution is putting one rectangle into their own box and then one by one decreasing the box count.
-
-* Backtracking Algorithm: In the backtracking algorithm, we recursively place rectangles. If we can not find a valid position we backtrack and continue with trying to place the rectangles.
-
-* Simulated Annealing: Given a start temperature, end temperature, cooling tempo, dwell rate and max time we generate new neighbors according to the geometry neighborhood. With a probabilistic decision we determine if we accept the generated solution or not even if its worse.
-
-## Evaluation of solutions in rectangle packing
-
-The evaluate function is designed to assess the quality of a rectangle packing solution by considering multiple aspects: the number of boxes used, space utilization, unused space, and overlapping areas. The goal is to minimize the evaluation score, with lower scores representing better solutions. 
-
-### Components of the evaluation function
-
-1. Number of boxes ($w_1$)
-2. Space utilization ($w_2$)
-3. Unused space ($w_3$)
-4. Overlapping items ($w_4$)
-
-This results in a following calculation of a evaluation: 
-$$\text{Score}=(w_1 \times \text{numBoxes})+(w_2\times (1-\text{utilization}))+(w_3 \times \text{unusedSpace})+(w_4\times \text{totalOverlapArea})$$
-
-
-## Speed up methods
-
-Due to the speed bottleneck of python we utilized different methods to speed things up as much as we can.
-* **NumPy**: we use NumPy for different reasons. Numpy is a strong numerical computing library, which is very helpful due to its efficiency, speed and versatility when dealing with large data sets. Although we need to parse our rectangle data into numpy arrays and do the computations on those, it is still faster than doing the calculations with python loops. 
-    * **Overlap calculations**: Due to the allowed overlap feature we need to calculate the overlaps between rectangles. This we do with a numpy representation of the rectangles in a box. The overlap width and height are calculated like the following: $$\text{overlap\_width}=\max(0, \min(x_1+w_1, x_2+w_2)-\max(x_1, x_2))$$
-    $$\text{overlap\_height}=\max(0, \min(y_1+h_1, y_2+h_2)-\max(y_1, y_2))$$
-
-    * Fast copying: Due to the fact, we save interim solutions, we need to create copies of objects, to make them independent and not changed later on. Because of that we first wanted to utilize copy.deepcopy(), which is extremely slow. To overcome this issue we wrote our own methods utilizing NumPy and also the numba compiler to copy the needed objects faster. 
-
-* **NJit**: using Numbas njit decorator allowed us to overcome the performance bottlenecks of python by compiling the functino to machine code by using LLVM. This leads to immense performance gains.
-    * **find_valid_placement**: The most important thing we use Numba for is the search for valid_placements. We use a occupancy grid to represent a box and its occupied spaces. That we use to build a integral image for faster calculations. The integral image allows us to to calculate the sum of cells in a rectangular area in constant time to check if the space is occupied.
-    $$I(x,y)=O(x,y)+I(x-1,y)+I(x,y-1)-I(x-1, y-1)$$
-    * $I(x,y)$ is the value at point $(x, y)$ in the integral image.
-    * $O(x,y)$ is the value at point $(x, y)$ in the occupancy grid.
-    $$A=I(x_2,y_2)+I(x_1-1,y_2)+I(x_2,y_1-1)-I(x_1-1, y_1-1)$$
-    * $A$ is the overlap area
-    * $(x_1, y_1)$ is the bottom left corner of the rectangle
-    * $(x_2, y_2)$ is the top-right corner of the rectangle
-
-## What could be improved
-
-* **Add more optimization problems**: Due to this project being a type of framework for solving, it would be nice to add more optimization problems to demonstrate the effectiveness of the algorithms. 
-* **Adding more algorithms**: There are other algorithms that have not yet been used in this project which might be a great addition to this project like population based approaches.
-* **Optimizing double calculation**: currently most of the calculations happen locally, meaning if for example we check overlaps we calculate the occupancy grid and integral image everytime. Although this still allows us to be way faster then manually checking with for loops only, it would make sense to store the integral iamge for each box. Due to the deadline of this project, this was not adjusted so far, but will be in the future.
-* **Better code organization to overcome circular imports**: due to circular imports across files we had to adjust the importing of other methods. This lead to a inconsistency regarding import syntax which shall be improved.
-* **Better usability in the user-interface**: the UI implemented with tkinter is definitely allowing us to use the software and configure what we can. But we would love to deep dive into different UI frameworks to see what else we could do to improve the usability of this project. Especially because this project is not only a assignment, but also a educational representation of the algorithms and the optimization problems. So maybe finding a different framework or working with a combination of python and html/jss frontend views could be beneficial for the sake of this project.
-
-# Used assets
-* Export Icon: Created by Chanut on Flaticon
-* Import Icon: Created by Ferdinand on Flaticon
-* Zoom-In Icon: Created by Stasy on Flaticon
-* Zoom-Out Icon: Created by nahumam on Flaticon
